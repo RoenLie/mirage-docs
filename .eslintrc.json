@@ -1,0 +1,6 @@
+{
+	"extends": [
+		"@eyeshare/eslint-config"
+	],
+	"rules": {}
+}

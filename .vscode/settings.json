@@ -1,0 +1,38 @@
+{
+	"module-templates.templateFiles": [
+		"./templates/.module-templates.json"
+	],
+	"module-templates.engine": "handlebars",
+	"editor.bracketPairColorization.enabled": true,
+	"editor.guides.bracketPairs": "active",
+	"editor.formatOnSave": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	},
+	"emmet.includeLanguages": {
+		"typescript": "html",
+		"javascript": "html"
+	},
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"eslint.run": "onSave",
+	"eslint.useESLintClass": true,
+	"eslint.format.enable": true,
+	"eslint.validate": [
+		"javascript",
+		"typescript",
+	],
+	"prettier.enable": false,
+	"[typescript]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
+	"typescript.format.insertSpaceAfterTypeAssertion": true,
+	"typescript.format.semicolons": "insert",
+	"typescript.preferences.importModuleSpecifier": "project-relative",
+	"typescript.preferences.quoteStyle": "single",
+	"typescript.updateImportsOnFileMove.enabled": "always",
+	"javascript.preferences.importModuleSpecifierEnding": "js",
+	"typescript.preferences.importModuleSpecifierEnding": "js",
+	"lit-plugin.rules.no-incompatible-type-binding": "off",
+	"typescript.tsdk": "node_modules\\typescript\\lib",
+}

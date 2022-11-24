@@ -1,0 +1,29 @@
+import { createMixin } from '@eyeshare/shared';
+import { LitElement } from 'lit';
+
+/**
+ *	This is the template for a mixin.
+ * Mixins are a bit special when used with typescript, as there are restrictions on how
+ * private class definitions need to be exposed and cannot contain private or protected members.
+ *
+ * As a workaround for this, we create an interface, that the createMixin helper takes advantage of.
+ * This enables us to emit a new class that exposes the interface, and whatever parent class api that we use.
+ * Note that a class is first created and then exported, this is to enable the use of decorators in the private class.
+ *
+ * This text is meant as information, please remove after implementing your code.
+ */
+/* ------------------------------------------------- */
+
+export interface I{{pascal name}} {
+
+}
+
+/* ------------------------------------------------- */
+
+export const {{pascal name}}Mixin = createMixin<I{{pascal name}}, typeof LitElement>((base) => {
+	class {{pascal name}} extends base implements I{{pascal name}} {
+
+	}
+
+	return {{pascal name}};
+});

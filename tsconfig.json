@@ -1,0 +1,26 @@
+{
+	"extends": "@eyeshare/tsconfig",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"baseUrl": ".",
+		"emitDeclarationOnly": true,
+		"skipLibCheck": true,
+		"incremental": false,
+		"types": [
+			"vite/client",
+			"sharedworker",
+			"node",
+		]
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.js",
+		"./typings/**/*.d.ts"
+	],
+	"exclude": [
+		"./**/*.test.ts",
+		"./**/*.bench.ts",
+		"./**/*.editor.d.ts"
+	]
+}
