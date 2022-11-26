@@ -162,7 +162,7 @@ export const defineDocConfig = async (
 		const headerReplacement = (key: string) => stringDedent(`
 		<div class="component-header">
 			<midoc-page-header
-				name="${ key }"
+				component-name="${ key }"
 				.declaration=\${this.metadata['${ key }']}
 			></midoc-page-header>
 		</div>

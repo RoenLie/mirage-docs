@@ -12,7 +12,7 @@ export class MiDocHeaderCmp extends LitElement {
 
 	@property({ type: Boolean }) public editor?: boolean;
 	@property({ type: Object }) public declaration: Declarations;
-	@property() public set name(v: string) {
+	@property({ attribute: 'component-name' }) public set componentName(v: string) {
 		let old = this._name;
 		this._slug = v.slice(v.indexOf('-') + 1);
 		this._name = toWords(toPascalCase(this._slug));
