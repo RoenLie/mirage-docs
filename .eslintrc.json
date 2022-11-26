@@ -1,6 +1,6 @@
 {
 	"extends": [
-		"@eyeshare/eslint-config"
+		"@roenlie/eslint-config"
 	],
 	"rules": {}
 }

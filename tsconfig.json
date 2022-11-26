@@ -1,11 +1,9 @@
 {
-	"extends": "@eyeshare/tsconfig",
+	"extends": "@roenlie/tsconfig",
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
 		"baseUrl": ".",
-		"emitDeclarationOnly": true,
-		"skipLibCheck": true,
 		"incremental": false,
 		"types": [
 			"vite/client",

@@ -32,8 +32,8 @@
 		"vite": "^3.2.4"
 	},
 	"devDependencies": {
-		"@eyeshare/eslint-config": "0.1.1-ci.23",
-		"@eyeshare/tsconfig": "0.1.1-ci.6",
+		"@roenlie/eslint-config": "^1.0.0",
+		"@roenlie/tsconfig": "^1.0.0",
 		"@types/markdown-it": "^12.2.3",
 		"@types/node": "18.8.2",
 		"@types/sharedworker": "^0.0.85",
