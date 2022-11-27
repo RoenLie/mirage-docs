@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/mirage-docs",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "",
 	"author": "Kristoffer Roen-Lie",
 	"license": "MIT",
@@ -28,6 +28,7 @@
 		"markdown-it": "^13.0.1",
 		"markdown-it-anchor": "^8.6.5",
 		"monaco-editor": "^0.34.1",
+		"tabbable": "^6.0.1",
 		"tslib": "^2.4.1",
 		"vite": "^3.2.4"
 	},

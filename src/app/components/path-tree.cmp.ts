@@ -2,9 +2,11 @@ import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
+import { FocusableElement, tabbable } from 'tabbable';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
+import { findActiveElement } from '../utilities/domquery.js';
 
 
 export type TreeRecord<T = any, TEnd = any> = {
@@ -24,24 +26,70 @@ export class MidocPathTreeCmp extends LitElement {
 	public override connectedCallback(): void {
 		super.connectedCallback();
 
+		this.addEventListener('keydown', this.handleKeydown);
+
 		this.groupState = JSON.parse(localStorage.getItem('midocMenuState') ?? '{}');
 	}
 
 	protected override firstUpdated(properties: PropertyValues): void {
 		super.firstUpdated(properties);
 
-		this.dispatchEvent(new CustomEvent('load', { cancelable: false, bubbles: false, composed: false }));
+		this.dispatchEvent(new CustomEvent('load', {
+			cancelable: false,
+			bubbles:    false,
+			composed:   false,
+		}));
+	}
+
+	public override disconnectedCallback(): void {
+		super.disconnectedCallback();
+		this.removeEventListener('keydown', this.handleKeydown);
 	}
 
 	protected override willUpdate(props: PropertyValues): void {
 		if (props.has('paths')) {
 			this.hierarchy = {};
 
-			this.paths.sort((a, b) => {
-				const aFile = a.split('/').at(-1) ?? '';
-				const bFile = b.split('/').at(-1) ?? '';
+			const createSegmentedPath = (path: string) => {
+				const segments = path.split('/');
+				const filtered = [
+					...segments
+						.filter(s => s.startsWith(this.delimiter))
+						.map(s => s.replace(this.delimiter, '')
+							.replaceAll('-', ' ')),
+					segments.at(-1)!,
+				];
 
-				return aFile.localeCompare(bFile);
+				return filtered;
+			};
+
+			const comparer = (a: string, b: string) => {
+				const aOrder = parseInt(a.split('.').at(0) ?? '');
+				const bOrder = parseInt(b.split('.').at(0) ?? '');
+				let value = 0;
+
+				if (isNaN(aOrder) && isNaN(bOrder))
+					value = a.localeCompare(b);
+				else
+					value = aOrder - bOrder;
+
+				return value;
+			};
+
+			this.paths.sort((a, b) => {
+				const aSegments = createSegmentedPath(a);
+				const bSegments = createSegmentedPath(b);
+
+				for (let i = 0; i < aSegments.length; i++) {
+					const aSeg = aSegments[i] ?? '';
+					const bSeg = bSegments[i] ?? '';
+
+					const value = comparer(aSeg, bSeg);
+					if (value !== 0)
+						return value;
+				}
+
+				return 0;
 			}).forEach(path => {
 				/* Split the path into segments */
 				const segments = path.split('/');
@@ -52,11 +100,14 @@ export class MidocPathTreeCmp extends LitElement {
 					remove the delimiter from the segment */
 					...segments
 						.filter(s => s.startsWith(this.delimiter))
-						.map(s => s.replace(this.delimiter, '')),
+						.map(s => s.replace(this.delimiter, '')
+							.replaceAll('-', ' ')
+							.replaceAll(/\d+\./g, '')),
 					/* Add the last segment after performing string replacements
 					to use as the last part of path */
 					this.nameReplacements.reduce(
-						(acc, [ from, to ]) => acc.replaceAll(from, to), segments.at(-1)!,
+						(acc, [ from, to ]) => acc.replaceAll(from, to),
+						(segments.at(-1) ?? '').replaceAll(/\d+\./g, ''),
 					),
 				];
 
@@ -107,6 +158,73 @@ export class MidocPathTreeCmp extends LitElement {
 		this.dispatchEvent(new CustomEvent('toggle', { detail: { state: this.groupState } }));
 	};
 
+	protected handleKeydown = (ev: KeyboardEvent) => {
+		if (![ 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight' ].includes(ev.code))
+			return;
+
+		const tabbableElements = tabbable(this, { getShadowRoot: true });
+		const activeElement = findActiveElement(this) as HTMLElement | null;
+
+		const indexOfActive = tabbableElements.findIndex(el => el === activeElement) ?? 0;
+		let nextIndex = indexOfActive;
+		let nextElement: FocusableElement | undefined;
+
+		if (ev.code === 'ArrowUp') {
+			ev.preventDefault();
+			nextIndex = indexOfActive - 1;
+			nextElement = tabbableElements.at(nextIndex);
+		}
+		if (ev.code === 'ArrowDown') {
+			ev.preventDefault();
+			nextIndex = (indexOfActive + 1) > tabbableElements.length - 1
+				? 0
+				: (indexOfActive + 1);
+
+			nextElement = tabbableElements.at(nextIndex);
+		}
+
+		if ([ 'ArrowLeft', 'ArrowRight' ].includes(ev.code)) {
+			if (activeElement?.classList.contains('toggle')) {
+				const dataset = activeElement.dataset;
+				const collapsed = dataset['collapsed'] === 'true' ? true : false;
+
+				if (ev.code === 'ArrowLeft') {
+					if (!collapsed) {
+						activeElement.click();
+					}
+					else {
+						nextElement = tabbableElements.slice(0, indexOfActive)
+							.reverse()
+							.find(el => el.classList.contains('toggle'));
+					}
+				}
+				if (ev.code === 'ArrowRight') {
+					if (collapsed) {
+						activeElement.click();
+					}
+					else {
+						nextElement = tabbableElements.slice(indexOfActive + 1)
+							.find(el => el.classList.contains('toggle'));
+					}
+				}
+			}
+			else {
+				if (ev.code === 'ArrowLeft') {
+					nextElement = tabbableElements.slice(0, indexOfActive)
+						.reverse()
+						.find(el => el.classList.contains('toggle'));
+				}
+				if (ev.code === 'ArrowRight') {
+					nextElement = tabbableElements.slice(indexOfActive)
+						.find(el => el.classList.contains('toggle'));
+				}
+			}
+		}
+
+		if (nextElement)
+			nextElement?.focus();
+	};
+
 	protected groupTemplate = (group: TreeRecord): TemplateResult => {
 		return html`
 		${ map(
@@ -127,7 +245,7 @@ export class MidocPathTreeCmp extends LitElement {
 				() => html`
 				<div class="group">
 					<div class="heading" @click=${ () => this.handleToggleClick(dir) }>
-						<button class="toggle">
+						<button class="toggle" data-collapsed=${ !this.groupState[dir] }>
 							${ this.groupState[dir] ? '🞃' : '🞂' }
 						</button>
 						<label>

@@ -7,7 +7,9 @@ import { toTagName } from './to-tag-name.js';
 export const createModuleIdFromPath = (path: string) => {
 	let fileInfo = parse(path);
 
-	return 'virtual:' + fileInfo.name.replaceAll('.', '-') + '.ts';
+	return 'virtual:' + fileInfo.name
+		.replaceAll('.', '-')
+		.replaceAll(' ', '-') + '.ts';
 };
 
 
@@ -24,12 +26,15 @@ export const createComponentTagFromPath = (path: string) => {
 
 	folders.push(tagname);
 
-	return folders.join('-').toLowerCase();
+	return folders.join('-')
+		.replaceAll(' ', '-')
+		.replaceAll(/\d/g, '')
+		.toLowerCase();
 };
 
 
 export const createComponentNameFromPath = (path: string) => {
 	let fileInfo = parse(path);
 
-	return toPascalCase('Midoc' + fileInfo.name + 'Cmp');
+	return toPascalCase('Midoc' + fileInfo.name.replaceAll(' ', '-') + 'Cmp');
 };

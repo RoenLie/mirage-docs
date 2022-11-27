@@ -53,6 +53,8 @@ export class MiDocSidebarCmp extends LitElement {
 	protected setIndeterminateState = (override?: boolean) => {
 		const menustate = JSON.parse(localStorage.getItem('midocMenuState') ?? '{}');
 		this.toggleIndeterminate = override ?? Object.values(menustate).some(Boolean);
+		if (!this.toggleIndeterminate)
+			this.toggleAllValue = false;
 	};
 
 	protected handleScroll = () => {
