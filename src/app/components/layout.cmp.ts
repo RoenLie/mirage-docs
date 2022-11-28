@@ -195,6 +195,11 @@ export class MiDocLayoutCmp extends LitElement {
 			border-radius: 999px;
 			overflow: hidden;
 		}
+		.nav-toggle:focus-visible,
+		.theme-toggle:focus-visible {
+			outline: 2px solid var(--midoc-tertiary-hover);
+			outline-offset: -2px;
+		}
 		.theme-toggle {
 			top: 0;
 			right: 0;
