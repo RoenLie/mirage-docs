@@ -1,11 +1,13 @@
 import './sidebar.cmp.js';
 
-import { css, html, LitElement, PropertyValues, unsafeCSS } from 'lit';
+import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
+import { when } from 'lit/directives/when.js';
 import siteConfig from 'virtual:siteconfig.ts';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
+import { Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 
 
 @customElement('midoc-layout')
@@ -15,6 +17,7 @@ export class MiDocLayoutCmp extends LitElement {
 	@property() public logoHeight = '';
 	@property() public heading = '';
 	@state() protected activeFrame = '';
+	@state() protected loading = false;
 	@query('iframe') protected frameQry: HTMLIFrameElement;
 	@query('midoc-sidebar') protected sidebarQry: LitElement;
 
@@ -29,10 +32,6 @@ export class MiDocLayoutCmp extends LitElement {
 		this.handleHashChange();
 		this.handleNavToggle(true);
 		this.handleColorSchemeToggle(true);
-	}
-
-	protected override async firstUpdated(props: PropertyValues): Promise<void> {
-		super.firstUpdated(props);
 	}
 
 	public override disconnectedCallback(): void {
@@ -52,6 +51,8 @@ export class MiDocLayoutCmp extends LitElement {
 			frameWindow.scrollTo(0, scrollVal);
 			frameWindow.addEventListener('scroll', this.handleFramePageScroll);
 		}
+
+		this.loading = false;
 	};
 
 	protected handleFramePageScroll = () => {
@@ -61,10 +62,16 @@ export class MiDocLayoutCmp extends LitElement {
 	};
 
 	protected handleTransitionEnd = () => {
-		this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
-		const hash = location.hash.split('#').filter(Boolean).at(0);
-		if (hash)
+		const hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
+		if (hash) {
+			this.loading = true;
 			this.activeFrame = hash + '.html';
+			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
+		}
+		else {
+			this.loading = false;
+			Object.assign(this.frameQry.style, { opacity: 1 });
+		}
 	};
 
 	protected blockTransition = () => {
@@ -85,6 +92,10 @@ export class MiDocLayoutCmp extends LitElement {
 	};
 
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
+		const hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
+		if (this.activeFrame === hash)
+			return;
+
 		await this.updateComplete;
 
 		while (this.transitionSet.size)
@@ -154,19 +165,25 @@ export class MiDocLayoutCmp extends LitElement {
 			></midoc-sidebar>
 			<main>
 				<iframe src=${ this.activeFrame }></iframe>
+
+				${ when(this.loading, () => html`
+				<div class="loader">
+					${ Icon(spinningCircleIcon) }
+				</div>
+				`) }
 			</main>
 
 			<div class="nav-toggle">
 				<button class="toggle" @click=${ () => this.handleNavToggle() }>
-					☰
+					${ Icon(listIcon) }
 				</button>
 			</div>
 
 			<div class="theme-toggle">
 				<button class="toggle" @click=${ () => this.handleColorSchemeToggle() }>
 					${ document.documentElement.getAttribute('color-scheme') === 'light'
-						? '☀️'
-						: '🌙'
+						? Icon(sunIcon)
+						: Icon(moonIcon)
 					}
 				</button>
 			</div>
@@ -205,6 +222,17 @@ export class MiDocLayoutCmp extends LitElement {
 			right: 0;
 		}
 
+		.loader {
+			position: absolute;
+			place-self: center;
+			font-size: 50px;
+			padding: 12px;
+			color: var(--midoc-tertiary);
+			border: 1px solid var(--midoc-surface-variant);
+			border-radius: 8px;
+			background-color: var(--midoc-background);
+		}
+
 		:host(.nav--closed) midoc-sidebar {
 			width: 0vw;
 		}
@@ -217,6 +245,7 @@ export class MiDocLayoutCmp extends LitElement {
 		}
 
 		main {
+			position: relative;
 			grid-area: frame;
 			display: grid;
 			grid-template-rows: 1fr;

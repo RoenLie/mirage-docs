@@ -8,6 +8,7 @@ import siteConfig from 'virtual:siteconfig.ts';
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
 import { inputStyle } from '../styles/input.styles.js';
+import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 import type { MidocPathTreeCmp } from './path-tree.cmp.js';
 
 
@@ -123,7 +124,9 @@ export class MiDocSidebarCmp extends LitElement {
 			<div class="menu-actions">
 				<div>
 					<button class="toggle" @click=${ () => this.toggleAll() }>
-						${ this.toggleAllValue || this.toggleIndeterminate ? '🞃' : '🞂' }
+						${ this.toggleAllValue || this.toggleIndeterminate
+							? Icon(chevronDownIcon)
+							: Icon(chevronRightIcon) }
 					</button>
 				</div>
 

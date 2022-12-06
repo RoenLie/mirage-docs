@@ -7,6 +7,7 @@ import { FocusableElement, tabbable } from 'tabbable';
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
 import { findActiveElement } from '../utilities/domquery.js';
+import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
 
 export type TreeRecord<T = any, TEnd = any> = {
@@ -246,7 +247,9 @@ export class MidocPathTreeCmp extends LitElement {
 				<div class="group">
 					<div class="heading" @click=${ () => this.handleToggleClick(dir) }>
 						<button class="toggle" data-collapsed=${ !this.groupState[dir] }>
-							${ this.groupState[dir] ? '🞃' : '🞂' }
+							${ this.groupState[dir]
+								? Icon(chevronDownIcon)
+								: Icon(chevronRightIcon) }
 						</button>
 						<label>
 							${ dir }
