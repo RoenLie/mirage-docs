@@ -4,12 +4,16 @@
 	"description": "",
 	"author": "Kristoffer Roen-Lie",
 	"license": "MIT",
+	"repository": "github/roenlie/mirage-docs",
+	"bugs": {
+		"url": "https://github.com/RoenLie/mirage-docs/issues",
+		"email": "KristofferRoenLie@gmail.com"
+	},
 	"main": "dist/index.js",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
 	"scripts": {
-		"logon": "vsts-npm-auth -config .npmrc",
 		"dev": "vite",
 		"build": "vite build && tsc",
 		"clean": "rimraf node_modules dist *.tsbuildinfo",
