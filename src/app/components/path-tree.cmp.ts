@@ -7,12 +7,8 @@ import { FocusableElement, tabbable } from 'tabbable';
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
 import { findActiveElement } from '../utilities/domquery.js';
+import { pathsToTree, TreeRecord } from '../utilities/paths-to-tree.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
-
-
-export type TreeRecord<T = any, TEnd = any> = {
-	[P in keyof T]: TreeRecord<T[P]> | TEnd;
-};
 
 
 @customElement('midoc-path-tree')
@@ -48,81 +44,8 @@ export class MidocPathTreeCmp extends LitElement {
 	}
 
 	protected override willUpdate(props: PropertyValues): void {
-		if (props.has('paths')) {
-			this.hierarchy = {};
-
-			const createSegmentedPath = (path: string) => {
-				const segments = path.split('/');
-				const filtered = [
-					...segments
-						.filter(s => s.startsWith(this.delimiter))
-						.map(s => s.replace(this.delimiter, '')
-							.replaceAll('-', ' ')),
-					segments.at(-1)!,
-				];
-
-				return filtered;
-			};
-
-			const comparer = (a: string, b: string) => {
-				const aOrder = parseInt(a.split('.').at(0) ?? '');
-				const bOrder = parseInt(b.split('.').at(0) ?? '');
-				let value = 0;
-
-				if (isNaN(aOrder) && isNaN(bOrder))
-					value = a.localeCompare(b);
-				else
-					value = aOrder - bOrder;
-
-				return value;
-			};
-
-			this.paths.sort((a, b) => {
-				const aSegments = createSegmentedPath(a);
-				const bSegments = createSegmentedPath(b);
-
-				for (let i = 0; i < aSegments.length; i++) {
-					const aSeg = aSegments[i] ?? '';
-					const bSeg = bSegments[i] ?? '';
-
-					const value = comparer(aSeg, bSeg);
-					if (value !== 0)
-						return value;
-				}
-
-				return 0;
-			}).forEach(path => {
-				/* Split the path into segments */
-				const segments = path.split('/');
-
-				/* Filter out any non grouping segments */
-				const filtered = [
-					/* Filter out the non grouping segments and
-					remove the delimiter from the segment */
-					...segments
-						.slice(0, -1)
-						.filter(s => s.startsWith(this.delimiter) || /\d+\./.test(s))
-						.map(s => s.replace(this.delimiter, '')
-							.replaceAll('-', ' ')
-							.replaceAll(/\d+\./g, '')),
-					/* Add the last segment after performing string replacements
-					to use as the last part of path */
-					this.nameReplacements.reduce(
-						(acc, [ from, to ]) => acc.replaceAll(from, to),
-						(segments.at(-1) ?? '').replaceAll(/\d+\./g, ''),
-					),
-				];
-
-				filtered.reduce((acc, cur, i, { length }) => {
-					if (i === length - 1)
-						acc[cur] = path;
-
-					acc[cur] ??= {};
-
-					return acc[cur];
-				}, this.hierarchy);
-			});
-		}
+		if (props.has('paths'))
+			this.hierarchy = pathsToTree(this.paths, this.delimiter, this.nameReplacements);
 
 		if (props.has('groupState'))
 			localStorage.setItem('midocMenuState', JSON.stringify(this.groupState));
