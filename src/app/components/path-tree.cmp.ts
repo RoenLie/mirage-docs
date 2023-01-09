@@ -100,7 +100,8 @@ export class MidocPathTreeCmp extends LitElement {
 					/* Filter out the non grouping segments and
 					remove the delimiter from the segment */
 					...segments
-						.filter(s => s.startsWith(this.delimiter))
+						.slice(0, -1)
+						.filter(s => s.startsWith(this.delimiter) || /\d+\./.test(s))
 						.map(s => s.replace(this.delimiter, '')
 							.replaceAll('-', ' ')
 							.replaceAll(/\d+\./g, '')),
