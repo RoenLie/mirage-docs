@@ -6,10 +6,12 @@ export const indexPageTemplate = (props: {
 	darkModeLink: string;
 	lightModeLink: string;
 	componentTag: string;
+	randomdata: string;
 }) => {
 	return `
 <!DOCTYPE html>
 <html lang="en">
+<!-- ${ props.randomdata }  -->
 <head>
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -35,6 +37,10 @@ export const indexPageTemplate = (props: {
 			darkModeLink: '${ props.darkModeLink }',
 			lightModeLink: '${ props.lightModeLink }',
 		})
+	</script>
+
+	<script type="module">
+		import "@roenlie/mirage-docs/dist/app/utilities/anchor-snatcher"
 	</script>
 </head>
 <body>

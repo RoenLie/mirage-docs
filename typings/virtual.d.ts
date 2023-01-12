@@ -10,6 +10,12 @@ declare module 'virtual:siteconfig.ts' {
 		styles: {
 			layout: string;
 			sidebar: string;
+			pathTree: string;
+			metadata: string;
+			cmpEditor: string;
+			pageHeader: string;
+			sourceEditor: string;
+			pageTemplate: string;
 		},
 		sidebar: {
 			nameReplacements: [from: string, to: string][];

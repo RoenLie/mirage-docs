@@ -1,8 +1,9 @@
-import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
+import { css, html, LitElement, PropertyValues, TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 import { FocusableElement, tabbable } from 'tabbable';
+import siteConfig from 'virtual:siteconfig.ts';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
@@ -254,6 +255,7 @@ export class MidocPathTreeCmp extends LitElement {
 			outline-offset: -2px;
 		}
 		`,
+		unsafeCSS(siteConfig.styles.pathTree),
 	];
 
 }

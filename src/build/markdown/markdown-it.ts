@@ -1,7 +1,9 @@
 import slugify from '@sindresorhus/slugify';
-import hljs from 'highlight.js/lib/common';
+import hljs from 'highlight.js';
 import mdIt from 'markdown-it';
 import mdItAnchor from 'markdown-it-anchor';
+
+import { tabReplacePlugin } from './tab-replace-plugin.js';
 
 
 export const markdownIt = mdIt({
@@ -11,7 +13,7 @@ export const markdownIt = mdIt({
 	highlight:   (str: string, lang: string) => {
 		if (lang && hljs.getLanguage(lang)) {
 			try {
-				return hljs.highlight(str, { language: lang }).value;
+				return hljs.highlight(str, { language: lang }).value.replaceAll('`', '\\`');
 			}
 			catch (__) { /* Ignore errors! */ }
 		}
@@ -22,4 +24,6 @@ export const markdownIt = mdIt({
 	level:     1,
 	slugify,
 	permalink: mdItAnchor.permalink.headerLink(),
+}).use(tabReplacePlugin, {
+	tabWidth: 3,
 });

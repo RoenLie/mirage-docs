@@ -1,7 +1,8 @@
-import { type TemplateResult, css, html, LitElement } from 'lit';
+import { type TemplateResult, css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { DirectiveResult } from 'lit/directive.js';
 import type { UnsafeHTMLDirective } from 'lit/directives/unsafe-html.js';
+import siteConfig from 'virtual:siteconfig.ts';
 
 import { curryDebounce } from '../../build/helpers/debounce.js';
 import { LoadedEditor, monaco } from '../../build/helpers/monaco.js';
@@ -314,6 +315,7 @@ export class EsSourceEditor extends LitElement {
 			border-radius: inherit;
 		}
 		`,
+		unsafeCSS(siteConfig.styles.sourceEditor),
 	];
 	//#endregion
 

@@ -1,7 +1,8 @@
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { type IDisposable } from 'monaco-editor';
+import siteConfig from 'virtual:siteconfig.ts';
 
 import { monaco } from '../../build/helpers/monaco.js';
 import { unpkgReplace } from '../../build/helpers/unpkg-replace.js';
@@ -91,6 +92,7 @@ export class EsComponentEditor extends EsSourceEditor {
 			border-top: 1px solid var(--midoc-surface-variant);
 		}
 		`,
+		unsafeCSS(siteConfig.styles.cmpEditor),
 	];
 
 }

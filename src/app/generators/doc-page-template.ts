@@ -7,11 +7,12 @@ export const docPageTemplate = (props: {
 	componentName: string;
 	componentTag: string;
 }) => `
-import { css, html, LitElement, PropertyValueMap } from 'lit';
+import { css, html, LitElement, PropertyValueMap, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { componentStyles } from '@roenlie/mirage-docs/dist/app/styles/component.styles.js'
 import { markdownStyles } from '@roenlie/mirage-docs/dist/app/styles/markdown.styles.js';
 import { highlightjsStyles } from '@roenlie/mirage-docs/dist/app/styles/highlightjs.styles.js';
+import siteConfig from 'virtual:siteconfig.ts';
 // injected imports
 ${ props.imports }
 
@@ -71,11 +72,28 @@ export class ${ props.componentName } extends LitElement {
 
 		this.insertFontLink();
 		this.resizeObserver.observe(this);
+
+		window.addEventListener('hashchange', this.handleHashChange);
+	}
+
+	public override disconnectedCallback() {
+		super.disconnectedCallback();
+		window.removeEventListener('hashchange', this.handleHashChange);
 	}
 	//#endregion
 
 
 	//#region logic
+	protected handleHashChange = () => {
+		const hash = window.location.hash;
+		const anchor = this.renderRoot.querySelector('a[href="' + hash + '"].header-anchor');
+		anchor?.scrollIntoView({
+			behavior: "smooth",
+			block: "start",
+			inline: "nearest"
+		});
+	}
+
 	protected insertFontLink() {
 		const fontRef = 'https://fonts.googleapis.com/css?family=Roboto+Mono';
 		const linkId = 'code-preview-font';
@@ -131,6 +149,7 @@ export class ${ props.componentName } extends LitElement {
 			padding-inline: 24px;
 		}
 		.markdown-body {
+			display: grid;
 			background: none;
 			padding-bottom: 200px;
 		}
@@ -141,6 +160,7 @@ export class ${ props.componentName } extends LitElement {
 			font-family: var(--code-font);
 		}
 		\`,
+		unsafeCSS(siteConfig.styles.pageTemplate),
 	];
 	//#endregion
 

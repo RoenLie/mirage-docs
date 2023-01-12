@@ -1,7 +1,8 @@
-import { css, html, LitElement, PropertyValues } from 'lit';
+import { css, html, LitElement, PropertyValues, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
+import siteConfig from 'virtual:siteconfig.ts';
 
 import type { Declarations } from '../../build/manifest/metadata.types.js';
 import { componentStyles } from '../styles/component.styles.js';
@@ -360,6 +361,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 			color: var(--midoc-tertiary);
 		}
 	`,
+		unsafeCSS(siteConfig.styles.metadata),
 	];
 	//#endregion
 

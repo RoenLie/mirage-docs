@@ -2,6 +2,7 @@ import './path-tree.cmp.js';
 
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
+import { when } from 'lit/directives/when.js';
 import routes from 'virtual:routes.ts';
 import siteConfig from 'virtual:siteconfig.ts';
 
@@ -112,9 +113,11 @@ export class MiDocSidebarCmp extends LitElement {
 	public override render() {
 		return html`
 			<div class="greeting">
+				${ when(this.logo, () => html`
 				<picture>
 					<img height=${ this.logoHeight } src=${ this.logo } alt="Logo">
 				</picture>
+				`) }
 
 				<div class="title">
 					${ this.heading }

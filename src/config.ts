@@ -39,6 +39,12 @@ export const defineDocConfig = async (
 			styles?: {
 				layout?: string;
 				sidebar?: string;
+				pathTree?: string;
+				metadata?: string;
+				cmpEditor?: string;
+				pageHeader?: string;
+				sourceEditor?: string;
+				pageTemplate?: string;
 			},
 			sidebar?: {
 				nameReplacements?: [from: string, to: string][];
@@ -77,6 +83,12 @@ export const defineDocConfig = async (
 	const styles = {
 		layout: \`${ props.siteConfig?.styles?.layout ?? '' }\`,
 		sidebar: \`${ props.siteConfig?.styles?.sidebar ?? '' }\`,
+		pathTree: \`${ props.siteConfig?.styles?.pathTree ?? '' }\`,
+		metadata: \`${ props.siteConfig?.styles?.metadata ?? '' }\`,
+		cmpEditor: \`${ props.siteConfig?.styles?.cmpEditor ?? '' }\`,
+		pageHeader: \`${ props.siteConfig?.styles?.pageHeader ?? '' }\`,
+		sourceEditor: \`${ props.siteConfig?.styles?.sourceEditor ?? '' }\`,
+		pageTemplate: \`${ props.siteConfig?.styles?.pageTemplate ?? '' }\`,
 	}
 
 	const sidebar = {
@@ -264,12 +276,8 @@ export const defineDocConfig = async (
 	for await (const [ , path ] of [ ...markdownCache.cache ]) {
 		const parsed = parse(path);
 		const moduleId = createModuleIdFromPath(path);
-		const projectIndexPath = join(
-			parsed.dir
-				.replace(root, '')
-				.replace(rootForwardSlash, '')
-				.slice(1), parsed.name,
-		).replaceAll('\\', '/');
+		const folderPath = parsed.dir.replace(root, '').replace(rootForwardSlash, '').slice(1);
+		const projectIndexPath = join(folderPath, parsed.name).replaceAll('\\', '/');
 
 		//#region Create the index file
 		const indexFile = join(parsed.dir, parsed.name + '.html');
@@ -283,6 +291,7 @@ export const defineDocConfig = async (
 				darkModeLink,
 				lightModeLink,
 				componentTag: createComponentTagFromPath(path),
+				randomdata:   indexFile,
 			}),
 		);
 		//#endregion
@@ -353,6 +362,7 @@ export const defineDocConfig = async (
 				darkModeLink,
 				lightModeLink,
 				componentTag: createComponentTagFromPath(path),
+				randomdata:   '',
 			}),
 		);
 		//#endregion

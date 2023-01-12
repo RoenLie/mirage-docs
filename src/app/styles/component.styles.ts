@@ -45,10 +45,10 @@ export const componentStyles = css`
 		cursor: revert;
 	}
 
-	/* Remove list styles (bullets/numbers) */
+	/*Remove list styles (bullets/numbers)
 	ol, ul, menu {
 		list-style: none;
-	}
+	}*/
 
 	/* removes spacing between cells in tables */
 	table {

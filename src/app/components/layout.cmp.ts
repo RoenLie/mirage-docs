@@ -7,7 +7,7 @@ import siteConfig from 'virtual:siteconfig.ts';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
-import { Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
+import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 
 
 @customElement('midoc-layout')
@@ -20,6 +20,7 @@ export class MiDocLayoutCmp extends LitElement {
 	@state() protected loading = false;
 	@query('iframe') protected frameQry: HTMLIFrameElement;
 	@query('midoc-sidebar') protected sidebarQry: LitElement;
+	@query('.scrollback') protected scrollbackQry: HTMLElement;
 
 	protected transitionSet = new Set<Promise<void>>();
 	protected navClosedClass = 'nav--closed';
@@ -57,8 +58,19 @@ export class MiDocLayoutCmp extends LitElement {
 
 	protected handleFramePageScroll = () => {
 		const frameWindow = this.frameQry.contentWindow;
-		if (frameWindow)
-			localStorage.setItem('pageScrollValue', String(frameWindow.scrollY ?? 0));
+		const scrollValue = frameWindow?.scrollY;
+		if (!scrollValue)
+			return;
+
+		localStorage.setItem('pageScrollValue', String(scrollValue));
+		if (scrollValue > frameWindow.innerHeight) {
+			if (this.scrollbackQry.classList.contains('hidden'))
+				this.scrollbackQry.classList.remove('hidden');
+		}
+		else {
+			if (!this.scrollbackQry.classList.contains('hidden'))
+				this.scrollbackQry.classList.add('hidden');
+		}
 	};
 
 	protected handleTransitionEnd = () => {
@@ -156,6 +168,10 @@ export class MiDocLayoutCmp extends LitElement {
 		}
 	}
 
+	protected handleScrollback() {
+		this.frameQry.contentDocument?.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
 	public override render() {
 		return html`
 			<midoc-sidebar
@@ -187,6 +203,12 @@ export class MiDocLayoutCmp extends LitElement {
 					}
 				</button>
 			</div>
+
+			<div class="scrollback">
+				<button class="toggle" @click=${ () => this.handleScrollback() }>
+					${ Icon(chevronUpIcon) }
+				</button>
+			</div>
 		`;
 	}
 
@@ -205,7 +227,8 @@ export class MiDocLayoutCmp extends LitElement {
 		}
 		${ buttonStyle('toggle', 50, 28) }
 		.nav-toggle,
-		.theme-toggle {
+		.theme-toggle,
+		.scrollback {
 			position: fixed;
 			margin: 8px 12px;
 			backdrop-filter: blur(1px);
@@ -220,6 +243,13 @@ export class MiDocLayoutCmp extends LitElement {
 		.theme-toggle {
 			top: 0;
 			right: 0;
+		}
+		.scrollback {
+			bottom: 25px;
+			right: 20px;
+		}
+		.hidden {
+			display: none;
 		}
 
 		.loader {
