@@ -1,10 +1,10 @@
 import './path-tree.cmp.js';
 
+import routes from 'alias:routes.js';
+import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
-import routes from 'virtual:routes.ts';
-import siteConfig from 'virtual:siteconfig.ts';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
@@ -93,7 +93,7 @@ export class MiDocSidebarCmp extends LitElement {
 		this.filteredRoutes = this.allRoutes.filter(path => {
 			const name = stringReplacement(path.split('/').at(-1)!);
 
-			return name.includes(search);
+			return name.toUpperCase().includes(search.toUpperCase());
 		});
 
 		if ((this.searchValue && !search) || search)

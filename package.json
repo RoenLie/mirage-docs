@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/mirage-docs",
-	"version": "1.0.8",
+	"version": "1.1.0",
 	"description": "",
 	"author": "Kristoffer Roen-Lie",
 	"license": "MIT",
@@ -34,14 +34,10 @@
 	},
 	"peerDependencies": {
 		"lit": "*",
-		"vite": "*",
-		"tslib": "*"
+		"tslib": "*",
+		"vite": "*"
 	},
 	"devDependencies": {
-		"tslib": "^2.4.1",
-		"lit": "^2.6.1",
-		"vite": "^4.0.4",
-		"bootstrap-icons": "^1.10.3",
 		"@roenlie/eslint-config": "^1.0.0",
 		"@roenlie/tsconfig": "^1.0.0",
 		"@types/markdown-it": "^12.2.3",
@@ -49,11 +45,15 @@
 		"@types/sharedworker": "^0.0.88",
 		"@typescript-eslint/eslint-plugin": "^5.48.1",
 		"@typescript-eslint/parser": "^5.48.1",
+		"bootstrap-icons": "^1.10.3",
 		"eslint": "^8.31.0",
 		"eslint-plugin-import": "^2.27.4",
 		"eslint-plugin-lit": "^1.8.0",
 		"eslint-plugin-simple-import-sort": "^8.0.0",
-		"rimraf": "^3.0.2",
-		"typescript": "^4.9.4"
+		"lit": "^2.6.1",
+		"rimraf": "^4.0.4",
+		"tslib": "^2.4.1",
+		"typescript": "^4.9.4",
+		"vite": "^4.0.4"
 	}
 }

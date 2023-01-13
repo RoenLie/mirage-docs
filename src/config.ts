@@ -1,11 +1,14 @@
 import { deepmerge } from 'deepmerge-ts';
-import { promises, readFileSync } from 'fs';
+import { promises, readFileSync, rmSync } from 'fs';
 import { dirname, join, normalize, parse, resolve } from 'path';
-import { defineConfig, Plugin, ResolvedConfig, UserConfigExport } from 'vite';
+import { defineConfig, Plugin, ResolvedConfig, UserConfig, UserConfigExport } from 'vite';
 
 import { docPageTemplate } from './app/generators/doc-page-template.js';
 import { editorPageTemplate } from './app/generators/editor-page-template.js';
 import { indexPageTemplate } from './app/generators/index-page-template.js';
+import { siteConfigTemplate } from './app/generators/site-config-template.js';
+import { tsconfigTemplate } from './app/generators/tsconfig-template.js';
+import { typingsTemplate } from './app/generators/typings-template.js';
 import { createFileCache, FilePathCache } from './build/cache/create-file-cache.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import type { AutoImportPluginProps } from './build/component/auto-import.types.js';
@@ -18,95 +21,110 @@ import { createManifestCache } from './build/manifest/create-manifest-cache.js';
 import type { Declarations } from './build/manifest/metadata.types.js';
 import { markdownIt } from './build/markdown/markdown-it.js';
 
-const root = resolve(resolve());
-const rootForwardSlash = root.replaceAll('\\', '/');
+
+const pRoot = resolve(resolve());
+const pRootForwardSlash = pRoot.replaceAll('\\', '/');
 const outDir = resolve(resolve(), 'dist');
 
 
+interface ConfigProperties {
+	rootDir: string;
+	entryDir: string;
+	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
+	input?: Record<string, string>;
+	autoImport?: AutoImportPluginProps;
+	siteConfig?: SiteConfig
+}
+
+
 export const defineDocConfig = async (
-	viteConfig: UserConfigExport,
-	props: {
-		entryDirs?: string[];
-		tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
-		editorDirs?: { path: string; pattern: RegExp }[];
-		stylelinks?: string[];
-		scriptlinks?: string[];
-		darkModeLink?: string;
-		lightModeLink?: string;
-		input?: Record<string, string>;
-		autoImport?: AutoImportPluginProps;
-		siteConfig?: {
-			styles?: {
-				layout?: string;
-				sidebar?: string;
-				pathTree?: string;
-				metadata?: string;
-				cmpEditor?: string;
-				pageHeader?: string;
-				sourceEditor?: string;
-				pageTemplate?: string;
-			},
-			sidebar?: {
-				nameReplacements?: [from: string, to: string][];
-			}
-		}
-	},
+	viteConfig: UserConfig,
+	props: ConfigProperties,
 ) => {
 	let {
-		input = { main: resolve(root, 'index.html') },
-		entryDirs = [ './src' ],
+		input = { main: resolve(pRoot, 'index.html') },
+		rootDir = '',
+		entryDir = './src',
 		tagDirs = [ { path: './src' } ],
-		editorDirs = [ { path: './src', pattern: /\.editor\.ts/ } ],
-		stylelinks = [],
-		scriptlinks = [],
-		darkModeLink = '',
-		lightModeLink = '',
+		siteConfig = {} as SiteConfig,
 	} = props;
 
 	let config: ResolvedConfig;
-	let tagCache: Map<string, string>;
-	let manifestCache: Map<string, Declarations>;
-	let markdownCache: FilePathCache;
-	let editorCache: FilePathCache;
+	let tagCache: Map<string, string> = new Map();
+	let manifestCache: Map<string, Declarations> = new Map();
+	let markdownCache: FilePathCache = {} as any;
+	let editorCache: FilePathCache = {} as any;
 
-	tagCache      = await createTagCache({ directories: tagDirs });
-	editorCache   = await createFileCache({ directories: editorDirs });
-	markdownCache = await createFileCache({ directories: entryDirs.map(d => ({ path: d, pattern: /.md/ })) });
+	siteConfig.internal          ??= {} as any;
+	siteConfig.internal.rootDir  ??= rootDir;
+	siteConfig.internal.entryDir ??= entryDir;
+	siteConfig.internal.libDir   ??= '.mirage';
+	const libDir = siteConfig.internal.libDir;
+	const aliases: Record<string, string> = {};
+
+
+	/** Clean out old cached files. */
+	const dir = join(pRoot, rootDir, libDir);
+	await promises.mkdir(dir, { recursive: true });
+	(await promises.readdir(dir)).forEach(f => rmSync(`${ dir }/${ f }`, { recursive: true }));
+
+	await Promise.all([
+		createTagCache({ directories: tagDirs }).then(cache => tagCache = cache),
+		createFileCache({ directories: [ { path: join(rootDir, entryDir), pattern: /\.editor\.ts/ } ] }).then(cache => editorCache = cache),
+		createFileCache({ directories: [ { path: join(rootDir, entryDir), pattern: /.md/ } ] }).then(cache => markdownCache = cache),
+	]);
+
 	manifestCache = createManifestCache(tagCache);
-
-	const virtualMap = new Map<string, string>();
 	const routes: string[] = [];
 
 
 	//#region create a site component config.
-	let siteConfigTemplate = stringDedent(`
-	const styles = {
-		layout: \`${ props.siteConfig?.styles?.layout ?? '' }\`,
-		sidebar: \`${ props.siteConfig?.styles?.sidebar ?? '' }\`,
-		pathTree: \`${ props.siteConfig?.styles?.pathTree ?? '' }\`,
-		metadata: \`${ props.siteConfig?.styles?.metadata ?? '' }\`,
-		cmpEditor: \`${ props.siteConfig?.styles?.cmpEditor ?? '' }\`,
-		pageHeader: \`${ props.siteConfig?.styles?.pageHeader ?? '' }\`,
-		sourceEditor: \`${ props.siteConfig?.styles?.sourceEditor ?? '' }\`,
-		pageTemplate: \`${ props.siteConfig?.styles?.pageTemplate ?? '' }\`,
-	}
+	let siteConfigContent = siteConfigTemplate(props.siteConfig);
+	await promises.writeFile(join(pRoot, rootDir, libDir, 'site-config.ts'), siteConfigContent);
+	aliases['alias:site-config.js'] = '/' + join(rootDir, libDir, 'site-config.ts').replaceAll('\\', '/');
+	//#endregion
 
-	const sidebar = {
-		nameReplacements: ${
-			JSON.stringify(props.siteConfig?.sidebar?.nameReplacements ?? [
-				[ '.docs', '' ],
-				[ '.editor', ' Editor' ],
-				[ '-', ' ' ],
-			])
-		}
-	}
 
-	export default {
-		styles,
-		sidebar,
-	}
-	`);
-	virtualMap.set('virtual:siteconfig.ts', siteConfigTemplate);
+	//#region create a tsconfig file for the cache folder.
+	await promises.writeFile(join(pRoot, rootDir, libDir, 'tsconfig.json'), tsconfigTemplate);
+	//#endregion
+
+	//#region create a d.ts file to make typescript happy inside the files.
+	await promises.writeFile(join(pRoot, rootDir, libDir, 'typings.d.ts'), typingsTemplate);
+	//#endregion
+
+
+	//#region creates an index file in the correct location.
+	const createIndexFile = async (moduleId: string, path: string) => {
+		const parsed = parse(path);
+		const content = indexPageTemplate({
+			title:        createComponentNameFromPath(path),
+			moduleId,
+			stylelinks:   props.siteConfig?.links?.styles ?? [],
+			scriptlinks:  props.siteConfig?.links?.scripts ?? [],
+			componentTag: createComponentTagFromPath(path),
+		});
+
+		//#region Create the index file
+		const cacheFolderPath = parsed.dir.replace(pRoot, '').replace(pRootForwardSlash, '').slice(1);
+		const cacheIndexFile = join(pRoot, rootDir, libDir, cacheFolderPath, parsed.name + '.html');
+		const cacheIndexDir = join(...cacheIndexFile.split('\\').slice(0, -1));
+
+		await promises.mkdir(cacheIndexDir, { recursive: true });
+		await promises.writeFile(cacheIndexFile, content);
+		//#endregion
+
+
+		//#region Add to routes
+		const cacheRoutePath = join(rootDir, libDir, cacheFolderPath, parsed.name).replaceAll('\\', '/');
+		routes.push(cacheRoutePath);
+		//#endregion
+
+
+		//#region Register as a multi page app entrypoint.
+		Object.assign(input, { [cacheRoutePath.replace('\\', '/')]: cacheIndexFile });
+		//#endregion
+	};
 	//#endregion
 
 
@@ -273,45 +291,21 @@ export const defineDocConfig = async (
 	};
 
 
-	for await (const [ , path ] of [ ...markdownCache.cache ]) {
-		const parsed = parse(path);
+	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const moduleId = createModuleIdFromPath(path);
-		const folderPath = parsed.dir.replace(root, '').replace(rootForwardSlash, '').slice(1);
-		const projectIndexPath = join(folderPath, parsed.name).replaceAll('\\', '/');
+		const fileName = parse(path).name + '.ts';
 
-		//#region Create the index file
-		const indexFile = join(parsed.dir, parsed.name + '.html');
-		await promises.writeFile(
-			indexFile,
-			indexPageTemplate({
-				title:        createComponentNameFromPath(path),
-				moduleId,
-				stylelinks,
-				scriptlinks,
-				darkModeLink,
-				lightModeLink,
-				componentTag: createComponentTagFromPath(path),
-				randomdata:   indexFile,
-			}),
-		);
-		//#endregion
+		await createIndexFile('./' + fileName, path);
 
+		const withoutExt = path.split(/\./).slice(0, -1).join('.');
+		const withoutRoot = withoutExt.replace(pRoot, '').replace(pRootForwardSlash, '');
 
-		//#region Add to routes
-		const routePath = projectIndexPath.replaceAll('\\', '/');
-		routes.push(routePath);
-		//#endregion
+		const fullScriptPath = join(pRoot, rootDir, libDir, withoutRoot) + '.ts';
+		const projectScriptPath = join(rootDir, libDir, withoutRoot) + '.ts';
+		await promises.writeFile(fullScriptPath, await createComponentFromMarkdown(path));
 
-
-		//#region Register as a multi page app entrypoint.
-		Object.assign(input, { [projectIndexPath]: indexFile });
-		//#endregion
-
-
-		//#region Create doc page code.
-		virtualMap.set(moduleId, await createComponentFromMarkdown(path));
-		//#endregion
-	}
+		aliases[moduleId] = projectScriptPath;
+	}));
 	//#endregion
 
 
@@ -332,71 +326,46 @@ export const defineDocConfig = async (
 			codeId:   path,
 			tag:      componentTag,
 			class:    componentClass,
-			code:     content,
+			code:     `const EditorComponent = (builder) => builder;\n` + content,
 		});
 
 		return component;
 	};
 
-
-	for await (const [ , path ] of [ ...editorCache.cache ]) {
-		const parsed = parse(path);
+	await Promise.all([ ...editorCache.cache ].map(async ([ , path ]) => {
 		const moduleId = createModuleIdFromPath(path);
-		const projectIndexPath = join(
-			parsed.dir
-				.replace(root, '')
-				.replace(rootForwardSlash, '')
-				.slice(1), parsed.name,
-		).replaceAll('\\', '/');
+		const fileName = parse(path).name + '.ts';
 
+		await createIndexFile('./' + fileName, path);
 
-		//#region Create the index file
-		const indexFile = join(parsed.dir, parsed.name + '.html');
-		await promises.writeFile(
-			indexFile,
-			indexPageTemplate({
-				title:        createComponentNameFromPath(path),
-				moduleId,
-				stylelinks,
-				scriptlinks,
-				darkModeLink,
-				lightModeLink,
-				componentTag: createComponentTagFromPath(path),
-				randomdata:   '',
-			}),
-		);
-		//#endregion
+		const withoutExt = path.split(/\./).slice(0, -1).join('.');
+		const withoutRoot = withoutExt.replace(pRoot, '').replace(pRootForwardSlash, '');
 
+		const fullScriptPath = join(pRoot, rootDir, libDir, withoutRoot) + '.ts';
+		const projectScriptPath = join(rootDir, libDir, withoutRoot) + '.ts';
+		await promises.writeFile(fullScriptPath, await createEditorFromFile(path));
 
-		//#region Add to routes
-		const routePath = projectIndexPath.replaceAll('\\', '/');
-		routes.push(routePath);
-		//#endregion
-
-
-		//#region Register as a multi page app entrypoint.
-		Object.assign(input, { [projectIndexPath]: indexFile });
-		//#endregion
-
-
-		//#region Create doc page code.
-		virtualMap.set(moduleId, await createEditorFromFile(path));
-		//#endregion
-	}
+		aliases[moduleId] = projectScriptPath;
+	}));
 	//#endregion
 
-
-	virtualMap.set(
-		'virtual:routes.ts',
+	await promises.writeFile(
+		join(pRoot, rootDir, libDir, 'routes.ts'),
 		`export default [ ${ routes.map(r => `'${ r }'`).join(',\n') } ]`,
 	);
+	aliases['alias:routes.js'] = '/' + join(rootDir, libDir, 'routes.ts').replaceAll('\\', '/');
+
 
 	const docConfig: UserConfigExport = {
 		appType: 'mpa',
 
-		root,
+		root: pRoot,
 
 		publicDir: 'public',
+
+		resolve: {
+			alias: aliases,
+		},
 
 		build: {
 			outDir,
@@ -404,10 +373,6 @@ export const defineDocConfig = async (
 			rollupOptions: {
 				input,
 			},
-		},
-
-		optimizeDeps: {
-			exclude: [ '@roenlie/mirage-docs' ],
 		},
 
 		plugins: [
@@ -418,15 +383,7 @@ export const defineDocConfig = async (
 					configResolved: (cfg) => {
 						config = cfg;
 					},
-					resolveId: (id) => {
-						if (virtualMap.has(id))
-							return id;
-					},
 					load: (id) => {
-						if (virtualMap.has(id))
-							return virtualMap.get(id);
-
-
 						/* if auto importer is being used, transform matching modules */
 						if (props.autoImport) {
 							const {
@@ -450,23 +407,19 @@ export const defineDocConfig = async (
 								return transformed;
 						}
 					},
-					transform(code, id) {
-						if (id.endsWith('.editor.ts')) {
-							code = `const EditorComponent = (builder) => builder;\n` + code;
-
-							return code;
-						}
-					},
 					async handleHotUpdate({ file, server }) {
 						if (!file.endsWith('.md'))
 							return;
 
-						const id = createModuleIdFromPath(file);
-						const module = server.moduleGraph.getModuleById(id);
+						const withoutExt = file.split(/\./).slice(0, -1).join('.');
+						const withoutRoot = withoutExt.replace(pRoot, '').replace(pRootForwardSlash, '');
+						const fullScriptPath = join(pRoot, rootDir, libDir, withoutRoot) + '.ts';
+
+						const module = server.moduleGraph.getModuleById(fullScriptPath.replaceAll('\\', '/'));
 
 						if (module) {
 							server.moduleGraph.invalidateModule(module);
-							virtualMap.set(id, await createComponentFromMarkdown(file));
+							await promises.writeFile(fullScriptPath, await createComponentFromMarkdown(file));
 
 							server.ws.send({
 								type: 'full-reload',

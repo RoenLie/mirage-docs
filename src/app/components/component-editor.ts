@@ -1,8 +1,8 @@
+import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { type IDisposable } from 'monaco-editor';
-import siteConfig from 'virtual:siteconfig.ts';
 
 import { monaco } from '../../build/helpers/monaco.js';
 import { unpkgReplace } from '../../build/helpers/unpkg-replace.js';

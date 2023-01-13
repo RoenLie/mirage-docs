@@ -1,14 +1,15 @@
+import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, PropertyValues, TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 import { FocusableElement, tabbable } from 'tabbable';
-import siteConfig from 'virtual:siteconfig.ts';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
 import { findActiveElement } from '../utilities/domquery.js';
 import { pathsToTree, TreeRecord } from '../utilities/paths-to-tree.js';
+import { trimHash } from '../utilities/trim-route-hash.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
 
@@ -71,7 +72,7 @@ export class MidocPathTreeCmp extends LitElement {
 	protected handleLinkClick = (ev: Event, route: string) => {
 		ev.preventDefault();
 
-		const hash = '#/' + route;
+		const hash = '#' + trimHash(route);
 		if (location.hash === hash)
 			return;
 
@@ -163,7 +164,7 @@ export class MidocPathTreeCmp extends LitElement {
 				<a
 					href=${ '/' + next }
 					tabindex="0"
-					@click=${ (ev: Event) => this.handleLinkClick(ev, next as string) }
+					@click=${ (ev: Event) => this.handleLinkClick(ev, '/' + next as string) }
 				>
 					${ dir }
 				</a>

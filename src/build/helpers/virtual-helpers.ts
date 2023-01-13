@@ -4,10 +4,10 @@ import { toPascalCase } from './to-pascal-case.js';
 import { toTagName } from './to-tag-name.js';
 
 
-export const createModuleIdFromPath = (path: string) => {
+export const createModuleIdFromPath = (path: string, prefix = 'alias:') => {
 	let fileInfo = parse(path);
 
-	return 'virtual:' + fileInfo.name
+	return prefix + fileInfo.name
 		.replaceAll('.', '-')
 		.replaceAll(' ', '-') + '.ts';
 };

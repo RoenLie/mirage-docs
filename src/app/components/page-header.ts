@@ -1,6 +1,6 @@
+import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import siteConfig from 'virtual:siteconfig.ts';
 
 import { toPascalCase } from '../../build/helpers/to-pascal-case.js';
 import { toWords } from '../../build/helpers/to-words.js';

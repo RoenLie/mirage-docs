@@ -89,6 +89,7 @@ export const componentStyles = css`
 		-moz-user-modify: read-write;
 		-webkit-user-modify: read-write;
 		overflow-wrap: break-word;
+		line-break: auto;
 		-webkit-line-break: after-white-space;
 		-webkit-user-select: auto;
 	}

@@ -1,12 +1,13 @@
 import './sidebar.cmp.js';
 
+import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
-import siteConfig from 'virtual:siteconfig.ts';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
+import { expandHash } from '../utilities/trim-route-hash.js';
 import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 
 
@@ -25,7 +26,6 @@ export class MiDocLayoutCmp extends LitElement {
 	protected transitionSet = new Set<Promise<void>>();
 	protected navClosedClass = 'nav--closed';
 	protected navStorageProp = 'midocNavClosed';
-	protected scrollStorageProp = 'midocScrollCache';
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
@@ -104,7 +104,7 @@ export class MiDocLayoutCmp extends LitElement {
 	};
 
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
-		const hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
+		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
 		if (this.activeFrame === hash)
 			return;
 
@@ -180,7 +180,7 @@ export class MiDocLayoutCmp extends LitElement {
 				heading=${ this.heading }
 			></midoc-sidebar>
 			<main>
-				<iframe src=${ this.activeFrame }></iframe>
+				<iframe src=${ this.activeFrame ? expandHash(this.activeFrame) : '' }></iframe>
 
 				${ when(this.loading, () => html`
 				<div class="loader">

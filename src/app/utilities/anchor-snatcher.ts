@@ -1,6 +1,7 @@
-export {};
+import { trimHash } from './trim-route-hash.js';
 
-const anchorSnatcher = (event: MouseEvent) => {
+
+const _anchorSnatcher = (event: MouseEvent) => {
 	const path = event.composedPath();
 
 	const anchor = path.find(el => el instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
@@ -9,7 +10,7 @@ const anchorSnatcher = (event: MouseEvent) => {
 
 		const route = new URL(anchor.href);
 		const path = route.pathname.replace('.md', '');
-		const hash = '#' + path;
+		const hash = trimHash('#' + path);
 
 		if (location.pathname !== path) {
 			const parent = globalThis.top;
@@ -23,12 +24,15 @@ const anchorSnatcher = (event: MouseEvent) => {
 				}
 			}
 		}
-		else if (location.hash !== route.hash) {
+		else {
 			globalThis.history.pushState({}, '', route.origin + route.pathname + route.hash);
 			globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
 		}
 	}
 };
 
-globalThis.removeEventListener('click', anchorSnatcher);
-globalThis.addEventListener('click', anchorSnatcher);
+
+export const anchorSnatcher = {
+	register:   () => globalThis.addEventListener('click', _anchorSnatcher),
+	unregister: () => globalThis.removeEventListener('click', _anchorSnatcher),
+};
