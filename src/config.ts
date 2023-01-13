@@ -367,6 +367,10 @@ export const defineDocConfig = async (
 			alias: aliases,
 		},
 
+		optimizeDeps: {
+			exclude: [ '@roenlie/mirage-docs' ],
+		},
+
 		build: {
 			outDir,
 			emptyOutDir:   true,
