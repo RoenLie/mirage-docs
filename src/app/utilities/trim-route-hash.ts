@@ -2,8 +2,8 @@ import siteConfig from 'alias:site-config.js';
 
 
 const trim = (string: string[]) => string.join('/').replaceAll('./', '/').replaceAll('//', '/').replaceAll('//', '/');
-const { rootDir, libDir, entryDir } = siteConfig?.internal ?? {};
-const prefix = trim([ rootDir, libDir, rootDir, entryDir ]);
+const { rootDir, libDir } = siteConfig?.internal ?? {};
+const prefix = trim([ rootDir, libDir ]);
 
 
 export const expandHash = (hash: string) => {

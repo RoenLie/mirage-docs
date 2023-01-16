@@ -13,6 +13,7 @@ import { createFileCache, FilePathCache } from './build/cache/create-file-cache.
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import type { AutoImportPluginProps } from './build/component/auto-import.types.js';
 import { createTagCache, getUsedTags } from './build/component/create-tag-cache.js';
+import { SiteConfig } from './build/config.types.js';
 import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
@@ -33,7 +34,7 @@ interface ConfigProperties {
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
 	input?: Record<string, string>;
 	autoImport?: AutoImportPluginProps;
-	siteConfig?: SiteConfig
+	siteConfig?: Partial<SiteConfig>
 }
 
 
@@ -55,11 +56,11 @@ export const defineDocConfig = async (
 	let markdownCache: FilePathCache = {} as any;
 	let editorCache: FilePathCache = {} as any;
 
-	siteConfig.internal          ??= {} as any;
-	siteConfig.internal.rootDir  ??= rootDir;
-	siteConfig.internal.entryDir ??= entryDir;
-	siteConfig.internal.libDir   ??= '.mirage';
-	const libDir = siteConfig.internal.libDir;
+	siteConfig.internal           ??= {} as any;
+	siteConfig.internal!.rootDir  ??= rootDir;
+	siteConfig.internal!.entryDir ??= entryDir;
+	siteConfig.internal!.libDir   ??= '.mirage';
+	const libDir = siteConfig.internal!.libDir;
 	const aliases: Record<string, string> = {};
 
 
@@ -68,11 +69,13 @@ export const defineDocConfig = async (
 	await promises.mkdir(dir, { recursive: true });
 	(await promises.readdir(dir)).forEach(f => rmSync(`${ dir }/${ f }`, { recursive: true }));
 
+
 	await Promise.all([
 		createTagCache({ directories: tagDirs }).then(cache => tagCache = cache),
 		createFileCache({ directories: [ { path: join(rootDir, entryDir), pattern: /\.editor\.ts/ } ] }).then(cache => editorCache = cache),
 		createFileCache({ directories: [ { path: join(rootDir, entryDir), pattern: /.md/ } ] }).then(cache => markdownCache = cache),
 	]);
+
 
 	manifestCache = createManifestCache(tagCache);
 	const routes: string[] = [];
@@ -88,6 +91,7 @@ export const defineDocConfig = async (
 	//#region create a tsconfig file for the cache folder.
 	await promises.writeFile(join(pRoot, rootDir, libDir, 'tsconfig.json'), tsconfigTemplate);
 	//#endregion
+
 
 	//#region create a d.ts file to make typescript happy inside the files.
 	await promises.writeFile(join(pRoot, rootDir, libDir, 'typings.d.ts'), typingsTemplate);
@@ -106,7 +110,12 @@ export const defineDocConfig = async (
 		});
 
 		//#region Create the index file
-		const cacheFolderPath = parsed.dir.replace(pRoot, '').replace(pRootForwardSlash, '').slice(1);
+		const cacheFolderPath = parsed.dir
+			.replace(pRoot, '')
+			.replace(pRootForwardSlash, '').slice(1)
+			.replace(rootDir.replace('./', ''), '')
+			.replace(entryDir.replace('./', ''), '');
+
 		const cacheIndexFile = join(pRoot, rootDir, libDir, cacheFolderPath, parsed.name + '.html');
 		const cacheIndexDir = join(...cacheIndexFile.split('\\').slice(0, -1));
 
@@ -298,10 +307,16 @@ export const defineDocConfig = async (
 		await createIndexFile('./' + fileName, path);
 
 		const withoutExt = path.split(/\./).slice(0, -1).join('.');
-		const withoutRoot = withoutExt.replace(pRoot, '').replace(pRootForwardSlash, '');
+		const withoutRoot = withoutExt
+			.replace(pRoot, '')
+			.replace(pRootForwardSlash, '');
 
-		const fullScriptPath = join(pRoot, rootDir, libDir, withoutRoot) + '.ts';
-		const projectScriptPath = join(rootDir, libDir, withoutRoot) + '.ts';
+		const withoutExtra = withoutRoot
+			.replace(rootDir.replace('./', ''), '')
+			.replace(entryDir.replace('./', ''), '');
+
+		const fullScriptPath = join(pRoot, rootDir, libDir, withoutExtra) + '.ts';
+		const projectScriptPath = join(rootDir, libDir, withoutExtra) + '.ts';
 		await promises.writeFile(fullScriptPath, await createComponentFromMarkdown(path));
 
 		aliases[moduleId] = projectScriptPath;
@@ -326,7 +341,7 @@ export const defineDocConfig = async (
 			codeId:   path,
 			tag:      componentTag,
 			class:    componentClass,
-			code:     `const EditorComponent = (builder) => builder;\n` + content,
+			code:     content,
 		});
 
 		return component;
@@ -339,15 +354,22 @@ export const defineDocConfig = async (
 		await createIndexFile('./' + fileName, path);
 
 		const withoutExt = path.split(/\./).slice(0, -1).join('.');
-		const withoutRoot = withoutExt.replace(pRoot, '').replace(pRootForwardSlash, '');
+		const withoutRoot = withoutExt
+			.replace(pRoot, '')
+			.replace(pRootForwardSlash, '');
 
-		const fullScriptPath = join(pRoot, rootDir, libDir, withoutRoot) + '.ts';
-		const projectScriptPath = join(rootDir, libDir, withoutRoot) + '.ts';
+		const withoutExtra = withoutRoot
+			.replace(rootDir.replace('./', ''), '')
+			.replace(entryDir.replace('./', ''), '');
+
+		const fullScriptPath = join(pRoot, rootDir, libDir, withoutExtra) + '.ts';
+		const projectScriptPath = join(rootDir, libDir, withoutExtra) + '.ts';
 		await promises.writeFile(fullScriptPath, await createEditorFromFile(path));
 
 		aliases[moduleId] = projectScriptPath;
 	}));
 	//#endregion
+
 
 	await promises.writeFile(
 		join(pRoot, rootDir, libDir, 'routes.ts'),
@@ -409,6 +431,13 @@ export const defineDocConfig = async (
 
 							if (transformed)
 								return transformed;
+						}
+					},
+					transform(code, id) {
+						if (id.endsWith('.editor.ts')) {
+							code = `const EditorComponent = (builder) => builder;\n` + code;
+
+							return code;
 						}
 					},
 					async handleHotUpdate({ file, server }) {

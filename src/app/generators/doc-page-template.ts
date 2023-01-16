@@ -25,7 +25,7 @@ export const docPageTemplate = (props: {
 
 		//#region properties
 		protected examples: Record<string, string> = ${ props.examples };
-		protected metadata: Record<string, string> = ${ props.metadata };
+		protected metadata: Record<string, any> = ${ props.metadata };
 		//#endregion
 
 		//#region template

@@ -1,7 +1,8 @@
+import { SiteConfig } from '../../build/config.types.js';
 import { stringDedent } from '../../build/helpers/string-dedent.js';
 
 
-export const siteConfigTemplate = (siteConfig?: SiteConfig) => stringDedent(`
+export const siteConfigTemplate = (siteConfig?: Partial<SiteConfig>) => stringDedent(`
 const styles = {
 	layout: \`${ siteConfig?.styles?.layout ?? '' }\`,
 	sidebar: \`${ siteConfig?.styles?.sidebar ?? '' }\`,
@@ -31,9 +32,9 @@ const links = {
 }
 
 const internal = {
-	libDir: \`${ siteConfig?.internal.libDir }\`,
-	rootDir: \`${ siteConfig?.internal.rootDir }\`,
-	entryDir: \`${ siteConfig?.internal.entryDir }\`,
+	libDir: \`${ siteConfig!.internal!.libDir }\`,
+	rootDir: \`${ siteConfig!.internal!.rootDir }\`,
+	entryDir: \`${ siteConfig!.internal!.entryDir }\`,
 }
 
 export default {
