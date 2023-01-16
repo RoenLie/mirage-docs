@@ -12,7 +12,7 @@ export const docPageTemplate = (props: {
 }) => stringDedent(`
 	import { css, html, LitElement, unsafeCSS } from 'lit';
 	import { customElement } from 'lit/decorators.js';
-	import { BaseDocElement } from '@roenlie/mirage-docs/dist/app/components/base-doc-element.js'
+	import { BaseDocElement } from '@roenlie/mirage-docs/dist/app/components/base-doc-element.js';
 	// injected imports
 	${ props.imports }
 

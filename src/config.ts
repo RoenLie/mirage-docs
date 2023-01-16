@@ -186,7 +186,7 @@ export const defineDocConfig = async (
 		const hoistExpression = /```typescript hoist\s+(.*?)```/gs;
 
 		content = content.replace(hoistExpression, (_, hoist) => {
-			imports.push(hoist);
+			imports.push((hoist + ';').replaceAll(';;', ';'));
 
 			return '';
 		});
@@ -219,7 +219,7 @@ export const defineDocConfig = async (
 
 		if (hasHeader) {
 			const importValue = '@roenlie/mirage-docs/dist/app/components/page-header.js';
-			imports.push(`import '${ importValue }'`);
+			imports.push(`import '${ importValue }';`);
 		}
 
 		return content;
@@ -250,7 +250,7 @@ export const defineDocConfig = async (
 		/* Only import the metadata viewer component if it is being used. */
 		if (!isEmptyObject(metadata)) {
 			const importValue = '@roenlie/mirage-docs/dist/app/components/metadata-viewer.js';
-			imports.push(`import '${ importValue }'`);
+			imports.push(`import '${ importValue }';`);
 		}
 
 		return content;
@@ -290,7 +290,7 @@ export const defineDocConfig = async (
 		/* only import the editor if it there are examples to be displayed. */
 		if (!isEmptyObject(examples)) {
 			const editorPath = '@roenlie/mirage-docs/dist/app/components/source-editor.js';
-			imports.push(`import '${ editorPath }'`);
+			imports.push(`import '${ editorPath }';`);
 		}
 
 		return {
