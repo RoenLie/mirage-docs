@@ -22,40 +22,6 @@ export const createMarkdownComponent = (
 	path: string,
 	content?: string,
 ) => {
-	const combineParts = async (path: string, content?: string) => {
-		if (!content)
-			content = await promises.readFile(path, { encoding: 'utf8' });
-
-		const imports: string[] = [];
-		const metadata: Record<string, Declarations> = {};
-
-		addUsedTags(content, imports);
-		content = addHoistedImports(content, imports);
-		content = addHeader(content, imports, metadata);
-		content = addMetadata(content, imports, metadata);
-		const examples = addEditors(content, imports, path);
-		content = examples.content;
-
-		content = docPageTemplate({
-			componentName: createComponentNameFromPath(path),
-			componentTag:  createComponentTagFromPath(path),
-			examples:      JSON.stringify(examples.examples, null, 3),
-			metadata:      JSON.stringify(metadata, null, 3),
-			hoisted:       '',
-			imports:       imports.join('\n'),
-			markdown:      markdownIt.render(content),
-		});
-
-		const preparedPath = DocPath.preparePath(projectRoot, path);
-		const targetLibPath = DocPath.targetLibDir(preparedPath, rootDir, entryDir, libDir, 'ts');
-
-		return {
-			path: targetLibPath,
-			content,
-		};
-	};
-
-
 	const addUsedTags = (content: string, imports: string[]) => {
 		/* save the matching tags to a set, to avoid duplicates */
 		const componentImportPaths = new Set<string>();
@@ -190,6 +156,40 @@ export const createMarkdownComponent = (
 
 		return {
 			examples,
+			content,
+		};
+	};
+
+
+	const combineParts = async (path: string, content?: string) => {
+		if (!content)
+			content = await promises.readFile(path, { encoding: 'utf8' });
+
+		const imports: string[] = [];
+		const metadata: Record<string, Declarations> = {};
+
+		addUsedTags(content, imports);
+		content = addHoistedImports(content, imports);
+		content = addHeader(content, imports, metadata);
+		content = addMetadata(content, imports, metadata);
+		const examples = addEditors(content, imports, path);
+		content = examples.content;
+
+		content = docPageTemplate({
+			componentName: createComponentNameFromPath(path),
+			componentTag:  createComponentTagFromPath(path),
+			examples:      JSON.stringify(examples.examples, null, 3),
+			metadata:      JSON.stringify(metadata, null, 3),
+			hoisted:       '',
+			imports:       imports.join('\n'),
+			markdown:      markdownIt.render(content),
+		});
+
+		const preparedPath = DocPath.preparePath(projectRoot, path);
+		const targetLibPath = DocPath.targetLibDir(preparedPath, rootDir, entryDir, libDir, 'ts');
+
+		return {
+			path: targetLibPath,
 			content,
 		};
 	};

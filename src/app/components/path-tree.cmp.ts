@@ -76,7 +76,7 @@ export class MidocPathTreeCmp extends LitElement {
 		if (location.hash === hash)
 			return;
 
-		history.pushState({}, '', '/' + hash);
+		history.pushState({}, '', hash);
 		dispatchEvent(new HashChangeEvent('hashchange'));
 	};
 

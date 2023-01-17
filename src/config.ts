@@ -18,7 +18,7 @@ export const defineDocConfig = async (
 	props: ConfigProperties,
 ) => {
 	let config: ResolvedConfig;
-	const { filesToCreate, tagCache, manifestCache, aliases } = await createDocFiles(props);
+	const { filesToCreate, tagCache, manifestCache, aliases } = await createDocFiles(pRoot, props);
 
 
 	await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {

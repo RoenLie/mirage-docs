@@ -9,7 +9,7 @@ export const DocPath = (() => {
 			const splitFilePath = normalize(absFilePath).split(path.sep);
 			const splitProjPath = normalize(absProjectPath).split(path.sep);
 
-			return path.sep + splitFilePath.slice(splitProjPath.length).join(path.sep);
+			return splitFilePath.slice(splitProjPath.length).join(path.sep);
 		},
 
 		targetLibDir: (preparedPath: string, rootDir: string, entryDir: string, libDir: string, extension: string) => {

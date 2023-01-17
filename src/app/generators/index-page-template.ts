@@ -24,7 +24,7 @@ export const indexPageTemplate = (props: {
 			l => `<script type="module" src="${ l }"></script>`,
 		).join('\n	') }
 
-		<script type="module">import "${ props.moduleId }";</script>
+		<script type="module" src="${ props.moduleId }"></script>
 	</head>
 	<body>
 		<${ props.componentTag }></${ props.componentTag }>

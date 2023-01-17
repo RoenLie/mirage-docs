@@ -108,6 +108,9 @@ export class MiDocLayoutCmp extends LitElement {
 		if (this.activeFrame === hash)
 			return;
 
+		console.log({ hash });
+
+
 		await this.updateComplete;
 
 		while (this.transitionSet.size)
