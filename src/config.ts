@@ -14,6 +14,7 @@ import { componentAutoImportLoad } from './build/component/auto-import.js';
 import type { AutoImportPluginProps } from './build/component/auto-import.types.js';
 import { createTagCache, getUsedTags } from './build/component/create-tag-cache.js';
 import { SiteConfig } from './build/config.types.js';
+import { genToArray, getFiles } from './build/helpers/get-files.js';
 import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
@@ -29,6 +30,7 @@ const outDir = resolve(resolve(), 'dist');
 
 
 interface ConfigProperties {
+	debug: boolean;
 	rootDir: string;
 	entryDir: string;
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
@@ -83,18 +85,33 @@ export const defineDocConfig = async (
 
 	//#region create a site component config.
 	let siteConfigContent = siteConfigTemplate(props.siteConfig);
+	const siteConfigFilePath = join(pRoot, rootDir, libDir, 'site-config.ts');
+
+	if (props.debug)
+		console.log('creating file:', siteConfigFilePath);
+
 	await promises.writeFile(join(pRoot, rootDir, libDir, 'site-config.ts'), siteConfigContent);
 	aliases['alias:site-config.js'] = '/' + join(rootDir, libDir, 'site-config.ts').replaceAll('\\', '/');
 	//#endregion
 
 
 	//#region create a tsconfig file for the cache folder.
-	await promises.writeFile(join(pRoot, rootDir, libDir, 'tsconfig.json'), tsconfigTemplate);
+	const tsconfigFilePath = join(pRoot, rootDir, libDir, 'tsconfig.json');
+
+	if (props.debug)
+		console.log('creating file:', tsconfigFilePath);
+
+	await promises.writeFile(tsconfigFilePath, tsconfigTemplate);
 	//#endregion
 
 
 	//#region create a d.ts file to make typescript happy inside the files.
-	await promises.writeFile(join(pRoot, rootDir, libDir, 'typings.d.ts'), typingsTemplate);
+	const typingsFilePath = join(pRoot, rootDir, libDir, 'typings.d.ts');
+
+	if (props.debug)
+		console.log('creating file:', typingsFilePath);
+
+	await promises.writeFile(typingsFilePath, typingsTemplate);
 	//#endregion
 
 
@@ -119,7 +136,14 @@ export const defineDocConfig = async (
 		const cacheIndexFile = join(pRoot, rootDir, libDir, cacheFolderPath, parsed.name + '.html');
 		const cacheIndexDir = join(...cacheIndexFile.split('\\').slice(0, -1));
 
+		if (props.debug)
+			console.log('creating directory:', cacheIndexDir);
+
 		await promises.mkdir(cacheIndexDir, { recursive: true });
+
+		if (props.debug)
+			console.log('creating file:', cacheIndexFile);
+
 		await promises.writeFile(cacheIndexFile, content);
 		//#endregion
 
@@ -317,6 +341,10 @@ export const defineDocConfig = async (
 
 		const fullScriptPath = join(pRoot, rootDir, libDir, withoutExtra) + '.ts';
 		const projectScriptPath = join(rootDir, libDir, withoutExtra) + '.ts';
+
+		if (props.debug)
+			console.log('creating file:', fullScriptPath);
+
 		await promises.writeFile(fullScriptPath, await createComponentFromMarkdown(path));
 
 		aliases[moduleId] = projectScriptPath;
@@ -364,6 +392,10 @@ export const defineDocConfig = async (
 
 		const fullScriptPath = join(pRoot, rootDir, libDir, withoutExtra) + '.ts';
 		const projectScriptPath = join(rootDir, libDir, withoutExtra) + '.ts';
+
+		if (props.debug)
+			console.log('creating file:', fullScriptPath);
+
 		await promises.writeFile(fullScriptPath, await createEditorFromFile(path));
 
 		aliases[moduleId] = projectScriptPath;
@@ -371,11 +403,24 @@ export const defineDocConfig = async (
 	//#endregion
 
 
-	await promises.writeFile(
-		join(pRoot, rootDir, libDir, 'routes.ts'),
-		`export default [ ${ routes.map(r => `'${ r }'`).join(',\n') } ]`,
-	);
+	//#region create the routes file
+	const routesFilePath = join(pRoot, rootDir, libDir, 'routes.ts');
+	const routesFileContent = `export default [ ${ routes.map(r => `'${ r }'`).join(',\n') } ]`;
+
+	if (props.debug)
+		console.log('creating file:', join(pRoot, rootDir, libDir, 'routes.ts'));
+
+	await promises.writeFile(routesFilePath, routesFileContent);
 	aliases['alias:routes.js'] = '/' + join(rootDir, libDir, 'routes.ts').replaceAll('\\', '/');
+	//#endregion
+
+
+	if (props.debug) {
+		console.log({
+			projectRoot: pRoot,
+			files:       await genToArray(getFiles('.')),
+		});
+	}
 
 
 	const docConfig: UserConfigExport = {
@@ -465,7 +510,5 @@ export const defineDocConfig = async (
 		],
 	};
 
-	const defaultConfig = defineConfig(viteConfig);
-
-	return deepmerge(docConfig, defaultConfig);
+	return deepmerge(docConfig, defineConfig(viteConfig));
 };

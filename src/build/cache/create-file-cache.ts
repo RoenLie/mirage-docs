@@ -1,6 +1,6 @@
 import Path from 'path';
 
-import { genToArray, getFiles } from '../helpers/get-external-paths.js';
+import { genToArray, getFiles } from '../helpers/get-files.js';
 
 
 export interface FilePathCache {

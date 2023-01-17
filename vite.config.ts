@@ -2,7 +2,7 @@ import { globby } from 'globby';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
-import { getAllExternalImportPaths } from './src/build/helpers/get-external-paths.js';
+import { getExternalImportPaths } from './src/build/helpers/get-external-paths.js';
 
 
 const root = resolve(resolve(), 'src');
@@ -10,9 +10,7 @@ const outDir = resolve(resolve(), 'dist');
 
 
 export default defineConfig(async () => {
-	const externalImportPaths = await getAllExternalImportPaths(
-		'./src',
-	);
+	const externalImportPaths = await getExternalImportPaths('./src');
 
 	return {
 		appType:   'mpa',
