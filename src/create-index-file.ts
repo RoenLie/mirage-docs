@@ -23,16 +23,11 @@ export const createIndexFile = (
 
 	const preparedPath = DocPath.preparePath(projectRoot, indexPath);
 	const targetLibPath = DocPath.targetLibDir(preparedPath, rootDir, entryDir, libDir, 'html');
-	let route = targetLibPath.replaceAll('\\', '/').replace('.html', '');
-	while (route.startsWith('/'))
-		route = route.slice(1);
 
 	return {
 		file: {
-			original: preparedPath,
-			path:     targetLibPath,
-			content:  content,
+			path:    targetLibPath,
+			content: content,
 		},
-		route,
 	};
 };

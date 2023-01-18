@@ -2,7 +2,7 @@ import { promises, readFileSync } from 'fs';
 import { dirname, join, normalize } from 'path';
 
 import { docPageTemplate } from './app/generators/doc-page-template.js';
-import { getUsedTags } from './build/component/create-tag-cache.js';
+import { getUsedTags } from './build/cache/create-tag-cache.js';
 import { DocPath } from './build/helpers/docpath.js';
 import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';

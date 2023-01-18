@@ -1,4 +1,3 @@
-import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
@@ -100,7 +99,7 @@ export class MiDocHeaderCmp extends LitElement {
 			color: var(--midoc-tertiary);
 		}
 		`,
-		unsafeCSS(siteConfig.styles.pageHeader),
+		unsafeCSS(window.miragedocs.siteConfig.styles.pageHeader),
 	];
 
 }

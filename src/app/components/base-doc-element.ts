@@ -1,41 +1,15 @@
-import siteConfig from 'alias:site-config.js';
 import { css, LitElement, unsafeCSS } from 'lit';
 
 import { componentStyles } from '../styles/component.styles.js';
 import { highlightjsStyles } from '../styles/highlightjs.styles.js';
 import { markdownStyles } from '../styles/markdown.styles.js';
 import { anchorSnatcher } from '../utilities/anchor-snatcher.js';
-import { subscribeToColorScheme } from '../utilities/color-subscription.js';
-
-
-subscribeToColorScheme({
-	darkModeLink:  siteConfig.links.darkTheme,
-	lightModeLink: siteConfig.links.lightTheme,
-});
+import { subscribeToColorChange } from '../utilities/color-subscription.js';
 
 
 export class BaseDocElement extends LitElement {
 
-	//#region properties
-	protected get colorScheme() {
-		return document.documentElement.getAttribute('color-scheme') ?? 'dark';
-	}
-	//#endregion
-
-
 	//#region observers
-	protected readonly documentElementObserver = (() => {
-		const obs = new MutationObserver((_mutations) => {
-			this.requestUpdate();
-		});
-		obs.observe(document.documentElement, {
-			attributes:      true,
-			attributeFilter: [ 'color-scheme' ],
-		});
-
-		return obs;
-	})();
-
 	protected resizeObserver = new ResizeObserver(([ entry ]) => {
 		const height = entry!.contentRect.height;
 
@@ -58,8 +32,8 @@ export class BaseDocElement extends LitElement {
 	//#region lifecycle
 	public override connectedCallback() {
 		super.connectedCallback();
-		document.documentElement.setAttribute('color-scheme', 'dark');
 
+		subscribeToColorChange(this);
 		this.insertFontLink();
 		this.resizeObserver.observe(this);
 
@@ -144,7 +118,7 @@ export class BaseDocElement extends LitElement {
 			font-family: var(--code-font);
 		}
 		`,
-		unsafeCSS(siteConfig?.styles.pageTemplate),
+		unsafeCSS(window.miragedocs.siteConfig?.styles.pageTemplate),
 	];
 	//#endregion
 

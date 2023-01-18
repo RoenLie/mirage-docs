@@ -3,8 +3,10 @@ import { promises } from 'fs';
 import { resolve, sep } from 'path';
 import { defineConfig, Plugin, ResolvedConfig, UserConfig, UserConfigExport } from 'vite';
 
+import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import { DocPath } from './build/helpers/docpath.js';
+import { stringDedent } from './build/helpers/string-dedent.js';
 import { ConfigProperties, createDocFiles } from './create-files.js';
 import { createMarkdownComponent } from './create-markdown-cmp.js';
 
@@ -18,12 +20,24 @@ export const defineDocConfig = async (
 	props: ConfigProperties,
 ) => {
 	let config: ResolvedConfig;
-	const { filesToCreate, tagCache, manifestCache, aliases } = await createDocFiles(pRoot, props);
+	const {
+		filesToCreate,
+		tagCache,
+		manifestCache,
+		siteconfigFilePath,
+	} = await createDocFiles(pRoot, props);
 
 
 	await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {
 		await promises.mkdir(path.split(sep).slice(0, -1).join(sep), { recursive: true });
+
+		if (props.debug)
+			console.log('Attempting to write file:', path);
+
 		await promises.writeFile(path, content);
+
+		if (props.debug)
+			console.log('Finished writing file:', path);
 	}));
 
 
@@ -34,13 +48,9 @@ export const defineDocConfig = async (
 
 		publicDir: 'public',
 
-		resolve: {
-			alias: aliases,
-		},
-
-		optimizeDeps: {
-			exclude: [ '@roenlie/mirage-docs' ],
-		},
+		//optimizeDeps: {
+		//	exclude: [ '@roenlie/mirage-docs' ],
+		//},
 
 		build: {
 			outDir,
@@ -57,6 +67,21 @@ export const defineDocConfig = async (
 
 					configResolved: (cfg) => {
 						config = cfg;
+					},
+					transformIndexHtml: (html) => {
+						return {
+							html,
+							tags: [
+								{
+									tag:   'script',
+									attrs: {
+										type: 'module',
+										src:  '/' + siteconfigFilePath.replaceAll('\\', '/'),
+									},
+									injectTo: 'head-prepend',
+								},
+							],
+						};
 					},
 					load: (id) => {
 						/* if auto importer is being used, transform matching modules */
@@ -96,7 +121,6 @@ export const defineDocConfig = async (
 						const preparedPath = DocPath.preparePath(pRoot, path);
 						const targetedPath = DocPath.targetLibDir(preparedPath, props.rootDir, props.entryDir, '.mirage', 'ts');
 						const resolvedTargetPath = resolve(targetedPath);
-
 						const module = server.moduleGraph.getModuleById(resolvedTargetPath.replaceAll('\\', '/'));
 
 						if (module) {

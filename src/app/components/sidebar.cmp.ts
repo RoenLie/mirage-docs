@@ -1,7 +1,5 @@
 import './path-tree.cmp.js';
 
-import routes from 'alias:routes.js';
-import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
@@ -19,14 +17,14 @@ export class MiDocSidebarCmp extends LitElement {
 	@property() public logo = '';
 	@property() public logoHeight = '';
 	@property() public heading = '';
-	@property({ type: Array }) public nameReplacements: [from: string, to: string][] = siteConfig.sidebar.nameReplacements;
+	@property({ type: Array }) public nameReplacements: [from: string, to: string][] = window.miragedocs.siteConfig.sidebar.nameReplacements!;
 	@state() protected toggleAllValue = false;
 	@state() protected toggleIndeterminate = false;
 	@state() protected filteredRoutes: string[] = [];
 	@query('midoc-path-tree') protected pathTreeQry: MidocPathTreeCmp;
 	protected scrollValue = 0;
 	protected searchValue = localStorage.getItem('midocSidebarSearch') ?? '';
-	protected allRoutes: string[] = routes;
+	protected allRoutes: string[] = window.miragedocs.routes;
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
@@ -125,13 +123,13 @@ export class MiDocSidebarCmp extends LitElement {
 			</div>
 
 			<div class="menu-actions">
-				<div>
+				<span class="toggle-wrapper">
 					<button class="toggle" @click=${ () => this.toggleAll() }>
 						${ this.toggleAllValue || this.toggleIndeterminate
 							? Icon(chevronDownIcon)
 							: Icon(chevronRightIcon) }
 					</button>
-				</div>
+				</span>
 
 				<input
 					class="search"
@@ -159,7 +157,7 @@ export class MiDocSidebarCmp extends LitElement {
 			overflow: hidden;
 			display: flex;
 			flex-flow: column nowrap;
-			gap: 2px;
+			gap: 8px;
 			overflow-y: auto;
 			overflow-x: hidden;
 			--scrollbar-width: 0px;
@@ -181,17 +179,20 @@ export class MiDocSidebarCmp extends LitElement {
 			font-size: 22px;
 			font-weight: 600;
 		}
-
-		${ buttonStyle('toggle', 30, 20) }
-
 		.menu-actions {
-			padding: 1rem 1rem;
 			white-space: nowrap;
 			display: flex;
 			place-items: center start;
 			gap: 8px;
+			padding-inline-start: 1rem;
+			padding-inline-end: 0.5rem;
 		}
+		.toggle-wrapper {
+			padding-inline-start: 4px
+		}
+		${ buttonStyle('toggle', 30, 20) }
 		${ inputStyle('search') }
+
 		.menu-wrapper {
 			padding-left: 1rem;
 			padding-right: 0.5rem;
@@ -201,7 +202,7 @@ export class MiDocSidebarCmp extends LitElement {
 			flex-flow: column nowrap;
 		}
 		`,
-		unsafeCSS(siteConfig.styles.sidebar),
+		unsafeCSS(window.miragedocs.siteConfig.styles.sidebar),
 	];
 
 }

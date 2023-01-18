@@ -1,5 +1,6 @@
 import { stringDedent } from '../../build/helpers/string-dedent.js';
 
+
 export const indexPageTemplate = (props: {
 	title: string;
 	moduleId: string;

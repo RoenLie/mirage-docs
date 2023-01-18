@@ -1,6 +1,6 @@
-import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, PropertyValues, TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 import { FocusableElement, tabbable } from 'tabbable';
@@ -19,6 +19,7 @@ export class MidocPathTreeCmp extends LitElement {
 	@property({ type: Array }) public paths: string[] = [];
 	@property({ type: Array }) public nameReplacements: [from: string, to: string][] = [];
 	@property() public delimiter = '_';
+	@property() public activeHref = '';
 	@state() protected groupState: Record<string, boolean> = {};
 	protected hierarchy: TreeRecord = {};
 
@@ -26,23 +27,26 @@ export class MidocPathTreeCmp extends LitElement {
 		super.connectedCallback();
 
 		this.addEventListener('keydown', this.handleKeydown);
+		window.addEventListener('hashchange', this.handleHashChange, { passive: true });
 
 		this.groupState = JSON.parse(localStorage.getItem('midocMenuState') ?? '{}');
-	}
 
-	protected override firstUpdated(properties: PropertyValues): void {
-		super.firstUpdated(properties);
+		setTimeout(async () => {
+			await this.updateComplete;
+			this.dispatchEvent(new CustomEvent('load', {
+				cancelable: false,
+				bubbles:    false,
+				composed:   false,
+			}));
 
-		this.dispatchEvent(new CustomEvent('load', {
-			cancelable: false,
-			bubbles:    false,
-			composed:   false,
-		}));
+			this.handleHashChange();
+		}, 0);
 	}
 
 	public override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.removeEventListener('keydown', this.handleKeydown);
+		window.removeEventListener('hashchange', this.handleHashChange);
 	}
 
 	protected override willUpdate(props: PropertyValues): void {
@@ -85,7 +89,17 @@ export class MidocPathTreeCmp extends LitElement {
 		this.dispatchEvent(new CustomEvent('toggle', { detail: { state: this.groupState } }));
 	};
 
+	protected handleHashChange = () => {
+		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
+		this.activeHref = hash;
+	};
+
 	protected handleKeydown = (ev: KeyboardEvent) => {
+		if (ev.code === 'Tab') {
+			this.setAttribute('inert', '');
+			setTimeout(() => this.removeAttribute('inert'), 0);
+		}
+
 		if (![ 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight' ].includes(ev.code))
 			return;
 
@@ -162,9 +176,10 @@ export class MidocPathTreeCmp extends LitElement {
 				typeof next === 'string',
 				() => html`
 				<a
-					href=${ '/' + next }
 					tabindex="0"
-					@click=${ (ev: Event) => this.handleLinkClick(ev, '/' + next as string) }
+					class   =${ classMap({ active: this.activeHref === trimHash(next as string) }) }
+					href    =${ '/' + next }
+					@click  =${ (ev: Event) => this.handleLinkClick(ev, next as string) }
 				>
 					${ dir }
 				</a>
@@ -246,9 +261,15 @@ export class MidocPathTreeCmp extends LitElement {
 			color: unset;
 			padding: 8px;
 		}
+		a.active {
+			background-color: var(--midoc-tertiary-active);
+		}
 		.heading:hover,
 		a:hover {
 			background-color: var(--midoc-tertiary-hover);
+		}
+		a:active {
+			background-color: var(--midoc-tertiary-press);
 		}
 		.heading:has(button:focus-visible),
 		a:focus-visible {
@@ -256,7 +277,7 @@ export class MidocPathTreeCmp extends LitElement {
 			outline-offset: -2px;
 		}
 		`,
-		unsafeCSS(siteConfig.styles.pathTree),
+		unsafeCSS(window.miragedocs.siteConfig.styles.pathTree),
 	];
 
 }

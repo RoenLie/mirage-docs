@@ -32,7 +32,7 @@ export const docPageTemplate = (props: {
 		public override render() {
 			return html\`
 				<div id="page-start" style="display:none;"></div>
-				<div class="markdown-body" color-scheme=\${ this.colorScheme }>
+				<div class="markdown-body">
 					${ props.markdown }
 				</div>
 			\`;

@@ -1,12 +1,13 @@
 import { join, resolve, sep } from 'path';
 
-import { routeTemplate } from './app/generators/route-template.js';
 import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { tsconfigTemplate } from './app/generators/tsconfig-template.js';
 import { typingsTemplate } from './app/generators/typings-template.js';
 import { createFileCache, FilePathCache } from './build/cache/create-file-cache.js';
+import { createTagCache } from './build/cache/create-tag-cache.js';
 import { AutoImportPluginProps } from './build/component/auto-import.types.js';
-import { createTagCache } from './build/component/create-tag-cache.js';
+import { SiteConfig } from './build/config.types.js';
+import { DocPath } from './build/helpers/docpath.js';
 import { createManifestCache } from './build/manifest/create-manifest-cache.js';
 import { Declarations } from './build/manifest/metadata.types.js';
 import { createEditorComponent } from './create-editor-cmp.js';
@@ -48,84 +49,68 @@ export const createDocFiles = async (
 	let editorCache:   FilePathCache = {} as any;
 
 	const libDir = props.siteConfig.internal!.libDir;
-	const aliases: Record<string, string> = {};
-	const routes: string[] = [];
 
 	/** Holds the path and content that will be created. */
 	const filesToCreate = new Map<string, string>();
 
-	const relativeRootDir  = '.\\' + props.rootDir;
 	const relativeLibDir   = '.\\' + join(props.rootDir, libDir);
 	const relativeEntryDir = '.\\' + join(props.rootDir, props.entryDir);
 
-	if (props.debug) {
-		console.log({
-			projectRoot,
-			relativeRootDir,
-			relativeLibDir,
-		});
-	}
 
+	// Cache all relevant files.
 	await Promise.all([
 		createTagCache({ directories: props.tagDirs }).then(cache => tagCache = cache),
+		createManifestCache({ directories: props.tagDirs }).then(cache => manifestCache = cache),
 		createFileCache({ directories: [ { path: relativeEntryDir, pattern: /\.editor\.ts/ } ] }).then(cache => editorCache = cache),
 		createFileCache({ directories: [ { path: relativeEntryDir, pattern: /.md/ } ] }).then(cache => markdownCache = cache),
 	]);
 
-	manifestCache = createManifestCache(tagCache);
 
+	//#region gather all route paths, as it needs to be injected into the index file.
+	const routes = [ ...markdownCache.cache, ...editorCache.cache ].map(([ , path ]) => {
+		const preparedPath = DocPath.preparePath(projectRoot, path);
+		const targetLibPath = DocPath.targetLibDir(preparedPath, props.rootDir, props.entryDir, libDir, 'html');
+		let route = targetLibPath.replaceAll('\\', '/').replace('.html', '');
+		while (route.startsWith('/'))
+			route = route.slice(1);
 
-	//#region create markdown routes
-	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
-		const { path: componentPath, content: componentContent } = await createMarkdownComponent(
-			projectRoot, tagCache, manifestCache, props.rootDir, props.entryDir, libDir, path,
-		);
-
-		filesToCreate.set(componentPath, componentContent);
-
-		const { file, route } = createIndexFile(
-			projectRoot, props.rootDir, props.entryDir, libDir,
-			props.siteConfig?.links?.styles ?? [],
-			props.siteConfig?.links?.scripts ?? [],
-			path,
-			'/' + componentPath.replaceAll('\\', '/'),
-		);
-
-		filesToCreate.set(file.path, file.content);
-
-		Object.assign(props.input ??= {}, {
-			[file.path.split(sep).at(-1)!]: file.path.replaceAll('\\', '/'),
-		});
-
-		routes.push(route);
-	}));
+		return route;
+	});
 	//#endregion
 
 
-	//#region create editor routes
-	await Promise.all([ ...editorCache.cache ].map(async ([ , path ]) => {
-		const { path: componentPath, content: componentContent } = await createEditorComponent(
-			projectRoot, props.rootDir, props.entryDir, libDir, path,
-		);
+	//#region fix any potential missing props in site config
+	props.siteConfig ??= {};
 
-		filesToCreate.set(componentPath, componentContent);
+	props.siteConfig.styles ??= {};
+	props.siteConfig.styles.layout ??= '';
+	props.siteConfig.styles.layout ??= '';
+	props.siteConfig.styles.sidebar ??= '';
+	props.siteConfig.styles.pathTree ??= '';
+	props.siteConfig.styles.metadata ??= '';
+	props.siteConfig.styles.cmpEditor ??= '';
+	props.siteConfig.styles.pageHeader ??= '';
+	props.siteConfig.styles.sourceEditor ??= '';
+	props.siteConfig.styles.pageTemplate ??= '';
 
-		const { file, route } = createIndexFile(
-			projectRoot, props.rootDir, props.entryDir, libDir,
-			props.siteConfig?.links?.styles ?? [],
-			props.siteConfig?.links?.scripts ?? [],
-			path,
-			'/' + componentPath.replaceAll('\\', '/'),
-		);
+	props.siteConfig.sidebar ??= {};
+	props.siteConfig.sidebar.nameReplacements ??= [
+		[ '.docs', '' ],
+		[ '.editor', ' Editor' ],
+		[ '-', ' ' ],
+	];
 
-		filesToCreate.set(file.path, file.content);
+	props.siteConfig.links ??= {};
+	props.siteConfig.links.styles ??= [];
+	props.siteConfig.links.scripts ??= [];
+	props.siteConfig.links.darkTheme ??= '';
+	props.siteConfig.links.darkTheme ??= '';
+	//#endregion
 
-		Object.assign(props.input ??= {}, {
-			[file.path.split(sep).at(-1)!]: file.path.replaceAll('\\', '/'),
-		});
 
-		routes.push(route);
-	}));
+	//#region create site config file
+	const siteconfigFilePath = join(relativeLibDir, 'siteconfig.ts');
+	filesToCreate.set(siteconfigFilePath, siteConfigTemplate(props.siteConfig, routes));
 	//#endregion
 
 
@@ -141,34 +126,60 @@ export const createDocFiles = async (
 	//#endregion
 
 
-	//#region create a site component config.
-	const siteConfigFilePath = join(relativeLibDir, 'site-config.ts');
-	const siteConfigContent = siteConfigTemplate(props.siteConfig);
+	//#region create markdown routes
+	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
+		const { path: componentPath, content: componentContent } = await createMarkdownComponent(
+			projectRoot, tagCache, manifestCache, props.rootDir, props.entryDir, libDir, path,
+		);
 
-	filesToCreate.set(siteConfigFilePath, siteConfigContent);
+		filesToCreate.set(componentPath, componentContent);
 
-	aliases['alias:site-config.js'] = join(projectRoot, props.rootDir, libDir, 'site-config.ts').replaceAll('\\', '/');
-	//#endregion
+		const { file } = createIndexFile(
+			projectRoot, props.rootDir, props.entryDir, libDir,
+			props.siteConfig?.links?.styles ?? [],
+			props.siteConfig?.links?.scripts ?? [],
+			path,
+			'/' + componentPath.replaceAll('\\', '/'),
+		);
 
+		filesToCreate.set(file.path, file.content);
 
-	//#region create the routes file
-	const routesFilePath = join(relativeLibDir, 'routes.ts');
-	filesToCreate.set(routesFilePath, routeTemplate(routes));
-
-	aliases['alias:routes.js'] = join(projectRoot, props.rootDir, libDir, 'routes.ts').replaceAll('\\', '/');
-	//#endregion
-
-
-	if (props.debug) {
-		filesToCreate.forEach((content, path) => {
-			console.log(path);
+		Object.assign(props.input ??= {}, {
+			[file.path.split(sep).at(-1)!]: file.path.replaceAll('\\', '/'),
 		});
-	}
+	}));
+	//#endregion
+
+
+	//#region create editor routes
+	await Promise.all([ ...editorCache.cache ].map(async ([ , path ]) => {
+		const { path: componentPath, content: componentContent } = await createEditorComponent(
+			projectRoot, props.rootDir, props.entryDir, libDir, path,
+		);
+
+		filesToCreate.set(componentPath, componentContent);
+
+		const { file } = createIndexFile(
+			projectRoot, props.rootDir, props.entryDir, libDir,
+			props.siteConfig?.links?.styles ?? [],
+			props.siteConfig?.links?.scripts ?? [],
+			path,
+			'/' + componentPath.replaceAll('\\', '/'),
+		);
+
+		filesToCreate.set(file.path, file.content);
+
+		Object.assign(props.input ??= {}, {
+			[file.path.split(sep).at(-1)!]: file.path.replaceAll('\\', '/'),
+		});
+	}));
+	//#endregion
+
 
 	return {
 		filesToCreate,
-		aliases,
 		tagCache,
 		manifestCache,
+		siteconfigFilePath,
 	};
 };

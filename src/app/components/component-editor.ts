@@ -1,4 +1,3 @@
-import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
@@ -92,7 +91,7 @@ export class EsComponentEditor extends EsSourceEditor {
 			border-top: 1px solid var(--midoc-surface-variant);
 		}
 		`,
-		unsafeCSS(siteConfig.styles.cmpEditor),
+		unsafeCSS(window.miragedocs.siteConfig.styles.cmpEditor),
 	];
 
 }

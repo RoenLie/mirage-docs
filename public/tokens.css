@@ -55,6 +55,7 @@
 	--midoc-tertiary-drag: rgba(162, 205, 218, 0.25);
 	--midoc-tertiary-press: rgba(162, 205, 218, 0.20);
 	--midoc-tertiary-hover: rgba(162, 205, 218, 0.15);
+	--midoc-tertiary-active: rgba(162, 205, 218, 0.10);
 
 	--midoc-on-tertiary-drag: rgba(3, 54, 64, 0.25);
 	--midoc-on-tertiary-press: rgba(3, 54, 64, 0.20);

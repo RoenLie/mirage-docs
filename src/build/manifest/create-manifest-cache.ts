@@ -1,11 +1,20 @@
+import { createTagCache } from '../cache/create-tag-cache.js';
 import { createManifest } from './create.js';
 import type { CustomElementManifest, Declarations } from './metadata.types.js';
 
 
-export const createManifestCache = (
+export const createManifestCache = async (options: {
+	directories: { path: string; whitelist?: RegExp[]; blacklist?: RegExp[] }[];
+	componentTagCache?: Map<string, string>;
+	tagCapturePatterns?: RegExp[];
+} | Map<string, string>) => {
 	/** Map of tag and path to where that component is declared */
-	tagCache: Map<string, string>,
-) => {
+	const tagCache = options instanceof Map ? options : await createTagCache({
+		directories:        options.directories,
+		componentTagCache:  options.componentTagCache,
+		tagCapturePatterns: options.tagCapturePatterns,
+	});
+
 	const paths = Array.from(tagCache).map(([ _, path ]) => path);
 
 	const manifest = createManifest(paths) as CustomElementManifest;

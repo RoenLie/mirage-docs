@@ -1,4 +1,3 @@
-import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, PropertyValues, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';
@@ -361,7 +360,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 			color: var(--midoc-tertiary);
 		}
 	`,
-		unsafeCSS(siteConfig.styles.metadata),
+		unsafeCSS(window.miragedocs.siteConfig.styles.metadata),
 	];
 	//#endregion
 

@@ -1,6 +1,6 @@
 import './sidebar.cmp.js';
+import '../types/globals.js';
 
-import siteConfig from 'alias:site-config.js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
@@ -44,13 +44,21 @@ export class MiDocLayoutCmp extends LitElement {
 		Object.assign(this.frameQry.style, { opacity: 1 });
 
 		const currentTheme = document.documentElement.getAttribute('color-scheme') ?? 'dark';
-		this.frameQry.contentDocument?.documentElement.setAttribute('color-scheme', currentTheme);
 
-		const frameWindow = this.frameQry.contentWindow;
-		if (frameWindow) {
-			const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
-			frameWindow.scrollTo(0, scrollVal);
-			frameWindow.addEventListener('scroll', this.handleFramePageScroll);
+		if (this.frameQry) {
+			const contentWindow   = this.frameQry.contentWindow;
+			const documentElement = this.frameQry.contentDocument?.documentElement;
+
+			if (documentElement)
+				documentElement.setAttribute('color-scheme', currentTheme);
+
+			if (contentWindow) {
+				contentWindow.updateColorScheme();
+
+				const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
+				contentWindow.scrollTo(0, scrollVal);
+				contentWindow.addEventListener('scroll', this.handleFramePageScroll);
+			}
 		}
 
 		this.loading = false;
@@ -108,9 +116,6 @@ export class MiDocLayoutCmp extends LitElement {
 		if (this.activeFrame === hash)
 			return;
 
-		console.log({ hash });
-
-
 		await this.updateComplete;
 
 		while (this.transitionSet.size)
@@ -140,8 +145,13 @@ export class MiDocLayoutCmp extends LitElement {
 		document.documentElement.setAttribute('color-scheme', nextTheme);
 		localStorage.setItem('midocColorScheme', nextTheme);
 
-		if (this.frameQry)
-			this.frameQry.contentDocument?.documentElement.setAttribute('color-scheme', nextTheme);
+		if (this.frameQry) {
+			const contentWindow   = this.frameQry.contentWindow;
+			const documentElement = this.frameQry.contentDocument?.documentElement;
+
+			documentElement?.setAttribute('color-scheme', nextTheme);
+			contentWindow?.updateColorScheme();
+		}
 
 		this.requestUpdate();
 	}
@@ -293,7 +303,7 @@ export class MiDocLayoutCmp extends LitElement {
 			border: none;
 		}
 		`,
-		unsafeCSS(siteConfig.styles.layout),
+		unsafeCSS(window.miragedocs.siteConfig.styles.layout),
 	];
 
 }

@@ -2,7 +2,7 @@ import { AnalyzePhaseParams, Plugin } from '@custom-elements-manifest/analyzer';
 import { create, litPlugin, ts } from '@custom-elements-manifest/analyzer/src/browser-entrypoint.js';
 import { readFileSync } from 'fs';
 
-import { getUsedTags } from '../component/create-tag-cache.js';
+import { getUsedTags } from '../cache/create-tag-cache.js';
 
 
 type Module = AnalyzePhaseParams['moduleDoc'];

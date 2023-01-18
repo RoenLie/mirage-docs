@@ -27,7 +27,7 @@ export const createEditorComponent = async (
 
 	content = editorPageTemplate({
 		editorId: '@roenlie/mirage-docs/dist/app/components/component-editor.js',
-		codeId:   targetLibPath.replaceAll('\\', '/'),
+		codeId:   '/' + targetLibPath.replaceAll('\\', '/'),
 		tag:      componentTag,
 		class:    componentClass,
 		code:     content,

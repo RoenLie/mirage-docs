@@ -1,4 +1,3 @@
-import siteConfig from 'alias:site-config.js';
 import { type TemplateResult, css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { DirectiveResult } from 'lit/directive.js';
@@ -315,7 +314,7 @@ export class EsSourceEditor extends LitElement {
 			border-radius: inherit;
 		}
 		`,
-		unsafeCSS(siteConfig.styles.sourceEditor),
+		unsafeCSS(window.miragedocs.siteConfig.styles.sourceEditor),
 	];
 	//#endregion
 
