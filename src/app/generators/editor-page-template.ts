@@ -1,32 +1,36 @@
+import { stringDedent } from '../../build/helpers/string-dedent.js';
+
 export const editorPageTemplate = (props: {
+	tag:      string;
+	code:     string;
+	class:    string;
+	codeId:   string;
 	editorId: string;
-	codeId: string;
-	tag: string;
-	class: string;
-	code: string;
-}) => `
-import '${ props.editorId }';
-import '${ props.codeId }';
-import { css, html, LitElement } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
+}) => stringDedent(`
+	import '${ props.editorId }';
+	import '${ props.codeId }';
+	import { css, html, LitElement } from 'lit';
+	import { customElement, property, query, state } from 'lit/decorators.js';
+	import { BaseDocElement } from '@roenlie/mirage-docs/dist/app/components/base-doc-element.js';
 
-@customElement('${ props.tag }')
-export class ${ props.class } extends LitElement {
 
-	protected content: string = \`${ props.code }\`;
+	@customElement('${ props.tag }')
+	export class ${ props.class } extends BaseDocElement {
 
-	public override render() {
-		return html\`
-			<docs-component-editor immediate .source=\${this.content}>
-			</docs-component-editor>
-		\`;
-	}
+		protected content: string = \`${ props.code }\`;
 
-	public static override styles = css\`
-		:host {
-			display: grid;
-			overflow: hidden;
+		public override render() {
+			return html\`
+				<docs-component-editor immediate .source=\${this.content}>
+				</docs-component-editor>
+			\`;
 		}
-	\`
-}
-`;
+
+		public static override styles = css\`
+			:host {
+				display: grid;
+				overflow: hidden;
+			}
+		\`
+	}
+`);

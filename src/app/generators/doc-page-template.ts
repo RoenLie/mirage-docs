@@ -2,13 +2,13 @@ import { stringDedent } from '../../build/helpers/string-dedent.js';
 
 
 export const docPageTemplate = (props: {
-	hoisted: string;
-	imports: string;
-	examples: string;
-	metadata: string;
-	markdown: string;
+	hoisted:       string;
+	imports:       string;
+	examples:      string;
+	metadata:      string;
+	markdown:      string;
+	componentTag:  string;
 	componentName: string;
-	componentTag: string;
 }) => stringDedent(`
 	import { css, html, LitElement, unsafeCSS } from 'lit';
 	import { customElement } from 'lit/decorators.js';

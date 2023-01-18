@@ -53,8 +53,8 @@ export const createDocFiles = async (
 	/** Holds the path and content that will be created. */
 	const filesToCreate = new Map<string, string>();
 
-	const relativeLibDir   = '.\\' + join(props.rootDir, libDir);
-	const relativeEntryDir = '.\\' + join(props.rootDir, props.entryDir);
+	const relativeLibDir   = '.' + sep + join(props.rootDir, libDir);
+	const relativeEntryDir = '.' + sep + join(props.rootDir, props.entryDir);
 
 
 	// Cache all relevant files.
@@ -62,11 +62,11 @@ export const createDocFiles = async (
 		createTagCache({ directories: props.tagDirs }).then(cache => tagCache = cache),
 		createManifestCache({ directories: props.tagDirs }).then(cache => manifestCache = cache),
 		createFileCache({ directories: [ { path: relativeEntryDir, pattern: /\.editor\.ts/ } ] }).then(cache => editorCache = cache),
-		createFileCache({ directories: [ { path: relativeEntryDir, pattern: /.md/ } ] }).then(cache => markdownCache = cache),
+		createFileCache({ directories: [ { path: relativeEntryDir, pattern: /\.md/ } ] }).then(cache => markdownCache = cache),
 	]);
 
 
-	//#region gather all route paths, as it needs to be injected into the index file.
+	//#region gather all route paths.
 	const routes = [ ...markdownCache.cache, ...editorCache.cache ].map(([ , path ]) => {
 		const preparedPath = DocPath.preparePath(projectRoot, path);
 		const targetLibPath = DocPath.targetLibDir(preparedPath, props.rootDir, props.entryDir, libDir, 'html');
