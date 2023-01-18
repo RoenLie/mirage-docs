@@ -63,25 +63,27 @@ export const defineDocConfig = async (
 		plugins: [
 			((): Plugin => {
 				return {
-					name: 'mirage-docs',
-
+					name:           'mirage-docs',
 					configResolved: (cfg) => {
 						config = cfg;
 					},
-					transformIndexHtml: (html) => {
-						return {
-							html,
-							tags: [
-								{
-									tag:   'script',
-									attrs: {
-										type: 'module',
-										src:  '/' + siteconfigFilePath.replaceAll('\\', '/'),
+					transformIndexHtml: {
+						order:   'pre',
+						handler: (html) => {
+							return {
+								html,
+								tags: [
+									{
+										tag:   'script',
+										attrs: {
+											type: 'module',
+											src:  '/' + siteconfigFilePath.replaceAll('\\', '/'),
+										},
+										injectTo: 'head-prepend',
 									},
-									injectTo: 'head-prepend',
-								},
-							],
-						};
+								],
+							};
+						},
 					},
 					load: (id) => {
 						/* if auto importer is being used, transform matching modules */
