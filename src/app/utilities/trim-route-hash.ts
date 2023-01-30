@@ -1,12 +1,28 @@
-const trim = (string: string[]) => string.join('/').replaceAll('./', '/').replaceAll('//', '/').replaceAll('//', '/');
+const trim = (string: string[]) => {
+	let trimmed = string.join('/').replaceAll('./', '/');
+	while (trimmed.includes('//'))
+		trimmed = trimmed.replaceAll('//', '/');
+
+	return trimmed;
+};
+
+
 const { rootDir, libDir } = window.miragedocs.siteConfig?.internal ?? {};
+
+
 const prefix = trim([ rootDir!, libDir! ]);
 
 
 export const expandHash = (hash: string) => {
-	return trim([ prefix, '/', hash ]);
+	hash = trim([ prefix, '/', hash ]);
+	hash = hash.slice([ ...hash ].findIndex(c => c !== '/'));
+
+	return hash;
 };
 
 export const trimHash = (hash: string) => {
-	return hash.replace(prefix, '');
+	hash = trim(hash.replace(prefix, '').split('/'));
+	hash = hash.slice([ ...hash ].findIndex(c => c !== '/'));
+
+	return hash;
 };

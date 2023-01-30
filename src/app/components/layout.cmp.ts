@@ -150,7 +150,7 @@ export class MiDocLayoutCmp extends LitElement {
 			const documentElement = this.frameQry.contentDocument?.documentElement;
 
 			documentElement?.setAttribute('color-scheme', nextTheme);
-			contentWindow?.updateColorScheme();
+			contentWindow?.updateColorScheme?.();
 		}
 
 		this.requestUpdate();

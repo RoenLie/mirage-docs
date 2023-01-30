@@ -76,11 +76,11 @@ export class MidocPathTreeCmp extends LitElement {
 	protected handleLinkClick = (ev: Event, route: string) => {
 		ev.preventDefault();
 
-		const hash = '#' + trimHash(route);
+		const hash = trimHash('#' + route);
 		if (location.hash === hash)
 			return;
 
-		history.pushState({}, '', hash);
+		history.pushState({}, '', '/' + hash);
 		dispatchEvent(new HashChangeEvent('hashchange'));
 	};
 
