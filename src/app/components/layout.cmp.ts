@@ -53,7 +53,7 @@ export class MiDocLayoutCmp extends LitElement {
 				documentElement.setAttribute('color-scheme', currentTheme);
 
 			if (contentWindow) {
-				contentWindow.updateColorScheme();
+				contentWindow?.updateColorScheme?.();
 
 				const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
 				contentWindow.scrollTo(0, scrollVal);
