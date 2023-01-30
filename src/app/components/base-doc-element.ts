@@ -9,6 +9,13 @@ import { subscribeToColorChange } from '../utilities/color-subscription.js';
 
 export class BaseDocElement extends LitElement {
 
+	//#region properties
+	public get colorScheme() {
+		return document.documentElement.getAttribute('color-scheme');
+	}
+	//#endregion
+
+
 	//#region observers
 	protected resizeObserver = new ResizeObserver(([ entry ]) => {
 		const height = entry!.contentRect.height;
