@@ -3,6 +3,7 @@ import hljs from 'highlight.js';
 import mdIt from 'markdown-it';
 import mdItAnchor from 'markdown-it-anchor';
 
+import { anchorEnhancePlugin } from './anchor-enhance-plugin.js';
 import { tabReplacePlugin } from './tab-replace-plugin.js';
 
 
@@ -26,4 +27,4 @@ export const markdownIt = mdIt({
 	permalink: mdItAnchor.permalink.headerLink(),
 }).use(tabReplacePlugin, {
 	tabWidth: 3,
-});
+}).use(anchorEnhancePlugin);

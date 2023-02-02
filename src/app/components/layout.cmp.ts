@@ -7,7 +7,7 @@ import { when } from 'lit/directives/when.js';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
-import { expandHash } from '../utilities/trim-route-hash.js';
+import { expandHash, trimHash } from '../utilities/trim-route-hash.js';
 import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 
 
@@ -17,12 +17,12 @@ export class MiDocLayoutCmp extends LitElement {
 	@property() public logo = '';
 	@property() public logoHeight = '';
 	@property() public heading = '';
-	@state() protected activeFrame = '';
 	@state() protected loading = false;
 	@query('iframe') protected frameQry: HTMLIFrameElement;
 	@query('midoc-sidebar') protected sidebarQry: LitElement;
 	@query('.scrollback') protected scrollbackQry: HTMLElement;
 
+	protected activeFrame = '';
 	protected transitionSet = new Set<Promise<void>>();
 	protected navClosedClass = 'nav--closed';
 	protected navStorageProp = 'midocNavClosed';
@@ -86,6 +86,11 @@ export class MiDocLayoutCmp extends LitElement {
 		if (hash) {
 			this.loading = true;
 			this.activeFrame = hash + '.html';
+
+			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
+			frame.src = expandHash(this.activeFrame);
+
+			this.frameQry.replaceWith(frame);
 			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
 		}
 		else {
@@ -113,6 +118,14 @@ export class MiDocLayoutCmp extends LitElement {
 
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
 		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
+		if (!hash) {
+			hash = window.miragedocs.routes[0] ?? '';
+			history.pushState({}, '', '#/' + trimHash(hash));
+			dispatchEvent(new HashChangeEvent('hashchange'));
+
+			return;
+		}
+
 		if (this.activeFrame === hash)
 			return;
 

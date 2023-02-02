@@ -91,7 +91,7 @@ export class MidocPathTreeCmp extends LitElement {
 
 	protected handleHashChange = () => {
 		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
-		this.activeHref = hash;
+		this.activeHref = hash.slice(Array.from(hash).findIndex(c => c !== '/'));
 	};
 
 	protected handleKeydown = (ev: KeyboardEvent) => {
