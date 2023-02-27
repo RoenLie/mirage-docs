@@ -1,4 +1,5 @@
 import './sidebar.cmp.js';
+import './global-search.cmp.js';
 import '../types/globals.js';
 
 import { css, html, LitElement, unsafeCSS } from 'lit';
@@ -206,29 +207,43 @@ export class MiDocLayoutCmp extends LitElement {
 				heading=${ this.heading }
 			></midoc-sidebar>
 			<main>
-				<iframe src=${ this.activeFrame ? expandHash(this.activeFrame) : '' }></iframe>
+				<div class="header">
+					<div class="start">
+						<div class="nav-toggle">
+							<button class="toggle" @click=${ () => this.handleNavToggle() }>
+								${ Icon(listIcon) }
+							</button>
+						</div>
+					</div>
+
+					<div class="middle">
+						<div class="global-search">
+							<docs-global-search></docs-global-search>
+						</div>
+					</div>
+
+					<div class="end">
+						<div class="theme-toggle">
+							<button class="toggle" @click=${ () => this.handleColorSchemeToggle() }>
+							${ document.documentElement.getAttribute('color-scheme') === 'light'
+								? Icon(sunIcon)
+								: Icon(moonIcon)
+							}
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<section>
+					<iframe src=${ this.activeFrame ? expandHash(this.activeFrame) : '' }></iframe>
+				</section>
 
 				${ when(this.loading, () => html`
-				<div class="loader">
-					${ Icon(spinningCircleIcon) }
-				</div>
-				`) }
+					<div class="loader">
+						${ Icon(spinningCircleIcon) }
+					</div>
+					`) }
 			</main>
-
-			<div class="nav-toggle">
-				<button class="toggle" @click=${ () => this.handleNavToggle() }>
-					${ Icon(listIcon) }
-				</button>
-			</div>
-
-			<div class="theme-toggle">
-				<button class="toggle" @click=${ () => this.handleColorSchemeToggle() }>
-					${ document.documentElement.getAttribute('color-scheme') === 'light'
-						? Icon(sunIcon)
-						: Icon(moonIcon)
-					}
-				</button>
-			</div>
 
 			<div class="scrollback">
 				<button class="toggle" @click=${ () => this.handleScrollback() }>
@@ -251,11 +266,15 @@ export class MiDocLayoutCmp extends LitElement {
 			color: var(--midoc-on-background);
 			overflow: hidden;
 		}
-		${ buttonStyle('toggle', 50, 28) }
+		.header {
+			display: grid;
+			grid-template-columns: auto 1fr auto;
+			grid-template-rows: auto;
+		}
+		${ buttonStyle('toggle', 40, 24) }
 		.nav-toggle,
 		.theme-toggle,
 		.scrollback {
-			position: fixed;
 			margin: 8px 12px;
 			backdrop-filter: blur(1px);
 			border-radius: 999px;
@@ -266,18 +285,14 @@ export class MiDocLayoutCmp extends LitElement {
 			outline: 2px solid var(--midoc-tertiary-hover);
 			outline-offset: -2px;
 		}
-		.theme-toggle {
-			top: 0;
-			right: 0;
-		}
 		.scrollback {
+			position: fixed;
 			bottom: 25px;
 			right: 20px;
 		}
 		.hidden {
 			display: none;
 		}
-
 		.loader {
 			position: absolute;
 			place-self: center;
@@ -288,26 +303,25 @@ export class MiDocLayoutCmp extends LitElement {
 			border-radius: 8px;
 			background-color: var(--midoc-background);
 		}
-
 		:host(.nav--closed) midoc-sidebar {
 			width: 0vw;
 		}
-
 		midoc-sidebar {
 			transition: width 0.3s ease;
 			width: 250px;
 			grid-area: sidebar;
 			border-right: 1px solid var(--midoc-surface-variant);
 		}
-
 		main {
 			position: relative;
 			grid-area: frame;
 			display: grid;
-			grid-template-rows: 1fr;
+			grid-template-rows: auto 1fr;
 			grid-template-columns: 1fr;
 		}
-
+		section {
+			display: grid;
+		}
 		iframe {
 			transition: opacity 0.2s linear;
 			opacity: 1;

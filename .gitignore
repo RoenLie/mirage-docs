@@ -8,3 +8,5 @@ node_modules
 .env.test
 .cache
 dist
+.mirage
+*/**/.mirage

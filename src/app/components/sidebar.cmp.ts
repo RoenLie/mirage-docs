@@ -123,6 +123,12 @@ export class MiDocSidebarCmp extends LitElement {
 			</div>
 
 			<div class="menu-actions">
+				<input
+					class="search"
+					type="search"
+					.value=${ this.searchValue }
+					@input=${ this.handleSearchInput }
+				/>
 				<span class="toggle-wrapper">
 					<button class="toggle" @click=${ () => this.toggleAll() }>
 						${ this.toggleAllValue || this.toggleIndeterminate
@@ -130,13 +136,6 @@ export class MiDocSidebarCmp extends LitElement {
 							: Icon(chevronRightIcon) }
 					</button>
 				</span>
-
-				<input
-					class="search"
-					type="search"
-					.value=${ this.searchValue }
-					@input=${ this.handleSearchInput }
-				/>
 			</div>
 
 			<div class="menu-wrapper">
@@ -163,17 +162,18 @@ export class MiDocSidebarCmp extends LitElement {
 			--scrollbar-width: 0px;
 			--scrollbar-height: 0px;
 		}
-		picture {
-			display: grid;
-		}
 		.greeting {
 			display: grid;
 			place-items: center;
-			grid-auto-columns: min-content;
-			grid-auto-rows: min-content;
+			grid-auto-flow: column;
+			grid-auto-columns: max-content;
+			gap: 8px;
 			padding-block: 16px;
-			padding-left: 74px;
+			padding-inline: 1rem 0.5rem;
 			color: var(--midoc-on-surface-variant);
+		}
+		.greeting picture {
+			display: grid;
 		}
 		.greeting .title {
 			font-size: 22px;
@@ -183,12 +183,13 @@ export class MiDocSidebarCmp extends LitElement {
 			white-space: nowrap;
 			display: flex;
 			place-items: center start;
+			justify-content: space-between;
 			gap: 8px;
 			padding-inline-start: 1rem;
 			padding-inline-end: 0.5rem;
 		}
 		.toggle-wrapper {
-			padding-inline-start: 4px
+			padding-inline-end: 4px
 		}
 		${ buttonStyle('toggle', 30, 20) }
 		${ inputStyle('search') }

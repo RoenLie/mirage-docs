@@ -7,7 +7,7 @@ const trim = (string: string[]) => {
 };
 
 
-const { rootDir, libDir } = window.miragedocs.siteConfig?.internal ?? {};
+const { rootDir, libDir } = globalThis.miragedocs.siteConfig?.internal ?? {};
 
 
 const prefix = trim([ rootDir!, libDir! ]);

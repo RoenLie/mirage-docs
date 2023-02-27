@@ -13,10 +13,9 @@ export default defineConfig(async () => {
 	const externalImportPaths = await getExternalImportPaths('./src');
 
 	return {
-		appType:   'mpa',
+		appType: 'mpa',
 		root,
-		publicDir: '../public',
-		worker:    {
+		worker:  {
 			rollupOptions: {
 				output: {
 					entryFileNames: (entry) => `workers/${ entry.name }.js`,

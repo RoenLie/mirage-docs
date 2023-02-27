@@ -1,3 +1,6 @@
+import { create } from '@lyrasearch/lyra';
+import { defaultHtmlSchema, populate } from '@lyrasearch/plugin-parsedoc';
+import { promises } from 'fs';
 import { join, resolve, sep } from 'path';
 
 import { siteConfigTemplate } from './app/generators/site-config-template.js';
@@ -8,6 +11,7 @@ import { createTagCache } from './build/cache/create-tag-cache.js';
 import { AutoImportPluginProps } from './build/component/auto-import.types.js';
 import { SiteConfig } from './build/config.types.js';
 import { DocPath } from './build/helpers/docpath.js';
+import { trim, trimHash } from './build/helpers/string.js';
 import { createManifestCache } from './build/manifest/create-manifest-cache.js';
 import { Declarations } from './build/manifest/metadata.types.js';
 import { createEditorComponent } from './create-editor-cmp.js';
@@ -126,6 +130,24 @@ export const createDocFiles = async (
 	//#endregion
 
 
+	//#region create lyra search indexes.
+	const lyraDb = await create({ schema: defaultHtmlSchema });
+
+	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
+		const content = await promises.readFile(path, { encoding: 'utf8' });
+
+		const preparedPath = DocPath.preparePath(projectRoot, path);
+		const targetLibPath = DocPath.targetLibDir(preparedPath, props.rootDir, props.entryDir, libDir, 'html');
+		let route = targetLibPath.replaceAll('\\', '/').replace('.html', '');
+		route = trimHash(trim([ props.rootDir, libDir ]), route);
+
+		await populate(lyraDb, content, 'md', { basePath: route + ':' });
+	}));
+
+
+	//#endregion
+
+
 	//#region create markdown routes
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const { path: componentPath, content: componentContent } = await createMarkdownComponent(
@@ -181,5 +203,6 @@ export const createDocFiles = async (
 		tagCache,
 		manifestCache,
 		siteconfigFilePath,
+		lyraDb,
 	};
 };

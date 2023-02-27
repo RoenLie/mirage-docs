@@ -187,14 +187,14 @@ export class MidocPathTreeCmp extends LitElement {
 				() => html`
 				<div class="group">
 					<div class="heading" @click=${ () => this.handleToggleClick(dir) }>
+						<label>
+							${ dir }
+						</label>
 						<button class="toggle" data-collapsed=${ !this.groupState[dir] }>
 							${ this.groupState[dir]
 								? Icon(chevronDownIcon)
 								: Icon(chevronRightIcon) }
 						</button>
-						<label>
-							${ dir }
-						</label>
 					</div>
 					<div class="items">
 						${ when(
@@ -234,6 +234,7 @@ export class MidocPathTreeCmp extends LitElement {
 			display: flex;
 			flex-flow: row nowrap;
 			align-items: center;
+			justify-content: space-between;
 			gap: 8px;
 			font-size: 16px;
 			font-weight: 600;
@@ -243,7 +244,7 @@ export class MidocPathTreeCmp extends LitElement {
 			font-size: 14px;
 			display: flex;
 			flex-flow: column nowrap;
-			padding-left: 8px;
+			padding-left: 16px;
 		}
 		.heading,
 		a {
@@ -254,7 +255,13 @@ export class MidocPathTreeCmp extends LitElement {
 		.heading {
 			padding: 4px;
 		}
+		.heading label {
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
 		a {
+			overflow: hidden;
 			white-space: nowrap;
 			text-overflow: ellipsis;
 			text-decoration: none;

@@ -65,7 +65,7 @@ export class EsComponentEditor extends EsSourceEditor {
 			this.content = html``;
 			await this.updateComplete;
 			this.content = html`
-			<es-editor-scratchpad .mixins=${ mixins }></es-editor-scratchpad>
+			<docs-editor-scratchpad .mixins=${ mixins }></docs-editor-scratchpad>
 			`;
 		}
 		catch (error) {
@@ -97,7 +97,7 @@ export class EsComponentEditor extends EsSourceEditor {
 }
 
 
-@customElement('es-editor-scratchpad')
+@customElement('docs-editor-scratchpad')
 export class EsEditorScratchpad extends LitElement {
 
 	@property({ type: Object, attribute: false }) public mixins: {

@@ -3,15 +3,20 @@ import { stringDedent } from '../../build/helpers/string-dedent.js';
 
 
 export const siteConfigTemplate = (siteConfig: Partial<SiteConfig>, routes: string[]) => stringDedent(`
-//@ts-ignore
+export {};
+
+declare global {
+	var miragedocs: any;
+}
+
 window.miragedocs ??= {};
-//@ts-ignore
+
 Object.assign(window.miragedocs, {
 	siteConfig: ${ JSON.stringify(siteConfig, null, 3) },
 	routes: ${ JSON.stringify(routes, null, 3) }
 });
 
-const deepFreeze = (object) => {
+const deepFreeze = (object: Record<keyof any, any>) => {
 	// Retrieve the property names defined on object
 	const propNames = Reflect.ownKeys(object);
 

@@ -7,9 +7,15 @@
 		"incremental": false,
 		"types": [
 			"vite/client",
-			"sharedworker",
 			"node",
-		]
+			"sharedworker"
+		],
+		"lib": [
+			"ESNext",
+			"DOM",
+			"DOM.Iterable",
+			"webworker"
+		],
 	},
 	"include": [
 		"./src/**/*.ts",

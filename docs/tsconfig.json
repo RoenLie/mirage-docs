@@ -1,0 +1,20 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"rootDir": ".",
+		"baseUrl": ".",
+		"noEmit": true,
+		"emitDeclarationOnly": false,
+		"incremental": false,
+		"types": [
+			"vite/client",
+			"sharedworker",
+			"node",
+		]
+	},
+	"include": [
+		"./**/*.ts",
+		"./**/*.js",
+	],
+	"exclude": []
+}

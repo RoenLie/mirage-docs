@@ -9,10 +9,6 @@
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": true
 	},
-	"emmet.includeLanguages": {
-		"typescript": "html",
-		"javascript": "html"
-	},
 	"editor.detectIndentation": false,
 	"editor.insertSpaces": false,
 	"eslint.run": "onSave",

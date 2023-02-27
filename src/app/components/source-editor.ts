@@ -1,4 +1,4 @@
-import { type TemplateResult, css, html, LitElement, unsafeCSS } from 'lit';
+import { css, html, LitElement, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { DirectiveResult } from 'lit/directive.js';
 import type { UnsafeHTMLDirective } from 'lit/directives/unsafe-html.js';

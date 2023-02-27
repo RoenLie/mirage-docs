@@ -1,12 +1,12 @@
+import { persistToFile } from '@lyrasearch/plugin-data-persistence';
 import { deepmerge } from 'deepmerge-ts';
 import { promises } from 'fs';
-import { resolve, sep } from 'path';
-import { defineConfig, Plugin, ResolvedConfig, UserConfig, UserConfigExport } from 'vite';
+import { join, resolve, sep } from 'path';
+import copy from 'rollup-plugin-copy';
+import { defineConfig, Plugin, ResolvedConfig, UserConfig } from 'vite';
 
-import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import { DocPath } from './build/helpers/docpath.js';
-import { stringDedent } from './build/helpers/string-dedent.js';
 import { ConfigProperties, createDocFiles } from './create-files.js';
 import { createMarkdownComponent } from './create-markdown-cmp.js';
 
@@ -25,34 +25,14 @@ export const defineDocConfig = async (
 		tagCache,
 		manifestCache,
 		siteconfigFilePath,
+		lyraDb,
 	} = await createDocFiles(pRoot, props);
 
-
-	await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {
-		await promises.mkdir(path.split(sep).slice(0, -1).join(sep), { recursive: true });
-
-		if (props.debug)
-			console.log('Attempting to write file:', path);
-
-		await promises.writeFile(path, content);
-
-		if (props.debug)
-			console.log('Finished writing file:', path);
-	}));
-
-
-	const docConfig: UserConfigExport = {
-		appType: 'mpa',
-
-		root: pRoot,
-
+	const docConfig: UserConfig = {
+		appType:   'mpa',
+		root:      pRoot,
 		publicDir: 'public',
-
-		//optimizeDeps: {
-		//	exclude: [ '@roenlie/mirage-docs' ],
-		//},
-
-		build: {
+		build:     {
 			outDir,
 			emptyOutDir:   true,
 			rollupOptions: {
@@ -151,5 +131,36 @@ export const defineDocConfig = async (
 		],
 	};
 
-	return deepmerge(docConfig, defineConfig(viteConfig));
+	const mergedConfig = deepmerge(docConfig, defineConfig(viteConfig)) as UserConfig;
+
+	mergedConfig.plugins?.push(
+		copy({
+			targets: [
+				{
+					src:  './node_modules/@roenlie/mirage-docs/dist/workers',
+					dest: mergedConfig.publicDir || '/public',
+				},
+			],
+			hook:     'config',
+			copyOnce: true,
+		}) as any,
+	);
+
+	// Write the mirage files to mirage disc location.
+	await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {
+		await promises.mkdir(path.split(sep).slice(0, -1).join(sep), { recursive: true });
+
+		if (props.debug)
+			console.log('Attempting to write file:', path);
+
+		await promises.writeFile(path, content);
+
+		if (props.debug)
+			console.log('Finished writing file:', path);
+	}));
+
+	// Write the search index file to public disc folder.
+	await persistToFile(lyraDb, 'json', join(mergedConfig.publicDir || '', 'searchIndexes.json'));
+
+	return mergedConfig as ReturnType<typeof defineConfig>;
 };
