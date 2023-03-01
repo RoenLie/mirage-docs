@@ -217,7 +217,7 @@ export class MidocPathTreeCmp extends LitElement {
 	public static override styles = [
 		componentStyles,
 		css`
-		${ buttonStyle('toggle', 30, 20) }
+		${ buttonStyle('button.toggle', 30, 20) }
 		button.toggle:hover::after {
 			display: none;
 		}

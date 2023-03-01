@@ -1,9 +1,9 @@
 import { css, unsafeCSS } from 'lit';
 
 export const inputStyle = (
-	className: string,
+	selector: string,
 ) => css`
-input.${ unsafeCSS(className) } {
+${ unsafeCSS(selector) } {
 	all: unset;
 	display: grid;
 	width: 100%;

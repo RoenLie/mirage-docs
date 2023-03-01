@@ -143,8 +143,6 @@ export const createDocFiles = async (
 
 		await populate(lyraDb, content, 'md', { basePath: route + ':' });
 	}));
-
-
 	//#endregion
 
 

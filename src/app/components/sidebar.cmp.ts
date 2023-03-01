@@ -191,8 +191,8 @@ export class MiDocSidebarCmp extends LitElement {
 		.toggle-wrapper {
 			padding-inline-end: 4px
 		}
-		${ buttonStyle('toggle', 30, 20) }
-		${ inputStyle('search') }
+		${ buttonStyle('button.toggle', 30, 20) }
+		${ inputStyle('input.search') }
 
 		.menu-wrapper {
 			padding-left: 1rem;

@@ -1,12 +1,12 @@
 import { css, unsafeCSS } from 'lit';
 
 export const buttonStyle = (
-	className: string,
+	selector: string,
 	dim: number,
 	font: number,
 	shape: 'sharp' | 'pill' = 'pill',
 ) => css`
-button.${ unsafeCSS(className) } {
+${ unsafeCSS(selector) } {
 	all: unset;
 	cursor: pointer;
 	width: ${ dim }px;
@@ -17,7 +17,7 @@ button.${ unsafeCSS(className) } {
 	position: relative;
 	border-radius: ${ shape === 'pill' ? 999 : 8 }px;
 }
-button.${ unsafeCSS(className) }:hover::after {
+${ unsafeCSS(selector) }:hover::after {
 	content: '';
 	position: absolute;
 	inset: 0;
