@@ -14,7 +14,7 @@ export class EsComponentEditor extends EsSourceEditor {
 
 	public override maxHeight = Infinity;
 	protected override editorLang = 'typescript' as const;
-	protected tsWorker: SharedWorker;
+	protected tsWorker: Worker;
 	protected languageDisposable: IDisposable[] = [];
 
 	public override async firstUpdated(): Promise<void> {
@@ -22,13 +22,12 @@ export class EsComponentEditor extends EsSourceEditor {
 			(await monaco).languages.typescript.typescriptDefaults.addExtraLib(editorCmpTypes),
 		);
 
-		this.tsWorker = new SharedWorker(
+		this.tsWorker = new Worker(
 			new URL('../workers/typescript-worker.ts', import.meta.url),
 			{ type: 'module' },
 		);
 
-		this.tsWorker.port.addEventListener('message', this.handleWorkerResponse);
-		this.tsWorker.port.start();
+		this.tsWorker.onmessage = this.handleWorkerResponse;
 
 		await super.firstUpdated();
 	}
@@ -36,7 +35,7 @@ export class EsComponentEditor extends EsSourceEditor {
 	public override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.languageDisposable.forEach(d => d.dispose());
-		this.tsWorker.port.close();
+		this.tsWorker.terminate();
 	}
 
 	protected override updateHeight() {
@@ -46,12 +45,19 @@ export class EsComponentEditor extends EsSourceEditor {
 		this.editor?.layout({ width: editorWidth, height: contentHeight });
 	}
 
+	protected override handleSlotChange() {
+		super.handleSlotChange();
+		this.source = this.source.replace(
+			`import { editorComponent } from '@roenlie/mirage-docs';`, '',
+		).trim();
+	}
+
 	protected override async execute() {
 		let content = this.editor.getValue();
-		content = `const EditorComponent = (builder) => builder;\n` + content;
+		content = `const editorComponent = (builder) => builder;\n` + content;
 
 		const js = unpkgReplace(content);
-		this.tsWorker.port.postMessage(js);
+		this.tsWorker.postMessage(js);
 	}
 
 	protected handleWorkerResponse = async (msg: MessageEvent<string>) => {

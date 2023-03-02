@@ -131,7 +131,9 @@ export const createDocFiles = async (
 
 
 	//#region create lyra search indexes.
-	const lyraDb = await create({ schema: defaultHtmlSchema });
+	const lyraDb = await create({
+		schema: defaultHtmlSchema,
+	});
 
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const content = await promises.readFile(path, { encoding: 'utf8' });
@@ -141,7 +143,9 @@ export const createDocFiles = async (
 		let route = targetLibPath.replaceAll('\\', '/').replace('.html', '');
 		route = trimHash(trim([ props.rootDir, libDir ]), route);
 
-		await populate(lyraDb, content, 'md', { basePath: route + ':' });
+		await populate(lyraDb, content, 'md', {
+			basePath: route + ':',
+		});
 	}));
 	//#endregion
 

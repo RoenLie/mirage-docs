@@ -18,7 +18,7 @@ export const restoreFromObject  = async <T extends PropertiesSchema>(
 };
 
 
-const fn = async () => {
+(async () => {
 	const searchData = await fetch('/searchIndexes.json').then(d => d.json()).then(d => d);
 
 	const db = await restoreFromObject<typeof defaultHtmlSchema>(searchData);
@@ -26,10 +26,9 @@ const fn = async () => {
 
 	self.onmessage = async (ev: MessageEvent<any>) => {
 		const searchParams = ev.data;
+
 		const result = await search<typeof defaultHtmlSchema>(db, searchParams);
 
 		postMessage(result);
 	};
-};
-
-fn();
+})();

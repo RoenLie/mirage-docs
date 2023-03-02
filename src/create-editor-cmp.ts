@@ -33,7 +33,6 @@ export const createEditorComponent = async (
 		code:     content,
 	});
 
-
 	return {
 		path: targetLibPath,
 		content,

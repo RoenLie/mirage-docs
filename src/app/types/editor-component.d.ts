@@ -13,12 +13,13 @@ declare global {
 		styles?(this: EditorElement): CSSResult;
 	});
 
-	// eslint-disable-next-line no-var
-	var EditorComponent: (builder: EditorComponentBuilder) => EditorComponentBuilder;
-
 	class EditorElement extends LitElement {
 
 		public requestUpdate(): void;
 
 	}
+
+	// eslint-disable-next-line no-var
+	var editorComponent: (builder: EditorComponentBuilder) => EditorComponentBuilder;
+
 }
