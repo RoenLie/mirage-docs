@@ -1,17 +1,33 @@
 import { RetrievedDoc, type SearchParams, SearchResult } from '@lyrasearch/lyra';
 import { type defaultHtmlSchema } from '@lyrasearch/plugin-parsedoc';
-import { css, html, LitElement, render } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { css, html, LitElement, PropertyValueMap } from 'lit';
+import { customElement, query, state } from 'lit/decorators.js';
+import { live } from 'lit/directives/live.js';
 import { map } from 'lit/directives/map.js';
+import { when } from 'lit/directives/when.js';
 
 import { componentStyles } from '../styles/component.styles.js';
+
+
+type ExpandedDoc = RetrievedDoc<{
+	readonly type: 'string';
+	readonly content: 'string';
+	readonly path: 'string';
+	modifiedPath: 'string';
+	displayPath: 'string';
+	displayText: 'string';
+}>
 
 
 @customElement('docs-global-search')
 export class GlobalSearch extends LitElement {
 
-	@state() searchResult: RetrievedDoc<typeof defaultHtmlSchema>[] = [];
+	@state() protected searchValue = '';
+	@state() protected searchResult: ExpandedDoc[] = [];
+	@query('dialog') protected dialogQry: HTMLDialogElement;
 	protected searchWorker: Worker;
+	protected get colorScheme() { return document.documentElement.getAttribute('color-scheme') ?? ''; }
+	protected colorSchemeObs = new MutationObserver(() => this.requestUpdate());
 
 	public override connectedCallback() {
 		super.connectedCallback();
@@ -22,18 +38,24 @@ export class GlobalSearch extends LitElement {
 		);
 
 		this.searchWorker.onmessage = this.handleWorkerResponse;
+		this.colorSchemeObs.observe(document.documentElement,
+			{ attributes: true, attributeFilter: [ 'color-scheme' ] });
+	}
+
+	protected override updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+		super.updated(_changedProperties);
+		this.setAttribute('color-scheme', this.colorScheme);
 	}
 
 	public override disconnectedCallback() {
 		super.disconnectedCallback();
 		this.searchWorker.terminate();
+		this.colorSchemeObs.disconnect();
 	}
 
 	//#region events
 	protected handleClick() {
-		const dialogEl = this.renderRoot.querySelector('dialog');
-		if (dialogEl)
-			dialogEl.showModal();
+		this.dialogQry.showModal();
 	}
 
 	protected handleDialogOpen() {
@@ -46,6 +68,7 @@ export class GlobalSearch extends LitElement {
 
 	protected handleDialogInput(ev: InputEvent & {target: HTMLInputElement}) {
 		const value = ev.target.value;
+		this.searchValue = value;
 
 		this.requestWorkerResponse({
 			term:       value,
@@ -62,6 +85,10 @@ export class GlobalSearch extends LitElement {
 
 		history.pushState({}, '', '/' + hash);
 		dispatchEvent(new HashChangeEvent('hashchange'));
+
+		this.dialogQry.close();
+		this.searchValue = '';
+		this.searchResult = [];
 	};
 	//#endregion
 
@@ -79,7 +106,35 @@ export class GlobalSearch extends LitElement {
 		let data = msg.data;
 		console.log(data);
 
-		this.searchResult = data.hits;
+		this.searchResult = data.hits.map((hit) => {
+			const modifiedPath = hit.document.path.split(':').at(0) ?? '';
+			const displayText = hit.document.content.slice(0, 20);
+			const displayPath = modifiedPath
+				.split('/')
+				.map(s => s
+					.replace(/^\d+\./, '')
+					.replace(/^_/, '')
+					.replaceAll('-', ' '))
+				.join('/');
+
+			const expandedHit: ExpandedDoc = {
+				...hit,
+				document: {
+					...hit.document,
+					modifiedPath,
+					displayPath,
+					displayText,
+				},
+			};
+
+			return expandedHit;
+		}).filter(hit => {
+			const link = hit.document.path.split(':').at(0) ?? '';
+
+			return location.hash !== '#/' + link;
+		});
+
+		console.log(this.searchResult);
 	};
 	//#endregion
 
@@ -121,12 +176,13 @@ export class GlobalSearch extends LitElement {
 			@close=${ this.handleDialogClose.bind(this) }
 		>
 		<div class="base">
-			<input @input=${ this.handleDialogInput.bind(this) } />
+			<input .value=${ live(this.searchValue) } @input=${ this.handleDialogInput.bind(this) } />
 			<div class="results">
 				<ul>
 					${ map(this.searchResult, (result) => {
-						const text = result.document.content.slice(0, 100);
-						const link = result.document.path.split(':').at(0) ?? '';
+						const text = result.document.displayText;
+						const link = result.document.modifiedPath;
+						const pathSegments = result.document.displayPath.split('/');
 
 						return html`
 						<li>
@@ -134,10 +190,13 @@ export class GlobalSearch extends LitElement {
 								href    =${ '/' + link }
 								@click  =${ (ev: Event) => this.handleLinkClick(ev, link) }
 							>
-							<div>
-								${ link }
+							<div class="link-header">
+								${ map(pathSegments, (seg, i) => html`
+								<span>${ seg }</span>
+								${ when(i !== pathSegments.length - 1, () => html`<span>></span>`) }
+								`) }
 							</div>
-							<div>
+							<div class="link-text">
 								${ text }
 							</div>
 							</a>
@@ -166,7 +225,8 @@ export class GlobalSearch extends LitElement {
 		css`
 		:host {
 			display: block;
-
+		}
+		:host([color-scheme="dark"]) {
 			--button-border-color: rgb(50,50,50);
 			--button-background-color: rgb(30,35,35);
 			--button-box-shadow-color: rgb(30 30 30);
@@ -180,6 +240,21 @@ export class GlobalSearch extends LitElement {
 			--item-border-color: rgb(50, 50, 50);
 			--item-background-color: rgb(30,30,30);
 		}
+		:host([color-scheme="light"]) {
+			--button-border-color: rgb(50,50,50);
+			--button-background-color: rgb(240,240,240);
+			--button-box-shadow-color: rgb(30 30 30);
+
+			--hotkey-border-color: rgb(50, 50, 50);
+			--hotkey-background-color: rgb(230,230,230);
+
+			--dialog-border-color: rgb(50,50,50);
+			--dialog-background-color: rgb(240,240,240);
+
+			--item-border-color: rgb(50, 50, 50);
+			--item-background-color: rgb(230,230,230);
+		}
+
 		button.button {
 			user-select: none;
 			display: flex;
@@ -242,9 +317,14 @@ export class GlobalSearch extends LitElement {
 		}
 		dialog .results {
 			display: grid;
-			border: 1px solid orange;
+			border: 1px solid var(--item-border-color);
 			padding: 8px;
 			border-radius: 6px;
+		}
+		.results ul {
+			display: flex;
+			flex-flow: column nowrap;
+			gap: 8px;
 		}
 		.results ul li {
 			list-style: none;
@@ -260,6 +340,19 @@ export class GlobalSearch extends LitElement {
 			overflow: hidden;
 			text-overflow: ellipsis;
 			background-color: rgb(teal / 50%);
+		}
+		dialog input {
+			all: unset;
+			background-color: transparent;
+			border: 1px solid var(--item-border-color);
+			border-radius: 6px;
+			padding: 8px;
+		}
+		dialog .link-header {
+			display: flex;
+			gap: 4px;
+			align-items: center;
+			justify-content: center;
 		}
 		`,
 	];

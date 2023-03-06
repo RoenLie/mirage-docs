@@ -64,6 +64,7 @@
 
 /* dark mode */
 :root[color-scheme="dark"] {
+	--midoc-theme: 'dark';
 	--midoc-background: var(--midoc-ref-neutral-10);
 	--midoc-on-background: var(--midoc-ref-neutral-80);
 	--midoc-surface-variant: var(--midoc-ref-neutral-variant-30);
@@ -75,6 +76,7 @@
 
 /* light mode */
 :root[color-scheme="light"] {
+	--midoc-theme: 'light';
 	--midoc-background: var(--midoc-ref-neutral-99);
 	--midoc-on-background: var(--midoc-ref-neutral-10);
 	--midoc-surface-variant: var(--midoc-ref-neutral-variant-90);
