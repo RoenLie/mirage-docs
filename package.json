@@ -1,6 +1,6 @@
 {
 	"name": "@roenlie/mirage-docs",
-	"version": "1.1.13",
+	"version": "1.2.1",
 	"description": "",
 	"author": "Kristoffer Roen-Lie",
 	"license": "MIT",
@@ -45,7 +45,7 @@
 	},
 	"devDependencies": {
 		"@roenlie/eslint-config": "^1.0.0",
-		"@roenlie/mirage-docs": "link:.",
+		"@roenlie/mirage-docs": "@roenlie/mirage-docs",
 		"@roenlie/tsconfig": "^1.0.0",
 		"@types/markdown-it": "^12.2.3",
 		"@types/node": "18.14.2",
