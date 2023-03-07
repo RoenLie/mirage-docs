@@ -2,6 +2,7 @@ import { RetrievedDoc, type SearchParams, SearchResult } from '@lyrasearch/lyra'
 import { type defaultHtmlSchema } from '@lyrasearch/plugin-parsedoc';
 import { css, html, LitElement, PropertyValueMap } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
 import { live } from 'lit/directives/live.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
@@ -24,10 +25,16 @@ export class GlobalSearch extends LitElement {
 
 	@state() protected searchValue = '';
 	@state() protected searchResult: ExpandedDoc[] = [];
-	@query('dialog') protected dialogQry: HTMLDialogElement;
+	@query('dialog') public dialogQry: HTMLDialogElement;
 	protected searchWorker: Worker;
 	protected get colorScheme() { return document.documentElement.getAttribute('color-scheme') ?? ''; }
 	protected colorSchemeObs = new MutationObserver(() => this.requestUpdate());
+	protected hotkeyListener = (ev: KeyboardEvent) => {
+		if (ev.code === 'KeyP' && ev.ctrlKey) {
+			ev.preventDefault();
+			this.dialogQry.showModal();
+		}
+	};
 
 	public override connectedCallback() {
 		super.connectedCallback();
@@ -40,6 +47,8 @@ export class GlobalSearch extends LitElement {
 		this.searchWorker.onmessage = this.handleWorkerResponse;
 		this.colorSchemeObs.observe(document.documentElement,
 			{ attributes: true, attributeFilter: [ 'color-scheme' ] });
+
+		window.addEventListener('keydown', this.hotkeyListener);
 	}
 
 	protected override updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
@@ -51,6 +60,7 @@ export class GlobalSearch extends LitElement {
 		super.disconnectedCallback();
 		this.searchWorker.terminate();
 		this.colorSchemeObs.disconnect();
+		window.removeEventListener('keydown', this.hotkeyListener);
 	}
 
 	//#region events
@@ -87,8 +97,10 @@ export class GlobalSearch extends LitElement {
 		dispatchEvent(new HashChangeEvent('hashchange'));
 
 		this.dialogQry.close();
-		this.searchValue = '';
-		this.searchResult = [];
+		this.requestUpdate();
+
+		//this.searchValue = '';
+		//this.searchResult = [];
 	};
 	//#endregion
 
@@ -129,12 +141,15 @@ export class GlobalSearch extends LitElement {
 
 			return expandedHit;
 		}).filter(hit => {
+			return true;
+
 			const link = hit.document.path.split(':').at(0) ?? '';
 
 			return location.hash !== '#/' + link;
+		}).filter((hit, idx, arr) => {
+			return !arr.slice(idx + 1, arr.length)
+				.some(h => h.document.modifiedPath === hit.document.modifiedPath);
 		});
-
-		console.log(this.searchResult);
 	};
 	//#endregion
 
@@ -162,7 +177,7 @@ export class GlobalSearch extends LitElement {
 				Search
 			</span>
 			<span class="hotkey">
-				Ctrl K
+				Ctrl P
 			</span>
 		</button>
 		`;
@@ -180,24 +195,26 @@ export class GlobalSearch extends LitElement {
 			<div class="results">
 				<ul>
 					${ map(this.searchResult, (result) => {
-						const text = result.document.displayText;
 						const link = result.document.modifiedPath;
 						const pathSegments = result.document.displayPath.split('/');
+						const segmentHeader = pathSegments.slice(0, -1);
+						const segmentBody = pathSegments.at(-1);
 
 						return html`
 						<li>
 							<a
 								href    =${ '/' + link }
 								@click  =${ (ev: Event) => this.handleLinkClick(ev, link) }
+								class=${ classMap({ current: location.hash === '#/' + link }) }
 							>
 							<div class="link-header">
-								${ map(pathSegments, (seg, i) => html`
+								${ map(segmentHeader, (seg, i) => html`
 								<span>${ seg }</span>
-								${ when(i !== pathSegments.length - 1, () => html`<span>></span>`) }
+								${ when(i !== segmentHeader.length - 1, () => html`<span>></span>`) }
 								`) }
 							</div>
 							<div class="link-text">
-								${ text }
+								${ segmentBody }
 							</div>
 							</a>
 						</li>
@@ -305,9 +322,9 @@ export class GlobalSearch extends LitElement {
 			border-radius: var(--midoc-border-radius-m);
 			border: 1px solid var(--dialog-border-color);
 			background-color: var(--dialog-background-color);
-			margin-top: 100px;
-			width: 400px;
-			height: 400px;
+			margin-top: 50px;
+			width: clamp(400px, 50vw, 600px);
+    		height: clamp(400px, 70vh, 600px);
 		}
 		dialog .base {
 			height: 100%;
@@ -320,6 +337,7 @@ export class GlobalSearch extends LitElement {
 			border: 1px solid var(--item-border-color);
 			padding: 8px;
 			border-radius: 6px;
+			overflow: auto;
 		}
 		.results ul {
 			display: flex;
@@ -328,7 +346,9 @@ export class GlobalSearch extends LitElement {
 		}
 		.results ul li {
 			list-style: none;
-			padding: 4px;
+			padding-block: 8px;
+			padding-inline: 8px;
+			border-radius: 8px;
 			border: 1px solid var(--item-border-color);
 			background-color: var(--item-background-color);
 		}
@@ -339,7 +359,9 @@ export class GlobalSearch extends LitElement {
 			flex-flow: column nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
-			background-color: rgb(teal / 50%);
+		}
+		a.current {
+			opacity: 0.3;
 		}
 		dialog input {
 			all: unset;
@@ -350,9 +372,17 @@ export class GlobalSearch extends LitElement {
 		}
 		dialog .link-header {
 			display: flex;
-			gap: 4px;
 			align-items: center;
-			justify-content: center;
+			overflow: hidden;
+			font-size: 0.7em;
+			font-weight: 500;
+			color: var(--midoc-tertiary);
+			gap: 4px;
+		}
+		dialog .link-header span {
+			text-overflow: ellipsis;
+			overflow: hidden;
+			white-space: nowrap;
 		}
 		`,
 	];

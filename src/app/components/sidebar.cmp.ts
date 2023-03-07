@@ -17,7 +17,11 @@ export class MiDocSidebarCmp extends LitElement {
 	@property() public logo = '';
 	@property() public logoHeight = '';
 	@property() public heading = '';
-	@property({ type: Array }) public nameReplacements: [from: string, to: string][] = window.miragedocs.siteConfig.sidebar.nameReplacements!;
+	@property({ type: Array }) public nameReplacements: [from: string, to: string][] = [
+		...window.miragedocs.siteConfig.sidebar.nameReplacements!,
+		[ '-', '' ],
+	];
+
 	@state() protected toggleAllValue = false;
 	@state() protected toggleIndeterminate = false;
 	@state() protected filteredRoutes: string[] = [];
@@ -82,17 +86,12 @@ export class MiDocSidebarCmp extends LitElement {
 	};
 
 	protected handleSearch = (search: string, initial?: boolean) => {
-		const stringReplacement = (str: string) => {
-			return this.nameReplacements.reduce(
-				(acc, [ from, to ]) => acc.replaceAll(from, to), str,
-			);
-		};
+		const stringReplacement = (str: string) => this.nameReplacements.reduce(
+			(acc, [ from, to ]) => acc.replaceAll(from, to), str,
+		);
 
-		this.filteredRoutes = this.allRoutes.filter(path => {
-			const name = stringReplacement(path.split('/').at(-1)!);
-
-			return name.toUpperCase().includes(search.toUpperCase());
-		});
+		this.filteredRoutes = this.allRoutes.filter(path =>
+			stringReplacement(path).toUpperCase().includes(search.toUpperCase()));
 
 		if ((this.searchValue && !search) || search)
 			this.toggleAllValue = !!search;

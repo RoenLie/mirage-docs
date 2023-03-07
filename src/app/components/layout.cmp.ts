@@ -2,13 +2,13 @@ import './sidebar.cmp.js';
 import './global-search.cmp.js';
 import '../types/globals.js';
 
-import { css, html, LitElement, unsafeCSS } from 'lit';
+import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
 
-import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
 import { expandHash, trimHash } from '../utilities/trim-route-hash.js';
+import { type GlobalSearch } from './global-search.cmp.js';
 import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 import { layoutStyles } from './layout.styles.js';
 
@@ -21,7 +21,6 @@ export class MiDocLayoutCmp extends LitElement {
 	@property() public heading = '';
 	@state() protected loading = false;
 	@query('iframe') protected frameQry: HTMLIFrameElement;
-	@query('dialog.search') protected searchDialogQry: HTMLDialogElement;
 	@query('midoc-sidebar') protected sidebarQry: LitElement;
 	@query('.scrollback') protected scrollbackQry: HTMLElement;
 
@@ -61,6 +60,7 @@ export class MiDocLayoutCmp extends LitElement {
 				const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
 				contentWindow.scrollTo(0, scrollVal);
 				contentWindow.addEventListener('scroll', this.handleFramePageScroll);
+				contentWindow.addEventListener('keydown', this.handleHotkeyPress);
 			}
 		}
 
@@ -142,6 +142,8 @@ export class MiDocLayoutCmp extends LitElement {
 
 		this.frameQry.contentWindow
 			?.removeEventListener('scroll', this.handleFramePageScroll);
+		this.frameQry.contentWindow
+			?.removeEventListener('keydown', this.handleHotkeyPress);
 
 		this.frameQry.addEventListener(
 			'transitionend', this.handleTransitionEnd, { once: true },
@@ -171,6 +173,16 @@ export class MiDocLayoutCmp extends LitElement {
 
 		this.requestUpdate();
 	}
+
+	protected handleHotkeyPress = (ev: KeyboardEvent) => {
+		if (ev.code === 'KeyP' && ev.ctrlKey) {
+			ev.preventDefault();
+
+			const searchEl = this.renderRoot
+				.querySelector('docs-global-search') as GlobalSearch;
+			searchEl.dialogQry.showModal();
+		}
+	};
 
 	protected async setNavState(state?: boolean) {
 		this.classList.toggle(this.navClosedClass, state);
@@ -208,6 +220,7 @@ export class MiDocLayoutCmp extends LitElement {
 			logoHeight=${ this.logoHeight }
 			heading=${ this.heading }
 		></midoc-sidebar>
+
 		<main>
 			<div class="header">
 				<div class="start">
