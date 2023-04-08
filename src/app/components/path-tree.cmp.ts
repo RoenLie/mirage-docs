@@ -49,7 +49,7 @@ export class MidocPathTreeCmp extends LitElement {
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}
 
-	protected willUpdate(props: PropertyValues): void {
+	protected override willUpdate(props: PropertyValues): void {
 		if (props.has('paths'))
 			this.hierarchy = pathsToTree(this.paths, this.delimiter, this.nameReplacements);
 
