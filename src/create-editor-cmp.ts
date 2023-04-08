@@ -6,10 +6,7 @@ import { createComponentNameFromPath, createComponentTagFromPath } from './build
 
 
 export const createEditorComponent = async (
-	projectRoot: string,
-	rootDir: string,
-	entryDir: string,
-	libDir: string,
+	targetPath: string,
 	path: string,
 	content?: string,
 ) => {
@@ -18,8 +15,6 @@ export const createEditorComponent = async (
 
 	const componentTag      = createComponentTagFromPath(path);
 	const componentClass    = createComponentNameFromPath(path);
-	const preparedPath = DocPath.preparePath(projectRoot, path);
-	const targetLibPath = DocPath.targetLibDir(preparedPath, rootDir, entryDir, libDir, 'ts');
 
 	content = content
 		.replaceAll('`', '\\`')
@@ -27,14 +22,13 @@ export const createEditorComponent = async (
 
 	content = editorPageTemplate({
 		editorId: '@roenlie/mirage-docs/dist/app/components/component-editor.js',
-		codeId:   '/' + targetLibPath.replaceAll('\\', '/'),
+		codeId:   '/' + targetPath.replaceAll('\\', '/'),
 		tag:      componentTag,
 		class:    componentClass,
 		code:     content,
 	});
 
 	return {
-		path: targetLibPath,
 		content,
 	};
 };

@@ -10,3 +10,5 @@ node_modules
 dist
 .mirage
 */**/.mirage
+workers
+searchIndexes.json

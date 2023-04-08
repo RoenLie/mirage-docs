@@ -3,7 +3,6 @@ import { dirname, join, normalize } from 'path';
 
 import { docPageTemplate } from './app/generators/doc-page-template.js';
 import { getUsedTags } from './build/cache/create-tag-cache.js';
-import { DocPath } from './build/helpers/docpath.js';
 import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
@@ -16,9 +15,7 @@ export const createMarkdownComponent = (
 	projectRoot: string,
 	tagCache: Map<string, string>,
 	manifestCache: Map<string, Declarations>,
-	rootDir: string,
-	entryDir: string,
-	libDir: string,
+	targetPath: string,
 	path: string,
 	content?: string,
 ) => {
@@ -185,11 +182,7 @@ export const createMarkdownComponent = (
 			markdown:      markdownIt.render(content),
 		});
 
-		const preparedPath = DocPath.preparePath(projectRoot, path);
-		const targetLibPath = DocPath.targetLibDir(preparedPath, rootDir, entryDir, libDir, 'ts');
-
 		return {
-			path: targetLibPath,
 			content,
 		};
 	};

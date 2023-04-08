@@ -1,7 +1,7 @@
 import { create } from '@lyrasearch/lyra';
 import { defaultHtmlSchema, populate } from '@lyrasearch/plugin-parsedoc';
 import { promises } from 'fs';
-import { join, resolve, sep } from 'path';
+import { join, normalize, resolve, sep } from 'path';
 
 import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { tsconfigTemplate } from './app/generators/tsconfig-template.js';
@@ -20,7 +20,7 @@ import { createMarkdownComponent } from './create-markdown-cmp.js';
 
 
 export interface ConfigProperties {
-	rootDir: string;
+	cacheDir: string;
 	entryDir: string;
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
 	input?: Record<string, string>;
@@ -37,13 +37,14 @@ export const createDocFiles = async (
 	props.tagDirs    ??= [ { path: './src' } ];
 	props.input      ??= { main: resolve(projectRoot, 'index.html') };
 	props.siteConfig ??= {};
-	props.rootDir    ??= '';
+	props.cacheDir    ??= '';
 	props.entryDir   ??= './src';
-	props.rootDir    = props.rootDir.replaceAll('./', '');
-	props.entryDir   = props.entryDir.replaceAll('./', '');
+
+	props.cacheDir    = props.cacheDir.replace(/^\.\//, '');
+	props.entryDir   = props.entryDir.replace(/^\.\//, '');
 
 	props.siteConfig.internal           ??= {} as any;
-	props.siteConfig.internal!.rootDir  ??= props.rootDir;
+	props.siteConfig.internal!.rootDir  ??= props.cacheDir;
 	props.siteConfig.internal!.entryDir ??= props.entryDir;
 	props.siteConfig.internal!.libDir   ??= '.mirage';
 
@@ -57,8 +58,8 @@ export const createDocFiles = async (
 	/** Holds the path and content that will be created. */
 	const filesToCreate = new Map<string, string>();
 
-	const relativeLibDir   = '.' + sep + join(props.rootDir, libDir);
-	const relativeEntryDir = '.' + sep + join(props.rootDir, props.entryDir);
+	const relativeLibDir   = '.' + sep + normalize(join(props.cacheDir, libDir));
+	const relativeEntryDir = '.' + sep + normalize(props.entryDir);
 
 
 	// Cache all relevant files.
@@ -72,11 +73,9 @@ export const createDocFiles = async (
 
 	//#region gather all route paths.
 	const routes = [ ...markdownCache.cache, ...editorCache.cache ].map(([ , path ]) => {
-		const preparedPath = DocPath.preparePath(projectRoot, path);
-		const targetLibPath = DocPath.targetLibDir(preparedPath, props.rootDir, props.entryDir, libDir, 'html');
-		let route = targetLibPath.replaceAll('\\', '/').replace('.html', '');
-		while (route.startsWith('/'))
-			route = route.slice(1);
+		const route = DocPath.createCachePath(
+			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
+		).replaceAll('\\', '/').replace('.html', '');
 
 		return route;
 	});
@@ -138,10 +137,11 @@ export const createDocFiles = async (
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const content = await promises.readFile(path, { encoding: 'utf8' });
 
-		const preparedPath = DocPath.preparePath(projectRoot, path);
-		const targetLibPath = DocPath.targetLibDir(preparedPath, props.rootDir, props.entryDir, libDir, 'html');
-		let route = targetLibPath.replaceAll('\\', '/').replace('.html', '');
-		route = trimHash(trim([ props.rootDir, libDir ]), route);
+		let route = DocPath.createCachePath(
+			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
+		).replaceAll('\\', '/').replace('.html', '');
+
+		route = trimHash(trim([ props.cacheDir, libDir ]), route);
 
 		await populate(lyraDb, content, 'md', {
 			basePath: route + ':',
@@ -152,24 +152,35 @@ export const createDocFiles = async (
 
 	//#region create markdown routes
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
-		const { path: componentPath, content: componentContent } = await createMarkdownComponent(
-			projectRoot, tagCache, manifestCache, props.rootDir, props.entryDir, libDir, path,
+		const componentTargetPath = DocPath.createCachePath(
+			projectRoot, path, relativeEntryDir, relativeLibDir, 'ts',
 		);
 
-		filesToCreate.set(componentPath, componentContent);
+		const { content: componentContent } = await createMarkdownComponent(
+			projectRoot,
+			tagCache,
+			manifestCache,
+			componentTargetPath,
+			path,
+		);
 
-		const { file } = createIndexFile(
-			projectRoot, props.rootDir, props.entryDir, libDir,
+		filesToCreate.set(componentTargetPath, componentContent);
+
+		const indexTargetPath = DocPath.createCachePath(
+			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
+		);
+
+		const { content } = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
 			props.siteConfig?.links?.scripts ?? [],
 			path,
-			'/' + componentPath.replaceAll('\\', '/'),
+			'/' + componentTargetPath.replaceAll('\\', '/'),
 		);
 
-		filesToCreate.set(file.path, file.content);
+		filesToCreate.set(indexTargetPath, content);
 
 		Object.assign(props.input ??= {}, {
-			[file.path.split(sep).at(-1)!]: file.path.replaceAll('\\', '/'),
+			[indexTargetPath.split(sep).at(-1)!]: indexTargetPath.replaceAll('\\', '/'),
 		});
 	}));
 	//#endregion
@@ -177,24 +188,32 @@ export const createDocFiles = async (
 
 	//#region create editor routes
 	await Promise.all([ ...editorCache.cache ].map(async ([ , path ]) => {
-		const { path: componentPath, content: componentContent } = await createEditorComponent(
-			projectRoot, props.rootDir, props.entryDir, libDir, path,
+		const componentTargetPath = DocPath.createCachePath(
+			projectRoot, path, relativeEntryDir, relativeLibDir, 'ts',
 		);
 
-		filesToCreate.set(componentPath, componentContent);
+		const { content: componentContent } = await createEditorComponent(
+			componentTargetPath,
+			path,
+		);
 
-		const { file } = createIndexFile(
-			projectRoot, props.rootDir, props.entryDir, libDir,
+		filesToCreate.set(componentTargetPath, componentContent);
+
+		const indexTargetPath = DocPath.createCachePath(
+			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
+		);
+
+		const { content } = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
 			props.siteConfig?.links?.scripts ?? [],
 			path,
-			'/' + componentPath.replaceAll('\\', '/'),
+			'/' + componentTargetPath.replaceAll('\\', '/'),
 		);
 
-		filesToCreate.set(file.path, file.content);
+		filesToCreate.set(indexTargetPath, content);
 
 		Object.assign(props.input ??= {}, {
-			[file.path.split(sep).at(-1)!]: file.path.replaceAll('\\', '/'),
+			[indexTargetPath.split(sep).at(-1)!]: indexTargetPath.replaceAll('\\', '/'),
 		});
 	}));
 	//#endregion
@@ -206,5 +225,7 @@ export const createDocFiles = async (
 		manifestCache,
 		siteconfigFilePath,
 		lyraDb,
+		relativeEntryDir,
+		relativeLibDir,
 	};
 };

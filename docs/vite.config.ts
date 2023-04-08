@@ -1,19 +1,17 @@
 import { defineDocConfig } from '@roenlie/mirage-docs';
-import { join, resolve } from 'path';
 import { UserConfig } from 'vite';
 
 
 export default defineDocConfig({
 	publicDir: 'docs/assets/',
 	build:     {
-		//emptyOutDir: false,
-		outDir:    join(resolve(), './dist/preview'),
+		outDir:    './dist/preview',
 		sourcemap: true,
 	},
 	plugins: [],
 }, {
-	rootDir:  './docs',
-	entryDir: './pages',
+	cacheDir: './docs',
+	entryDir: './docs/pages',
 	//siteConfig: {
 	//links: {
 	//	//styles: [
@@ -26,7 +24,7 @@ export default defineDocConfig({
 	//},
 	//},
 	//autoImport: {
-	//	tagPrefixes:   [ 'es' ],
+	//	tagPrefixes:   [],
 	//	loadWhitelist: [ /\.ts/ ],
 	//},
 }) as Promise<UserConfig>;

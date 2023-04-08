@@ -26,6 +26,8 @@ export const defineDocConfig = async (
 		manifestCache,
 		siteconfigFilePath,
 		lyraDb,
+		relativeEntryDir,
+		relativeLibDir,
 	} = await createDocFiles(pRoot, props);
 
 	const docConfig: UserConfig = {
@@ -100,25 +102,29 @@ export const defineDocConfig = async (
 						if (!path.endsWith('.md'))
 							return;
 
-						const preparedPath = DocPath.preparePath(pRoot, path);
-						const targetedPath = DocPath.targetLibDir(preparedPath, props.rootDir, props.entryDir, '.mirage', 'ts');
-						const resolvedTargetPath = resolve(targetedPath);
+						const componentTargetPath = DocPath.createCachePath(
+							pRoot, path, relativeEntryDir, relativeLibDir, 'ts',
+						);
+
+						const resolvedTargetPath = resolve(componentTargetPath);
 						const module = server.moduleGraph.getModuleById(resolvedTargetPath.replaceAll('\\', '/'));
 
 						if (module) {
 							server.moduleGraph.invalidateModule(module);
 
+							const componentTargetPath = DocPath.createCachePath(
+								pRoot, path, relativeEntryDir, relativeLibDir, 'ts',
+							);
+
 							const file = await createMarkdownComponent(
 								pRoot,
 								tagCache,
 								manifestCache,
-								props.rootDir,
-								props.entryDir,
-								'.mirage',
+								componentTargetPath,
 								path,
 							);
 
-							await promises.writeFile(file.path, file.content);
+							await promises.writeFile(componentTargetPath, file.content);
 
 							server.ws.send({
 								type: 'full-reload',

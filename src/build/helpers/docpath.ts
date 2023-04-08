@@ -1,7 +1,28 @@
-import path, { normalize, resolve } from 'path';
+import path, { join, normalize, resolve } from 'path';
 
 export const DocPath = (() => {
 	return {
+		createCachePath: (
+			projectRoot: string,
+			filePath: string,
+			relativeEntryDir: string,
+			relativeCacheDir: string,
+			extension: string,
+		) => {
+			const preparedPath = DocPath.preparePath(projectRoot, filePath);
+			const entryDir = relativeEntryDir
+				.replace(new RegExp('^.\\\\'), '')
+				.replace(new RegExp('^./'), '');
+
+			const cachePath = join(relativeCacheDir, preparedPath.replace(entryDir, ''));
+
+			// Replace the extension with the new one.
+			const replacedExtension = cachePath
+				.split('.').slice(0, -1).join('.') + '.' + extension;
+
+			return replacedExtension;
+		},
+
 		preparePath: (projectPath: string, filePath: string) => {
 			const absFilePath = resolve(filePath);
 			const absProjectPath = resolve(projectPath);
@@ -12,7 +33,13 @@ export const DocPath = (() => {
 			return splitFilePath.slice(splitProjPath.length).join(path.sep);
 		},
 
-		targetLibDir: (preparedPath: string, rootDir: string, entryDir: string, libDir: string, extension: string) => {
+		targetLibDir: (
+			preparedPath: string,
+			rootDir: string,
+			entryDir: string,
+			libDir: string,
+			extension: string,
+		) => {
 			const invalidChars = [ './', '/', '\\' ];
 			const cleanSegment = (string: string) => {
 				let char = '';
@@ -29,7 +56,16 @@ export const DocPath = (() => {
 			entryDir = cleanSegment(entryDir);
 
 			// Replace the entry dir with lib dir.
-			const libTargetPath = preparedPath.replace(entryDir, libDir);
+			const directEntryDir = entryDir.replaceAll(/^[.\\/]+/g, '');
+			//console.log({ directEntryDir });
+
+			let libTargetPath = preparedPath.replace(rootDir, join(rootDir, libDir));
+			if (directEntryDir) {
+				libTargetPath = preparedPath.replace(
+					directEntryDir,
+					join(rootDir, libDir),
+				);
+			}
 
 			// Replace the extension with the new one.
 			const replacedExtension = libTargetPath
