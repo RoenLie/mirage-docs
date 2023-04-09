@@ -28,7 +28,7 @@ export const defineDocConfig = async (
 		lyraDb,
 		relativeEntryDir,
 		relativeLibDir,
-	} = await createDocFiles(pRoot, props);
+	} = await createDocFiles(pRoot, viteConfig?.base ?? '', props);
 
 	const docConfig: UserConfig = {
 		appType:   'mpa',

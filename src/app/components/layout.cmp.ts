@@ -13,6 +13,9 @@ import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } 
 import { layoutStyles } from './layout.styles.js';
 
 
+const base = window.miragedocs.siteConfig.internal.base ?? '';
+
+
 @customElement('midoc-layout')
 export class MiDocLayoutCmp extends LitElement {
 
@@ -91,7 +94,7 @@ export class MiDocLayoutCmp extends LitElement {
 			this.activeFrame = hash + '.html';
 
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
-			frame.src = expandHash(this.activeFrame);
+			frame.src = (base ? base + '/' : '') + expandHash(this.activeFrame);
 
 			this.frameQry.replaceWith(frame);
 			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
@@ -123,7 +126,7 @@ export class MiDocLayoutCmp extends LitElement {
 		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
 		if (!hash) {
 			hash = window.miragedocs.routes[0] ?? '';
-			history.pushState({}, '', '#/' + trimHash(hash));
+			history.pushState({}, '', base + '#/' + trimHash(hash));
 			dispatchEvent(new HashChangeEvent('hashchange'));
 
 			return;
@@ -247,7 +250,10 @@ export class MiDocLayoutCmp extends LitElement {
 			</div>
 
 			<section>
-				<iframe src=${ this.activeFrame ? expandHash(this.activeFrame) : '' }></iframe>
+				<iframe src=${ this.activeFrame
+					? (base ? base + '/' : '') + expandHash(this.activeFrame)
+					: '' }
+				></iframe>
 			</section>
 
 			${ when(this.loading, () => html`

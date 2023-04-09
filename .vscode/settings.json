@@ -1,8 +1,4 @@
 {
-	"module-templates.templateFiles": [
-		"./templates/.module-templates.json"
-	],
-	"module-templates.engine": "handlebars",
 	"editor.bracketPairColorization.enabled": true,
 	"editor.guides.bracketPairs": "active",
 	"editor.formatOnSave": true,

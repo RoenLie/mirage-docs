@@ -2,7 +2,6 @@
 	"recommendations": [
 		"runem.lit-plugin",
 		"dbaeumer.vscode-eslint",
-		"asbjornh.vscode-module-templates",
 		"johnpapa.vscode-peacock",
 	],
 	"unwantedRecommendations": [

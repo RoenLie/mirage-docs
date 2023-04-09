@@ -20,6 +20,7 @@ import { createMarkdownComponent } from './create-markdown-cmp.js';
 
 
 export interface ConfigProperties {
+	base: string;
 	cacheDir: string;
 	entryDir: string;
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
@@ -32,21 +33,23 @@ export interface ConfigProperties {
 
 export const createDocFiles = async (
 	projectRoot: string,
+	base: string,
 	props: ConfigProperties,
 ) => {
 	props.tagDirs    ??= [ { path: './src' } ];
 	props.input      ??= { main: resolve(projectRoot, 'index.html') };
 	props.siteConfig ??= {};
-	props.cacheDir    ??= '';
+	props.cacheDir   ??= '';
 	props.entryDir   ??= './src';
 
-	props.cacheDir    = props.cacheDir.replace(/^\.\//, '');
+	props.cacheDir   = props.cacheDir.replace(/^\.\//, '');
 	props.entryDir   = props.entryDir.replace(/^\.\//, '');
 
 	props.siteConfig.internal           ??= {} as any;
 	props.siteConfig.internal!.rootDir  ??= props.cacheDir;
 	props.siteConfig.internal!.entryDir ??= props.entryDir;
 	props.siteConfig.internal!.libDir   ??= '.mirage';
+	props.siteConfig.internal!.base 		??= base;
 
 	let tagCache:      Map<string, string> = new Map();
 	let manifestCache: Map<string, Declarations> = new Map();

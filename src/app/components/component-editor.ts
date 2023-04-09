@@ -9,6 +9,9 @@ import editorCmpTypes from '../types/editor-component.d.ts?raw';
 import { EsSourceEditor } from './source-editor.js';
 
 
+const base = window.miragedocs.siteConfig.internal.base ?? '';
+
+
 @customElement('docs-component-editor')
 export class EsComponentEditor extends EsSourceEditor {
 
@@ -22,8 +25,20 @@ export class EsComponentEditor extends EsSourceEditor {
 			(await monaco).languages.typescript.typescriptDefaults.addExtraLib(editorCmpTypes),
 		);
 
+		/**
+		 * This is done so that vite takes the into the build.
+		 * The Actual url is wrong, but that is fixed by doing another call below.
+		 */
+		let notTrue;
+		if (notTrue === true) {
+			this.tsWorker = new Worker(
+				new URL('../workers/search-worker.ts', import.meta.url),
+				{ type: 'module' },
+			);
+		}
+
 		this.tsWorker = new Worker(
-			new URL('../workers/typescript-worker.ts', import.meta.url),
+			new URL(globalThis.location.origin + base + '/workers/typescript-worker.js'),
 			{ type: 'module' },
 		);
 

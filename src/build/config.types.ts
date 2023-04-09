@@ -19,6 +19,7 @@ export interface SiteConfig {
 		lightTheme: string;
 	}>
 	internal: Partial<{
+		base: string;
 		libDir: string;
 		rootDir: string;
 		entryDir: string;

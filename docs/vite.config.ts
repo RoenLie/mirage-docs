@@ -3,6 +3,7 @@ import { UserConfig } from 'vite';
 
 
 export default defineDocConfig({
+	//base:      '/mirage-docs',
 	publicDir: 'docs/assets/',
 	build:     {
 		outDir:    './dist/preview',

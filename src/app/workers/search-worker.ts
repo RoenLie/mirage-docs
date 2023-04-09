@@ -19,10 +19,10 @@ export const restoreFromObject  = async <T extends PropertiesSchema>(
 
 
 (async () => {
-	const searchData = await fetch('/searchIndexes.json').then(d => d.json()).then(d => d);
+	const searchData = await fetch('../searchIndexes.json').then(d => d.json()).then(d => d);
 
 	const db = await restoreFromObject<typeof defaultHtmlSchema>(searchData);
-	console.log(db);
+	//console.log(db);
 
 	self.onmessage = async (ev: MessageEvent<any>) => {
 		const searchParams = ev.data;

@@ -80,7 +80,7 @@ export class MidocPathTreeCmp extends LitElement {
 		if (location.hash === hash)
 			return;
 
-		history.pushState({}, '', '/' + hash);
+		history.pushState({}, '', window.miragedocs.siteConfig.internal.base + '/' + hash);
 		dispatchEvent(new HashChangeEvent('hashchange'));
 	};
 
@@ -241,10 +241,20 @@ export class MidocPathTreeCmp extends LitElement {
 			cursor: pointer;
 		}
 		.items {
+			position: relative;
 			font-size: 14px;
 			display: flex;
 			flex-flow: column nowrap;
 			padding-left: 16px;
+		}
+		.items::after {
+			content: '';
+			position: absolute;
+			height: calc(100% - 2px);
+			left: 7px;
+			bottom: 0px;
+			width: 2px;
+			background-color: var(--midoc-tertiary-hover);
 		}
 		.heading,
 		a {

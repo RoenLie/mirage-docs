@@ -11,6 +11,9 @@ import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 import type { MidocPathTreeCmp } from './path-tree.cmp.js';
 
 
+const base = window.miragedocs.siteConfig.internal.base ?? '';
+
+
 @customElement('midoc-sidebar')
 export class MiDocSidebarCmp extends LitElement {
 
@@ -112,7 +115,10 @@ export class MiDocSidebarCmp extends LitElement {
 			<div class="greeting">
 				${ when(this.logo, () => html`
 				<picture>
-					<img height=${ this.logoHeight } src=${ this.logo } alt="Logo">
+					<img
+						height=${ this.logoHeight }
+						src=${ (base ? base + '/' : '') + this.logo } alt="Logo"
+					/>
 				</picture>
 				`) }
 
@@ -191,6 +197,11 @@ export class MiDocSidebarCmp extends LitElement {
 			padding-inline-end: 4px
 		}
 		${ buttonStyle('button.toggle', 30, 20) }
+		.toggle-wrapper button:focus-visible {
+			outline: 2px solid var(--midoc-tertiary-hover);
+			outline-offset: -2px;
+		}
+
 		${ inputStyle('input.search') }
 
 		.menu-wrapper {

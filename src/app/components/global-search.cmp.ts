@@ -20,6 +20,9 @@ type ExpandedDoc = RetrievedDoc<{
 }>
 
 
+const base = window.miragedocs.siteConfig.internal.base ?? '';
+
+
 @customElement('docs-global-search')
 export class GlobalSearch extends LitElement {
 
@@ -39,8 +42,20 @@ export class GlobalSearch extends LitElement {
 	public override connectedCallback() {
 		super.connectedCallback();
 
+		/**
+		 * This is done so that vite takes the into the build.
+		 * The Actual url is wrong, but that is fixed by doing another call below.
+		 */
+		let notTrue;
+		if (notTrue === true) {
+			this.searchWorker = new Worker(
+				new URL('../workers/search-worker.ts', import.meta.url),
+				{ type: 'module' },
+			);
+		}
+
 		this.searchWorker = new Worker(
-			new URL('../workers/search-worker.ts', import.meta.url),
+			new URL(globalThis.location.origin + base + '/workers/search-worker.js'),
 			{ type: 'module' },
 		);
 
@@ -93,7 +108,9 @@ export class GlobalSearch extends LitElement {
 		if (location.hash === hash)
 			return;
 
-		history.pushState({}, '', '/' + hash);
+		const base = window.miragedocs.siteConfig.internal.base;
+
+		history.pushState({}, '', base + '/' + hash);
 		dispatchEvent(new HashChangeEvent('hashchange'));
 
 		this.dialogQry.close();
@@ -116,7 +133,7 @@ export class GlobalSearch extends LitElement {
 		msg: MessageEvent<SearchResult<typeof defaultHtmlSchema>>,
 	) => {
 		let data = msg.data;
-		console.log(data);
+		//console.log(data);
 
 		this.searchResult = data.hits.map((hit) => {
 			const modifiedPath = hit.document.path.split(':').at(0) ?? '';
@@ -319,7 +336,7 @@ export class GlobalSearch extends LitElement {
 		}
 		dialog.search {
 			color: var(--midoc-on-background);
-			border-radius: var(--midoc-border-radius-m);
+			border-radius: var(--midoc-border-radius-s);
 			border: 1px solid var(--dialog-border-color);
 			background-color: var(--dialog-background-color);
 			margin-top: 50px;
