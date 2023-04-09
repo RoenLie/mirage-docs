@@ -20,7 +20,6 @@ import { createMarkdownComponent } from './create-markdown-cmp.js';
 
 
 export interface ConfigProperties {
-	base: string;
 	cacheDir: string;
 	entryDir: string;
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
