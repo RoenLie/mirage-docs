@@ -32,7 +32,7 @@ export class EsComponentEditor extends EsSourceEditor {
 		let notTrue;
 		if (notTrue === true) {
 			this.tsWorker = new Worker(
-				new URL('../workers/search-worker.ts', import.meta.url),
+				new URL('../workers/typescript-worker.ts', import.meta.url),
 				{ type: 'module' },
 			);
 		}
@@ -62,9 +62,9 @@ export class EsComponentEditor extends EsSourceEditor {
 
 	protected override handleSlotChange() {
 		super.handleSlotChange();
-		this.source = this.source.replace(
-			`import { editorComponent } from '@roenlie/mirage-docs';`, '',
-		).trim();
+		this.source = this.source
+			.replace(/^import { editorComponent }.+/, '')
+			.trim();
 	}
 
 	protected override async execute() {

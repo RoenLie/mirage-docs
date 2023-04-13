@@ -1,6 +1,5 @@
 node_modules
 _packages
-src
 .npmignore
 .npmrc
 .vscode

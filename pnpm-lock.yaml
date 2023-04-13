@@ -53,7 +53,7 @@ devDependencies:
     version: 1.0.0(eslint@8.38.0)(typescript@4.9.5)
   '@roenlie/mimic-nodejs':
     specifier: ^0.0.4
-    version: 0.0.4(@swc/helpers@0.5.0)
+    version: 0.0.4
   '@roenlie/mirage-docs':
     specifier: 'link:'
     version: 'link:'
@@ -493,11 +493,11 @@ packages:
       - supports-color
     dev: true
 
-  /@roenlie/mimic-nodejs@0.0.4(@swc/helpers@0.5.0):
+  /@roenlie/mimic-nodejs@0.0.4:
     resolution: {integrity: sha512-yMRneeMxAEBsO3GC7ZNNdkzBA9a/R5DKIiMfTdAX+/KdUieNnXVqD/wlf+gefikK6mBiNAYmN3Mu5mo2il3OUg==}
     hasBin: true
     dependencies:
-      '@swc/core': 1.3.46(@swc/helpers@0.5.0)
+      '@swc/core': 1.3.46
       tslib: 2.5.0
       yargs: 17.7.1
     transitivePeerDependencies:
@@ -613,14 +613,12 @@ packages:
     dev: true
     optional: true
 
-  /@swc/core@1.3.46(@swc/helpers@0.5.0):
+  /@swc/core@1.3.46:
     resolution: {integrity: sha512-WxzgJMWUBVJ95HsvEqlWzM3Qxp2FQrPa4QdAkQQuuvCMnfdctGUbhX/c3LiSRlWrl2LIkYAi4bLansTOol4QcQ==}
     engines: {node: '>=10'}
     requiresBuild: true
     peerDependencies:
       '@swc/helpers': ^0.5.0
-    dependencies:
-      '@swc/helpers': 0.5.0
     optionalDependencies:
       '@swc/core-darwin-arm64': 1.3.46
       '@swc/core-darwin-x64': 1.3.46
@@ -632,12 +630,6 @@ packages:
       '@swc/core-win32-arm64-msvc': 1.3.46
       '@swc/core-win32-ia32-msvc': 1.3.46
       '@swc/core-win32-x64-msvc': 1.3.46
-    dev: true
-
-  /@swc/helpers@0.5.0:
-    resolution: {integrity: sha512-SjY/p4MmECVVEWspzSRpQEM3sjR17sP8PbGxELWrT+YZMBfiUyt1MRUNjMV23zohwlG2HYtCQOsCwsTHguXkyg==}
-    dependencies:
-      tslib: 2.5.0
     dev: true
 
   /@types/chai-subset@1.3.3:

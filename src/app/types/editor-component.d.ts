@@ -1,4 +1,4 @@
-import type { CSSResult, CSSResultGroup, LitElement, TemplateResult } from 'lit';
+import type { CSSResult, CSSResultGroup, TemplateResult } from 'lit';
 
 
 declare global {
@@ -13,7 +13,7 @@ declare global {
 		styles?(this: EditorElement): CSSResult;
 	});
 
-	class EditorElement extends LitElement {
+	class EditorElement {
 
 		public requestUpdate(): void;
 

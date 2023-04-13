@@ -8,8 +8,6 @@
 		"incremental": false,
 		"types": [
 			"vite/client",
-			"sharedworker",
-			"node",
 		]
 	},
 	"include": [
