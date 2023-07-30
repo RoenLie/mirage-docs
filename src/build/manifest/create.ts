@@ -68,7 +68,7 @@ function litUsedTagsPlugin(): Plugin {
 					return;
 
 				const componentText = node.getText();
-				const tags = getUsedTags(componentText, [ /^es-/, /^docs-/ ]);
+				const tags = getUsedTags(componentText, [ /^es-/, /^docs-/, /^mm-/ ]);
 
 				(classDoc as any).dependencies = tags.map(tag => ({
 					name: tag,
