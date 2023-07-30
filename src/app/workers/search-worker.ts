@@ -1,33 +1,36 @@
-import { create, type Data, load, type Lyra, type PropertiesSchema, search } from '@lyrasearch/lyra';
-import { type defaultHtmlSchema } from '@lyrasearch/plugin-parsedoc';
+import { create, load, type Orama, type RawData, search } from '@orama/orama';
 
 
-export const restoreFromObject  = async <T extends PropertiesSchema>(
-	data: Data<any>,
-): Promise<Lyra<T>> => {
-	const db = await create<any>({
-		edge:   true,
-		schema: {
-			__placeholder: 'string',
-		},
+const defaultHtmlSchema = {
+	type:    'string',
+	content: 'string',
+	path:    'string',
+} as const;
+
+// Creating a custom restore function because @orama/plugin-data-persistence
+// exposes nodejs imports that don't work in the browser.
+const customRestore = async (
+	data: RawData,
+): Promise<Orama> => {
+	const db = await create({
+		schema: defaultHtmlSchema,
 	});
 
 	await load(db, data);
 
-	return db as unknown as Lyra<T>;
+	return db;
 };
 
 
 (async () => {
-	const searchData = await fetch('../searchIndexes.json').then(d => d.json()).then(d => d);
+	const JSONIndex = await fetch('../searchIndexes.json')
+		.then(d => d.json()).then(d => d);
 
-	const db = await restoreFromObject<typeof defaultHtmlSchema>(searchData);
-	//console.log(db);
+	const db = await customRestore(JSONIndex);
 
-	self.onmessage = async (ev: MessageEvent<any>) => {
+	self.onmessage = async (ev: MessageEvent) => {
 		const searchParams = ev.data;
-
-		const result = await search<typeof defaultHtmlSchema>(db, searchParams);
+		const result = await search(db, searchParams);
 
 		postMessage(result);
 	};

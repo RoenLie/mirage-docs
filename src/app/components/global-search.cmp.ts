@@ -1,6 +1,5 @@
-import { RetrievedDoc, type SearchParams, SearchResult } from '@lyrasearch/lyra';
-import { type defaultHtmlSchema } from '@lyrasearch/plugin-parsedoc';
-import { css, html, LitElement, PropertyValueMap } from 'lit';
+import { type ElapsedTime } from '@orama/orama';
+import { css, html, LitElement, type PropertyValues } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { live } from 'lit/directives/live.js';
@@ -10,14 +9,28 @@ import { when } from 'lit/directives/when.js';
 import { componentStyles } from '../styles/component.styles.js';
 
 
-type ExpandedDoc = RetrievedDoc<{
-	readonly type: 'string';
-	readonly content: 'string';
-	readonly path: 'string';
-	modifiedPath: 'string';
-	displayPath: 'string';
-	displayText: 'string';
-}>
+type CustomResult = {
+	/** The number of all the matched documents. */
+	count: number;
+	/** An array of matched documents taking `limit` and `offset` into account. */
+	hits: ExpandedDoc[];
+	/** The time taken to search. */
+	elapsed: ElapsedTime;
+}
+
+
+type ExpandedDoc = {
+	id: string;
+	score: number;
+	document: {
+		readonly type: string;
+		readonly content: string;
+		readonly path: string;
+		modifiedPath: string;
+		displayPath: string;
+		displayText: string;
+	};
+}
 
 
 const base = window.miragedocs.siteConfig.internal.base ?? '';
@@ -27,7 +40,7 @@ const base = window.miragedocs.siteConfig.internal.base ?? '';
 export class GlobalSearch extends LitElement {
 
 	@state() protected searchValue = '';
-	@state() protected searchResult: ExpandedDoc[] = [];
+	@state() protected searchResult: any[] = [];
 	@query('dialog') public dialogQry: HTMLDialogElement;
 	protected searchWorker: Worker;
 	protected get colorScheme() { return document.documentElement.getAttribute('color-scheme') ?? ''; }
@@ -66,7 +79,7 @@ export class GlobalSearch extends LitElement {
 		window.addEventListener('keydown', this.hotkeyListener);
 	}
 
-	protected override updated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+	protected override updated(_changedProperties: PropertyValues): void {
 		super.updated(_changedProperties);
 		this.setAttribute('color-scheme', this.colorScheme);
 	}
@@ -83,13 +96,9 @@ export class GlobalSearch extends LitElement {
 		this.dialogQry.showModal();
 	}
 
-	protected handleDialogOpen() {
-		console.log('modal opened');
-	}
+	protected handleDialogOpen() { }
 
-	protected handleDialogClose() {
-		console.log('modal closed');
-	}
+	protected handleDialogClose() { }
 
 	protected handleDialogInput(ev: InputEvent & {target: HTMLInputElement}) {
 		const value = ev.target.value;
@@ -123,19 +132,13 @@ export class GlobalSearch extends LitElement {
 
 
 	//#region Worker
-	protected requestWorkerResponse = async (
-		search: SearchParams<typeof defaultHtmlSchema>,
-	) => {
+	protected requestWorkerResponse = async (search: any) => {
 		this.searchWorker.postMessage(search);
 	};
 
-	protected handleWorkerResponse = async (
-		msg: MessageEvent<SearchResult<typeof defaultHtmlSchema>>,
-	) => {
-		let data = msg.data;
-		//console.log(data);
 
-		this.searchResult = data.hits.map((hit) => {
+	protected handleWorkerResponse = async ({ data }: MessageEvent<CustomResult>) => {
+		this.searchResult = data.hits.map(hit => {
 			const modifiedPath = hit.document.path.split(':').at(0) ?? '';
 			const displayText = hit.document.content.slice(0, 20);
 			const displayPath = modifiedPath
@@ -157,12 +160,6 @@ export class GlobalSearch extends LitElement {
 			};
 
 			return expandedHit;
-		}).filter(hit => {
-			return true;
-
-			const link = hit.document.path.split(':').at(0) ?? '';
-
-			return location.hash !== '#/' + link;
 		}).filter((hit, idx, arr) => {
 			return !arr.slice(idx + 1, arr.length)
 				.some(h => h.document.modifiedPath === hit.document.modifiedPath);

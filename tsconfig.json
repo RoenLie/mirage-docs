@@ -7,7 +7,6 @@
 		"incremental": false,
 		"types": [
 			"vite/client",
-			"node",
 			"sharedworker"
 		],
 		"lib": [

@@ -8,6 +8,7 @@
 		"incremental": false,
 		"types": [
 			"vite/client",
+			"sharedworker",
 		]
 	},
 	"include": [

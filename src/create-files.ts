@@ -1,5 +1,5 @@
-import { create } from '@lyrasearch/lyra';
-import { defaultHtmlSchema, populate } from '@lyrasearch/plugin-parsedoc';
+import { create } from '@orama/orama';
+import { defaultHtmlSchema, populate } from '@orama/plugin-parsedoc';
 import { promises } from 'fs';
 import { join, normalize, resolve, sep } from 'path';
 
@@ -132,7 +132,7 @@ export const createDocFiles = async (
 
 
 	//#region create lyra search indexes.
-	const lyraDb = await create({
+	const oramaDb = await create({
 		schema: defaultHtmlSchema,
 	});
 
@@ -145,7 +145,7 @@ export const createDocFiles = async (
 
 		route = trimHash(trim([ props.cacheDir, libDir ]), route);
 
-		await populate(lyraDb, content, 'md', {
+		await populate(oramaDb, content, 'md', {
 			basePath: route + ':',
 		});
 	}));
@@ -226,7 +226,7 @@ export const createDocFiles = async (
 		tagCache,
 		manifestCache,
 		siteconfigFilePath,
-		lyraDb,
+		oramaDb,
 		relativeEntryDir,
 		relativeLibDir,
 	};

@@ -1,4 +1,4 @@
-import Fs from 'fs';
+import { readFileSync } from 'node:fs';
 
 import { genToArray, getFiles } from '../helpers/get-files.js';
 
@@ -27,10 +27,23 @@ export const createTagCache = async (options: {
 		});
 
 		for (const file of files) {
-			const fileContent = Fs.readFileSync(file, { encoding: 'utf8' });
+			const fileContent = readFileSync(file, { encoding: 'utf8' });
+			const normalizedFileName = file.replaceAll('\\', '/');
+
+			fileContent.replaceAll(/HTMLElementTagNameMap.*?{(.*?)}/gs, (val, capture: string) => {
+				capture.replaceAll(/([-\w]+)['"]/g, (val, tag: string) => {
+					if (!/[^-\w]/.test(tag))
+						componentTagCache.set(tag, normalizedFileName);
+
+					return val;
+				});
+
+				return val;
+			});
+
 			options.tagCapturePatterns.forEach(expr => {
 				fileContent.replaceAll(expr, (val, tag) => {
-					componentTagCache.set(tag, file.replaceAll('\\', '/'));
+					componentTagCache.set(tag, normalizedFileName);
 
 					return val;
 				});

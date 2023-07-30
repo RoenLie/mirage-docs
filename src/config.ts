@@ -1,4 +1,4 @@
-import { persistToFile } from '@lyrasearch/plugin-data-persistence';
+import { persistToFile } from '@orama/plugin-data-persistence/server';
 import { deepmerge } from 'deepmerge-ts';
 import { promises } from 'fs';
 import { join, resolve, sep } from 'path';
@@ -25,7 +25,7 @@ export const defineDocConfig = async (
 		tagCache,
 		manifestCache,
 		siteconfigFilePath,
-		lyraDb,
+		oramaDb,
 		relativeEntryDir,
 		relativeLibDir,
 	} = await createDocFiles(pRoot, viteConfig?.base ?? '', props);
@@ -166,7 +166,7 @@ export const defineDocConfig = async (
 	}));
 
 	// Write the search index file to public disc folder.
-	await persistToFile(lyraDb, 'json', join(mergedConfig.publicDir || '', 'searchIndexes.json'));
+	await persistToFile(oramaDb, 'json', join(mergedConfig.publicDir || '', 'searchIndexes.json'));
 
 	return mergedConfig as ReturnType<typeof defineConfig>;
 };
