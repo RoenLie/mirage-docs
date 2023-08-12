@@ -1,4 +1,4 @@
-import Path from 'path';
+import Path from 'node:path';
 
 import { genToArray, getFiles } from '../helpers/get-files.js';
 
@@ -19,7 +19,7 @@ export const createFileCache = async (options: {
 		files = files.filter(pth => pattern.test(pth));
 
 		files.forEach(file => {
-			let name = Path.parse(file).name;
+			const name = Path.parse(file).name;
 			cache.set(name, file.replaceAll('\\', '/'));
 		});
 	}

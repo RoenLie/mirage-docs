@@ -1,13 +1,13 @@
-import { ResolvedConfig } from 'vite';
+import { type ResolvedConfig } from 'vite';
 
-export type AutoImportPluginProps = {
+export interface AutoImportPluginProps {
 	tagPrefixes: string[],
 	loadWhitelist: RegExp[],
 	loadBlacklist?: RegExp[];
 	tagCaptureExpr?: RegExp;
 }
 
-export type AutoImportLoadProps = {
+export interface AutoImportLoadProps {
 	id: string;
 	config: ResolvedConfig;
 	tagCache: Map<string, string>;

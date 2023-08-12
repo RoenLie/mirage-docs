@@ -1,14 +1,14 @@
-import { css, html, LitElement, PropertyValues, TemplateResult, unsafeCSS } from 'lit';
+import { css, html, LitElement, type PropertyValues, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
-import { FocusableElement, tabbable } from 'tabbable';
+import { type FocusableElement, tabbable } from 'tabbable';
 
 import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
 import { findActiveElement } from '../utilities/domquery.js';
-import { pathsToTree, TreeRecord } from '../utilities/paths-to-tree.js';
+import { pathsToTree, type TreeRecord } from '../utilities/paths-to-tree.js';
 import { trimHash } from '../utilities/trim-route-hash.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
@@ -90,7 +90,7 @@ export class MidocPathTreeCmp extends LitElement {
 	};
 
 	protected handleHashChange = () => {
-		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
+		const hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
 		this.activeHref = hash.slice(Array.from(hash).findIndex(c => c !== '/'));
 	};
 

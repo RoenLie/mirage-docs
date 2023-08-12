@@ -1,6 +1,6 @@
-import Fs from 'fs';
+import Fs from 'node:fs';
 
-import { AutoImportLoadProps } from './auto-import.types.js';
+import { type AutoImportLoadProps } from './auto-import.types.js';
 
 
 export const componentAutoImportLoad = (props: AutoImportLoadProps) => {

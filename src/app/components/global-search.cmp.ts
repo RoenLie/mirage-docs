@@ -9,7 +9,7 @@ import { when } from 'lit/directives/when.js';
 import { componentStyles } from '../styles/component.styles.js';
 
 
-type CustomResult = {
+interface CustomResult {
 	/** The number of all the matched documents. */
 	count: number;
 	/** An array of matched documents taking `limit` and `offset` into account. */
@@ -19,7 +19,7 @@ type CustomResult = {
 }
 
 
-type ExpandedDoc = {
+interface ExpandedDoc {
 	id: string;
 	score: number;
 	document: {
@@ -43,7 +43,10 @@ export class GlobalSearch extends LitElement {
 	@state() protected searchResult: any[] = [];
 	@query('dialog') public dialogQry: HTMLDialogElement;
 	protected searchWorker: Worker;
-	protected get colorScheme() { return document.documentElement.getAttribute('color-scheme') ?? ''; }
+	protected get colorScheme() {
+		return document.documentElement.getAttribute('color-scheme') ?? '';
+	}
+
 	protected colorSchemeObs = new MutationObserver(() => this.requestUpdate());
 	protected hotkeyListener = (ev: KeyboardEvent) => {
 		if (ev.code === 'KeyP' && ev.ctrlKey) {

@@ -1,4 +1,4 @@
-import { AnalyzePhaseParams, Plugin } from '@custom-elements-manifest/analyzer';
+import { type AnalyzePhaseParams, type Plugin } from '@custom-elements-manifest/analyzer';
 import { create, litPlugin, ts } from '@custom-elements-manifest/analyzer/src/browser-entrypoint.js';
 import { readFileSync } from 'fs';
 

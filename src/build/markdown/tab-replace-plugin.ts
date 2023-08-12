@@ -5,10 +5,10 @@ import { stringRepeat } from '../helpers/string-repeat.js';
 
 export const tabReplacePlugin: mdIt.PluginWithOptions<{tabWidth: number}> = (md, options) => {
 	// default to being two spaces wide
-	let tabWidth: number = options?.tabWidth ?? 2;
+	const tabWidth: number = options?.tabWidth ?? 2;
 
 	// patch the current rule, don't replace it completely
-	let originalRule = md.renderer.rules.fence;
+	const originalRule = md.renderer.rules.fence;
 	md.renderer.rules.fence = function(tokens, idx, options, env, self) {
 		tokens[idx]!.content = expandTabs(tokens[idx]!.content, tabWidth);
 

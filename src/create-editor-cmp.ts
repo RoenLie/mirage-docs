@@ -1,7 +1,6 @@
 import { promises } from 'fs';
 
 import { editorPageTemplate } from './app/generators/editor-page-template.js';
-import { DocPath } from './build/helpers/docpath.js';
 import { createComponentNameFromPath, createComponentTagFromPath } from './build/helpers/virtual-helpers.js';
 
 

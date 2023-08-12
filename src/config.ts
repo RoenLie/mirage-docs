@@ -3,11 +3,11 @@ import { deepmerge } from 'deepmerge-ts';
 import { promises } from 'fs';
 import { join, resolve, sep } from 'path';
 import copy from 'rollup-plugin-copy';
-import { defineConfig, Plugin, ResolvedConfig, UserConfig } from 'vite';
+import { defineConfig, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
 
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import { DocPath } from './build/helpers/docpath.js';
-import { ConfigProperties, createDocFiles } from './create-files.js';
+import { type ConfigProperties, createDocFiles } from './create-files.js';
 import { createMarkdownComponent } from './create-markdown-cmp.js';
 
 

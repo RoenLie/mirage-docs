@@ -6,7 +6,8 @@ export const stringDedent = (
 		closest?: boolean;
 	}>,
 ) => {
-	let { trim = true, count = Infinity, closest = true } = options ?? {};
+	const { trim = true, closest = true } = options ?? {};
+	let { count = Infinity } = options ?? {};
 
 	if (trim)
 		string = string.trim();
@@ -19,7 +20,7 @@ export const stringDedent = (
 		);
 	}
 
-	let lines = string.split('\n');
+	const lines = string.split('\n');
 
 	for (let i = 0; i < lines.length; i++) {
 		let iteration = 0;
@@ -34,13 +35,12 @@ export const stringDedent = (
 
 export const countFirstCharSequence = (content: string, char: string) => {
 	let tabCount = 0;
-	for (let i = 0; i < content.length; i++) {
-		let element = content[i];
-		let isTab = element === char;
+
+	for (const element of content) {
+		const isTab = element === char;
 
 		if (tabCount > 0 && !isTab)
 			break;
-
 		if (isTab)
 			tabCount++;
 	}

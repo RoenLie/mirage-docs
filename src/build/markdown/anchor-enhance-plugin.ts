@@ -5,9 +5,7 @@ export const anchorEnhancePlugin: mdIt.PluginWithOptions<{class: string}> = (md)
 	md.core.ruler.push('anchor_internalizer', (state) => {
 		const tokens = state.tokens;
 
-		for (let idx = 0; idx < tokens.length; idx++) {
-			const token = tokens[idx];
-
+		for (const token of tokens) {
 			if (token?.type !== 'inline')
 				continue;
 

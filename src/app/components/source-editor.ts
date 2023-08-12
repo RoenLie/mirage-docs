@@ -1,10 +1,10 @@
 import { css, html, LitElement, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
-import { DirectiveResult } from 'lit/directive.js';
+import { type DirectiveResult } from 'lit/directive.js';
 import type { UnsafeHTMLDirective } from 'lit/directives/unsafe-html.js';
 
-import { curryDebounce } from '../../build/helpers/debounce.js';
-import { LoadedEditor, monaco } from '../../build/helpers/monaco.js';
+import { debounce } from '../../build/helpers/debounce.js';
+import { type LoadedEditor, monaco } from '../../build/helpers/monaco.js';
 import { stringDedent } from '../../build/helpers/string-dedent.js';
 import { unpkgReplace } from '../../build/helpers/unpkg-replace.js';
 import { drag } from '../utilities/drag.js';
@@ -123,7 +123,7 @@ export class EsSourceEditor extends LitElement {
 		this.editor?.layout();
 	}
 
-	protected delayedExecute = curryDebounce(1000, () => this.execute());
+	protected delayedExecute = debounce(1000, () => this.execute());
 
 	protected async execute(force = false) {
 		const js = unpkgReplace(this.editor.getValue());

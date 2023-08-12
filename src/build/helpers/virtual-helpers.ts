@@ -5,7 +5,7 @@ import { toTagName } from './to-tag-name.js';
 
 
 export const createModuleIdFromPath = (path: string, prefix = 'alias:') => {
-	let fileInfo = parse(path);
+	const fileInfo = parse(path);
 
 	return prefix + fileInfo.name
 		.replaceAll('.', '-')
@@ -14,15 +14,15 @@ export const createModuleIdFromPath = (path: string, prefix = 'alias:') => {
 
 
 export const createComponentTagFromPath = (path: string) => {
-	let fileInfo = parse(path);
-	let tagname = toTagName(fileInfo.name, 'midoc');
+	const fileInfo = parse(path);
+	const tagname = toTagName(fileInfo.name, 'midoc');
 
 	const folders = path.split('/')
 		.reduce((p, c) => {
 			c.startsWith('_') && p.push(c.replace('_', ''));
 
 			return p;
-		}, <string[]>[]);
+		}, [] as string[]);
 
 	folders.push(tagname);
 
@@ -34,7 +34,7 @@ export const createComponentTagFromPath = (path: string) => {
 
 
 export const createComponentNameFromPath = (path: string) => {
-	let fileInfo = parse(path);
+	const fileInfo = parse(path);
 
 	return toPascalCase('Midoc' + fileInfo.name.replaceAll(' ', '-') + 'Cmp');
 };

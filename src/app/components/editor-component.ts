@@ -1,4 +1,4 @@
-import { css, CSSResult, CSSResultGroup, html, TemplateResult } from 'lit';
+import { css, CSSResult, type CSSResultGroup, html, type TemplateResult } from 'lit';
 
 
 type EditorComponentBuilder = (api: {

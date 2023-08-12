@@ -1,4 +1,4 @@
-import { html, TemplateResult } from 'lit';
+import { html, type TemplateResult } from 'lit';
 
 
 export const Icon = (template: TemplateResult) => {

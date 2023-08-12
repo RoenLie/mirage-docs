@@ -1,5 +1,6 @@
 import { toWords } from './to-words.js';
 
+
 /** Split the `text` by words and apply kebab casing. */
 export const toTagName = (text: string, prefix?: string, postfix?: string): string => {
 	let tag = toWords(text, '-')

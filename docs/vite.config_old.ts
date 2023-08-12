@@ -3,7 +3,7 @@ import { type UserConfig } from 'vite';
 
 
 export default defineDocConfig({
-	//root: './docs',
+	root:      '/docs',
 	base:      '/mirage-docs',
 	publicDir: 'docs/assets/',
 	build:     {
@@ -12,8 +12,9 @@ export default defineDocConfig({
 	},
 	plugins: [],
 }, {
-	cacheDir: './docs',
-	entryDir: './docs/pages',
+	cacheDir: '/docs/',
+	entryDir: '/docs/pages',
+	debug:    true,
 	//siteConfig: {
 	//links: {
 	//	//styles: [

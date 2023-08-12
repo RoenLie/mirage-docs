@@ -1,5 +1,5 @@
 import { createManifest } from '../manifest/create.js';
-import { CustomElementManifest, Declarations } from '../manifest/metadata.types.js';
+import { type CustomElementManifest, type Declarations } from '../manifest/metadata.types.js';
 
 export const createManifestCache = (
 	/** Map of tag and path to where that component is declared */

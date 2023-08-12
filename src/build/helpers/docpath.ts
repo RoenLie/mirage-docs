@@ -1,4 +1,5 @@
-import path, { join, normalize, resolve } from 'path';
+import path, { join, normalize, resolve } from 'node:path';
+
 
 export const DocPath = (() => {
 	return {

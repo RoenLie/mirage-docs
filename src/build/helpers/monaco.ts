@@ -5,7 +5,7 @@ interface CancelablePromise<T> extends Promise<T> {
 	cancel: () => void;
 }
 
-export { editor };
+export type { editor };
 export type LoadedEditor = ReturnType<Awaited<typeof monaco>['editor']['create']>;
 export type Loader = Awaited<ReturnType<typeof loader['init']>>;
 export type LoaderPromise = CancelablePromise<Loader>;

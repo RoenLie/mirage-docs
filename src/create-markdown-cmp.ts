@@ -7,7 +7,7 @@ import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
 import { createComponentNameFromPath, createComponentTagFromPath } from './build/helpers/virtual-helpers.js';
-import { Declarations } from './build/manifest/metadata.types.js';
+import { type Declarations } from './build/manifest/metadata.types.js';
 import { markdownIt } from './build/markdown/markdown-it.js';
 
 
@@ -25,7 +25,7 @@ export const createMarkdownComponent = (
 
 		/* loop through and cache paths for all tags that match the expression and whitelist. */
 		getUsedTags(content, [ /es-/, /midoc-/ ]).forEach(tag => {
-			let path = tagCache.get(tag);
+			const path = tagCache.get(tag);
 			if (path)
 				componentImportPaths.add(path);
 		});

@@ -1,4 +1,4 @@
-import { SiteConfig } from '../../build/config.types.js';
+import { type SiteConfig } from '../../build/config.types.js';
 
 
 declare global {

@@ -1,4 +1,4 @@
-import { NameReplacement, replaceInName } from './name-replacement.js';
+import { type NameReplacement, replaceInName } from './name-replacement.js';
 import { createSegmentedPath, isGroupingSegment, segmentComparer } from './segments.js';
 
 export type TreeRecord<T = any, TEnd = any> = {
