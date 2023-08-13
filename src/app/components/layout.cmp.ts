@@ -4,6 +4,7 @@ import '../types/globals.js';
 
 import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';
 
 import { componentStyles } from '../styles/component.styles.js';
@@ -264,7 +265,11 @@ export class MiDocLayoutCmp extends LitElement {
 				`) }
 		</main>
 
-		<div class="scrollback">
+		<div class=${ classMap({
+			scrollback: true,
+			hidden:     (this.frameQry?.contentWindow?.scrollY ?? 0)
+				< (this.frameQry?.contentWindow?.innerHeight ?? 800),
+		}) }>
 			<button class="toggle" @click=${ () => this.handleScrollback() }>
 				${ Icon(chevronUpIcon) }
 			</button>

@@ -1,5 +1,5 @@
 import { type ElapsedTime } from '@orama/orama';
-import { css, html, LitElement, type PropertyValues } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { live } from 'lit/directives/live.js';
@@ -7,6 +7,7 @@ import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 
 import { componentStyles } from '../styles/component.styles.js';
+import { Icon, xIcon } from './icons.js';
 
 
 interface CustomResult {
@@ -48,7 +49,10 @@ export class GlobalSearch extends LitElement {
 		return document.documentElement.getAttribute('color-scheme') ?? '';
 	}
 
-	protected colorSchemeObs = new MutationObserver(() => this.requestUpdate());
+	protected colorSchemeObs = new MutationObserver(() => {
+		this.setAttribute('color-scheme', this.colorScheme);
+	});
+
 	protected dialogObs = new MutationObserver(() => this.handleDialogToggle());
 	protected hotkeyListener = (ev: KeyboardEvent) => {
 		if (ev.code === 'KeyP' && ev.ctrlKey) {
@@ -84,8 +88,10 @@ export class GlobalSearch extends LitElement {
 				this.activeSearchEl?.classList?.toggle('active', true);
 			}
 		}
-		if (ev.code === 'Enter')
+		if (ev.code === 'Enter') {
+			ev.preventDefault();
 			this.activeSearchEl?.querySelector('a')?.click();
+		}
 	}
 
 	public override async connectedCallback() {
@@ -128,6 +134,10 @@ export class GlobalSearch extends LitElement {
 
 	protected handleDialogToggle() {
 		if (this.dialogQry.open) {
+			const allEls = [ ...this.renderRoot.querySelectorAll('ul li') ] as HTMLElement[];
+			if (!allEls.some(el => this.activeSearchEl === el))
+				this.activeSearchEl = allEls[0];
+
 			this.requestWorkerResponse({
 				term:       this.searchValue,
 				properties: '*',
@@ -193,6 +203,14 @@ export class GlobalSearch extends LitElement {
 			return !arr.slice(idx + 1, arr.length)
 				.some(h => h.document.modifiedPath === hit.document.modifiedPath);
 		});
+
+		await this.updateComplete;
+		const allEls = [ ...this.renderRoot.querySelectorAll('ul li:not(:has(a.current))') ] as HTMLElement[];
+		if (!this.activeSearchEl || !allEls.some(el => this.activeSearchEl === el)) {
+			this.activeSearchEl?.classList.toggle('active', false);
+			this.activeSearchEl = allEls[0];
+			this.activeSearchEl?.classList.toggle('active', true);
+		}
 	};
 	//#endregion
 
@@ -230,12 +248,15 @@ export class GlobalSearch extends LitElement {
 		return html`
 		<dialog class="search">
 			<div class="base">
-				<div>
+				<div class="icon-wrapper">
 					<input
 						.value=${ live(this.searchValue) }
 						@input=${ this.handleDialogInput.bind(this) }
 						@keydown=${ this.inputKeyListener.bind(this) }
 					/>
+					<div class="input-icon" @click=${ () => this.dialogQry.close() }>
+						${ Icon(xIcon) }
+					</div>
 				</div>
 
 				<div class="results">
@@ -337,6 +358,23 @@ export class GlobalSearch extends LitElement {
 			outline: 1px solid orange;
 			outline-offset: 2px;
 			cursor: pointer;
+		}
+		.icon-wrapper {
+			display: grid;
+			grid-template-columns: 1fr max-content;
+			align-items: center;
+			gap: 12px;
+		}
+		.input-icon {
+			padding: 6px;
+			cursor: pointer;
+			border: 1px solid transparent;
+		}
+		.input-icon:hover {
+			box-shadow: 0px 0px 3px rgb(50,50,50);
+			border-radius: 8px;
+			border-color: var(--item-border-color);
+			background-color: var(--item-background-color);
 		}
 		.icon {
 			display: grid;
