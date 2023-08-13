@@ -23,7 +23,7 @@ const customRestore = async (
 
 
 (async () => {
-	const JSONIndex = await fetch('../searchIndexes.json')
+	const JSONIndex = await fetch('/.mirage/searchIndexes.json')
 		.then(d => d.json()).then(d => d);
 
 	const db = await customRestore(JSONIndex);

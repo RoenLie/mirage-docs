@@ -95,7 +95,6 @@ export class MiDocLayoutCmp extends LitElement {
 			this.activeFrame = hash + '.html';
 
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
-			//frame.src = (base ? base + '/' : '') + expandHash(this.activeFrame)
 			frame.src = (base ? base + '/' : '') + this.activeFrame.replace(viteRoot, '');
 
 			this.frameQry.replaceWith(frame);

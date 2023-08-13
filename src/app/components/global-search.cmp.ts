@@ -41,6 +41,7 @@ export class GlobalSearch extends LitElement {
 
 	@state() protected searchValue = '';
 	@state() protected searchResult: any[] = [];
+	@state() protected activeSearchEl?: HTMLElement;
 	@query('dialog') public dialogQry: HTMLDialogElement;
 	protected searchWorker: Worker;
 	protected get colorScheme() {
@@ -48,6 +49,7 @@ export class GlobalSearch extends LitElement {
 	}
 
 	protected colorSchemeObs = new MutationObserver(() => this.requestUpdate());
+	protected dialogObs = new MutationObserver(() => this.handleDialogToggle());
 	protected hotkeyListener = (ev: KeyboardEvent) => {
 		if (ev.code === 'KeyP' && ev.ctrlKey) {
 			ev.preventDefault();
@@ -55,24 +57,48 @@ export class GlobalSearch extends LitElement {
 		}
 	};
 
-	public override connectedCallback() {
+	protected inputKeyListener(ev: KeyboardEvent) {
+		if (ev.code === 'ArrowUp') {
+			ev.preventDefault();
+			const allEls = [ ...this.renderRoot.querySelectorAll('ul li') ] as HTMLElement[];
+			if (!this.activeSearchEl) {
+				this.activeSearchEl = allEls[0];
+				this.activeSearchEl?.classList?.toggle('active', true);
+			}
+			else {
+				this.activeSearchEl.classList.toggle('active', false);
+				this.activeSearchEl = this.activeSearchEl.previousElementSibling as HTMLElement ?? allEls.at(-1)!;
+				this.activeSearchEl?.classList?.toggle('active', true);
+			}
+		}
+		if (ev.code === 'ArrowDown') {
+			ev.preventDefault();
+			const allEls = [ ...this.renderRoot.querySelectorAll('ul li') ] as HTMLElement[];
+			if (!this.activeSearchEl) {
+				this.activeSearchEl = allEls[0];
+				this.activeSearchEl?.classList?.toggle('active', true);
+			}
+			else {
+				this.activeSearchEl.classList.toggle('active', false);
+				this.activeSearchEl = this.activeSearchEl.nextElementSibling as HTMLElement ?? allEls[0]!;
+				this.activeSearchEl?.classList?.toggle('active', true);
+			}
+		}
+		if (ev.code === 'Enter')
+			this.activeSearchEl?.querySelector('a')?.click();
+	}
+
+	public override async connectedCallback() {
 		super.connectedCallback();
 
-		/**
-		 * This is done so that vite takes the into the build.
-		 * The Actual url is wrong, but that is fixed by doing another call below.
-		 */
-		let notTrue;
-		if (notTrue === true) {
-			this.searchWorker = new Worker(
-				new URL('../workers/search-worker.ts', import.meta.url),
-				{ type: 'module' },
-			);
-		}
+		/** This is here so the worker is included in the build. */
+		(() => new Worker(new URL(
+			'../workers/search-worker.ts', import.meta.url,
+		), { type: 'module' }).terminate());
 
+		/** This is the actual creating of the worker. */
 		this.searchWorker = new Worker(
-			new URL(globalThis.location.origin + base + '/workers/search-worker.js'),
-			{ type: 'module' },
+			base + '/.mirage/workers/search-worker.js', { type: 'module' },
 		);
 
 		this.searchWorker.onmessage = this.handleWorkerResponse;
@@ -80,16 +106,17 @@ export class GlobalSearch extends LitElement {
 			{ attributes: true, attributeFilter: [ 'color-scheme' ] });
 
 		window.addEventListener('keydown', this.hotkeyListener);
-	}
 
-	protected override updated(_changedProperties: PropertyValues): void {
-		super.updated(_changedProperties);
-		this.setAttribute('color-scheme', this.colorScheme);
+		setTimeout(() => this.updateComplete.then(() => {
+			this.setAttribute('color-scheme', this.colorScheme);
+			this.dialogObs.observe(this.dialogQry, { attributes: true, attributeFilter: [ 'open' ] });
+		}));
 	}
 
 	public override disconnectedCallback() {
 		super.disconnectedCallback();
 		this.searchWorker.terminate();
+		this.dialogObs.disconnect();
 		this.colorSchemeObs.disconnect();
 		window.removeEventListener('keydown', this.hotkeyListener);
 	}
@@ -99,9 +126,14 @@ export class GlobalSearch extends LitElement {
 		this.dialogQry.showModal();
 	}
 
-	protected handleDialogOpen() { }
-
-	protected handleDialogClose() { }
+	protected handleDialogToggle() {
+		if (this.dialogQry.open) {
+			this.requestWorkerResponse({
+				term:       this.searchValue,
+				properties: '*',
+			});
+		}
+	}
 
 	protected handleDialogInput(ev: InputEvent & {target: HTMLInputElement}) {
 		const value = ev.target.value;
@@ -116,20 +148,15 @@ export class GlobalSearch extends LitElement {
 	protected handleLinkClick = (ev: Event, route: string) => {
 		ev.preventDefault();
 
-		const hash = '#/' + route;
+		const hash = '#' + route;
 		if (location.hash === hash)
 			return;
 
-		const base = window.miragedocs.siteConfig.internal.base;
-
-		history.pushState({}, '', base + '/' + hash);
+		history.pushState({}, '', hash);
 		dispatchEvent(new HashChangeEvent('hashchange'));
 
 		this.dialogQry.close();
 		this.requestUpdate();
-
-		//this.searchValue = '';
-		//this.searchResult = [];
 	};
 	//#endregion
 
@@ -138,7 +165,6 @@ export class GlobalSearch extends LitElement {
 	protected requestWorkerResponse = async (search: any) => {
 		this.searchWorker.postMessage(search);
 	};
-
 
 	protected handleWorkerResponse = async ({ data }: MessageEvent<CustomResult>) => {
 		this.searchResult = data.hits.map(hit => {
@@ -202,44 +228,48 @@ export class GlobalSearch extends LitElement {
 
 	protected dialogTemplate() {
 		return html`
-		<dialog
-			class="search"
-			@open=${ this.handleDialogOpen.bind(this) }
-			@close=${ this.handleDialogClose.bind(this) }
-		>
-		<div class="base">
-			<input .value=${ live(this.searchValue) } @input=${ this.handleDialogInput.bind(this) } />
-			<div class="results">
-				<ul>
-					${ map(this.searchResult, (result) => {
-						const link = result.document.modifiedPath;
-						const pathSegments = result.document.displayPath.split('/');
-						const segmentHeader = pathSegments.slice(0, -1);
-						const segmentBody = pathSegments.at(-1);
+		<dialog class="search">
+			<div class="base">
+				<div>
+					<input
+						.value=${ live(this.searchValue) }
+						@input=${ this.handleDialogInput.bind(this) }
+						@keydown=${ this.inputKeyListener.bind(this) }
+					/>
+				</div>
 
-						return html`
-						<li>
-							<a
-								href    =${ '/' + link }
-								@click  =${ (ev: Event) => this.handleLinkClick(ev, link) }
-								class=${ classMap({ current: location.hash === '#/' + link }) }
-							>
-							<div class="link-header">
-								${ map(segmentHeader, (seg, i) => html`
-								<span>${ seg }</span>
-								${ when(i !== segmentHeader.length - 1, () => html`<span>></span>`) }
-								`) }
-							</div>
-							<div class="link-text">
-								${ segmentBody }
-							</div>
-							</a>
-						</li>
-						`;
-					}) }
-				</ul>
+				<div class="results">
+					<ul>
+						${ map(this.searchResult, (result) => {
+							const link = result.document.modifiedPath;
+							const pathSegments = result.document.displayPath.split('/').filter(Boolean);
+							const segmentHeader = pathSegments.slice(2, -1);
+							const segmentBody = pathSegments.at(-1);
+
+							return html`
+							<li>
+								<a
+									tabindex="-1"
+									href    =${ '/' + link }
+									@click  =${ (ev: Event) => this.handleLinkClick(ev, link) }
+									class=${ classMap({ current: location.hash === '#' + link }) }
+								>
+								<div class="link-header">
+									${ map(segmentHeader, (seg, i) => html`
+									<span>${ seg }</span>
+									${ when(i !== segmentHeader.length - 1, () => html`<span>></span>`) }
+									`) }
+								</div>
+								<div class="link-text">
+									${ segmentBody }
+								</div>
+								</a>
+							</li>
+							`;
+						}) }
+					</ul>
+				</div>
 			</div>
-		</div>
 		</dialog>
 		`;
 	}
@@ -368,6 +398,9 @@ export class GlobalSearch extends LitElement {
 			border-radius: 8px;
 			border: 1px solid var(--item-border-color);
 			background-color: var(--item-background-color);
+		}
+		.results ul li.active {
+			border-color: orange;
 		}
 		.results ul li a {
 			text-decoration: none;

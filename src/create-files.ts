@@ -1,18 +1,15 @@
 import { create } from '@orama/orama';
 import { defaultHtmlSchema, populate } from '@orama/plugin-parsedoc';
 import { promises } from 'fs';
-import { join, normalize, resolve, sep } from 'path';
+import { join, normalize, sep } from 'path';
 
 import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { tsconfigTemplate } from './app/generators/tsconfig-template.js';
 import { typingsTemplate } from './app/generators/typings-template.js';
-import { createFileCache, type FilePathCache } from './build/cache/create-file-cache.js';
-import { createTagCache } from './build/cache/create-tag-cache.js';
+import { type FilePathCache } from './build/cache/create-file-cache.js';
 import { type AutoImportPluginProps } from './build/component/auto-import.types.js';
 import { type SiteConfig } from './build/config.types.js';
 import { DocPath } from './build/helpers/docpath.js';
-import { trim, trimHash } from './build/helpers/string.js';
-import { createManifestCache } from './build/manifest/create-manifest-cache.js';
 import { type Declarations } from './build/manifest/metadata.types.js';
 import { createEditorComponent } from './create-editor-cmp.js';
 import { createIndexFile } from './create-index-file.js';
@@ -21,7 +18,7 @@ import { createMarkdownComponent } from './create-markdown-cmp.js';
 
 export interface ConfigProperties {
 	root: string;
-	entryDir: string;
+	source: string;
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
 	input?: Record<string, string>;
 	autoImport?: AutoImportPluginProps;
@@ -31,10 +28,10 @@ export interface ConfigProperties {
 
 
 export const createDocFiles = async (
-	projectRoot: string,
-	base: string,
-	props: ConfigProperties,
 	args: {
+		projectRoot: string,
+		base: string,
+		props: ConfigProperties,
 		manifestCache: Map<string, Declarations>,
 		tagCache: Map<string, string>,
 		editorCache: FilePathCache,
@@ -42,16 +39,15 @@ export const createDocFiles = async (
 	},
 ) => {
 	const {
-		manifestCache,
-		tagCache,
-		editorCache,
-		markdownCache,
+		manifestCache, tagCache, editorCache,
+		markdownCache, props, base, projectRoot,
 	} = args;
+
 	props.siteConfig ??= {};
 
 	props.siteConfig.internal           ??= {} as any;
 	props.siteConfig.internal!.rootDir  ??= props.root;
-	props.siteConfig.internal!.entryDir ??= props.entryDir;
+	props.siteConfig.internal!.entryDir ??= props.source;
 	props.siteConfig.internal!.libDir   ??= '.mirage';
 	props.siteConfig.internal!.base 		??= base;
 
@@ -61,12 +57,10 @@ export const createDocFiles = async (
 	const filesToCreate = new Map<string, string>();
 
 	const relativeLibDir   = '.' + sep + normalize(join(props.root, libDir));
-	const relativeEntryDir = props.entryDir;
+	const relativeEntryDir = props.source;
 
 	//#region gather all route paths.
 	const routes = [ ...markdownCache.cache, ...editorCache.cache ].map(([ , path ]) => {
-		console.log({ projectRoot, path, relativeEntryDir, relativeLibDir });
-
 		const route = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		).replace(props.root, '').replaceAll('\\', '/').replace('.html', '');
@@ -131,11 +125,9 @@ export const createDocFiles = async (
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const content = await promises.readFile(path, { encoding: 'utf8' });
 
-		let route = DocPath.createCachePath(
+		const route = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
-		).replaceAll('\\', '/').replace('.html', '');
-
-		route = trimHash(trim([ libDir ]), route);
+		).replace(props.root, '').replaceAll('\\', '/').replace('.html', '');
 
 		await populate(oramaDb, content, 'md', {
 			basePath: route + ':',
@@ -164,7 +156,7 @@ export const createDocFiles = async (
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		);
 
-		const { content } = createIndexFile(
+		const content = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
 			props.siteConfig?.links?.scripts ?? [],
 			path,
@@ -175,7 +167,7 @@ export const createDocFiles = async (
 		filesToCreate.set(indexTargetPath, content);
 
 		Object.assign(props.input ??= {}, {
-			[indexTargetPath.split(sep).at(-1)!]: indexTargetPath.replaceAll('\\', '/'),
+			[indexTargetPath.split(sep).at(-1)!]: './' + indexTargetPath.replaceAll('\\', '/'),
 		});
 	}));
 	//#endregion
@@ -191,24 +183,22 @@ export const createDocFiles = async (
 			componentTargetPath.replace(props.root, '').replaceAll(/\\{1,}/g, '/'),
 			path,
 		);
-
 		filesToCreate.set(componentTargetPath, componentContent);
 
 		const indexTargetPath = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		);
 
-		const { content } = createIndexFile(
+		const content = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
 			props.siteConfig?.links?.scripts ?? [],
 			path,
 			componentTargetPath.replace(props.root, '').replaceAll(/\\{1,}/g, '/'),
 		);
-
 		filesToCreate.set(indexTargetPath, content);
 
 		Object.assign(props.input ??= {}, {
-			[indexTargetPath.split(sep).at(-1)!]: indexTargetPath.replaceAll('\\', '/'),
+			[indexTargetPath.split(sep).at(-1)!]: './' + indexTargetPath.replaceAll('\\', '/'),
 		});
 	}));
 	//#endregion

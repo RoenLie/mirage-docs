@@ -25,23 +25,15 @@ export class EsComponentEditor extends EsSourceEditor {
 			(await monaco).languages.typescript.typescriptDefaults.addExtraLib(editorCmpTypes),
 		);
 
-		/**
-		 * This is done so that vite takes the into the build.
-		 * The Actual url is wrong, but that is fixed by doing another call below.
-		 */
-		let notTrue;
-		if (notTrue === true) {
-			this.tsWorker = new Worker(
-				new URL('../workers/typescript-worker.ts', import.meta.url),
-				{ type: 'module' },
-			);
-		}
+		/** This is here so the worker is included in the build. */
+		(() => new Worker(new URL(
+			'../workers/typescript-worker.ts', import.meta.url,
+		), { type: 'module' }).terminate());
 
+		/** This is the actual creating of the worker. */
 		this.tsWorker = new Worker(
-			new URL(globalThis.location.origin + base + '/workers/typescript-worker.js'),
-			{ type: 'module' },
+			base + '/.mirage/workers/typescript-worker.js', { type: 'module' },
 		);
-
 		this.tsWorker.onmessage = this.handleWorkerResponse;
 
 		await super.firstUpdated();
@@ -53,11 +45,12 @@ export class EsComponentEditor extends EsSourceEditor {
 		this.tsWorker.terminate();
 	}
 
-	protected override updateHeight() {
+	protected override async updateHeight() {
+		const editor = await this.editor;
 		const contentHeight = Math.min(this.maxHeight, this.editorWrapperQry.clientHeight ?? 0 - 50);
 		const editorWidth = this.editorQry.clientWidth;
 
-		this.editor?.layout({ width: editorWidth, height: contentHeight });
+		editor.layout({ width: editorWidth, height: contentHeight });
 	}
 
 	protected override handleSlotChange() {
@@ -68,7 +61,8 @@ export class EsComponentEditor extends EsSourceEditor {
 	}
 
 	protected override async execute() {
-		let content = this.editor.getValue();
+		const editor = await this.editor;
+		let content = editor.getValue();
 		content = `const editorComponent = (builder) => builder;\n` + content;
 
 		const js = unpkgReplace(content);
@@ -76,7 +70,7 @@ export class EsComponentEditor extends EsSourceEditor {
 	}
 
 	protected handleWorkerResponse = async (msg: MessageEvent<string>) => {
-		let data = msg.data;
+		const data = msg.data;
 
 		try {
 			const encodedJs = encodeURIComponent(data);

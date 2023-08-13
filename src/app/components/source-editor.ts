@@ -24,12 +24,12 @@ export class EsSourceEditor extends LitElement {
 
 	//#region properties
 	protected editorLang: 'javascript' | 'typescript' = 'javascript';
-	protected editor: LoadedEditor;
+	protected resolveEditor: (editor: LoadedEditor) => any;
+	protected editor: Promise<LoadedEditor>;
 	protected get vsTheme() {
 		const scheme = document.documentElement.getAttribute('color-scheme') ?? 'dark';
-		const vsTheme = scheme === 'dark' ? 'vs-dark' : 'vs';
 
-		return vsTheme;
+		return scheme === 'dark' ? 'vs-dark' : 'vs';
 	}
 	//#endregion
 
@@ -53,6 +53,10 @@ export class EsSourceEditor extends LitElement {
 	public override connectedCallback() {
 		super.connectedCallback();
 
+		let resolve: (editor: LoadedEditor) => any = () => {};
+		this.editor = new Promise<LoadedEditor>(res => resolve = res);
+		this.resolveEditor = resolve;
+
 		this.resizeObs.observe(window.document.body);
 		this.documentElementObserver.observe(document.documentElement, {
 			attributes:      true,
@@ -63,7 +67,7 @@ export class EsSourceEditor extends LitElement {
 	public override disconnectedCallback() {
 		super.disconnectedCallback();
 
-		this.editor.dispose();
+		this.editor.then(ed => ed.dispose());
 		this.resizeObs.disconnect();
 		this.documentElementObserver.disconnect();
 	}
@@ -71,7 +75,7 @@ export class EsSourceEditor extends LitElement {
 	public override async firstUpdated() {
 		this.resizeObs.observe(this.editorWrapperQry);
 
-		this.editor = (await monaco).editor.create(this.editorQry, {
+		const editor = (await monaco).editor.create(this.editorQry, {
 			value:                   this.source,
 			language:                this.editorLang,
 			scrollbar:               { alwaysConsumeMouseWheel: false },
@@ -87,8 +91,10 @@ export class EsSourceEditor extends LitElement {
 			guides:                  { bracketPairs: true },
 		});
 
-		this.editor.onDidContentSizeChange(() => this.updateHeight());
-		this.editor.onDidChangeModelContent(this.delayedExecute);
+		this.resolveEditor(editor);
+
+		editor.onDidContentSizeChange(() => this.updateHeight());
+		editor.onDidChangeModelContent(this.delayedExecute);
 
 		this.setInitialHeight();
 		this.updateHeight();
@@ -100,12 +106,14 @@ export class EsSourceEditor extends LitElement {
 
 
 	//#region logic
-	protected setInitialHeight() {
+	protected async setInitialHeight() {
+		const editor = await this.editor;
+
 		if (this.autoHeight) {
 			if (this.maxHeight !== Infinity) {
 				// Based on: https://github.com/microsoft/monaco-editor/issues/794#issuecomment-688959283
 				this.editorWrapperQry.style.setProperty('height',
-					Math.min(this.maxHeight, this.editor.getContentHeight() + 50) + 'px');
+					Math.min(this.maxHeight, editor.getContentHeight() + 50) + 'px');
 			}
 		}
 		else {
@@ -113,20 +121,23 @@ export class EsSourceEditor extends LitElement {
 		}
 	}
 
-	protected updateHeight() {
+	protected async updateHeight() {
+		const editor = await this.editor;
+
 		const contentHeight = Math.min(this.maxHeight, this.editorWrapperQry.clientHeight ?? 0 - 50);
 		const editorWidth = this.editorQry.clientWidth;
 
-		this.editor?.layout({ width: editorWidth, height: contentHeight });
+		editor.layout({ width: editorWidth, height: contentHeight });
 		// doing a second call to layout to recalculate the height after setting it
 		// this fixes a bug where when in auto initial height, the first row is not visible.
-		this.editor?.layout();
+		editor.layout();
 	}
 
 	protected delayedExecute = debounce(1000, () => this.execute());
 
 	protected async execute(force = false) {
-		const js = unpkgReplace(this.editor.getValue());
+		const editor = await this.editor;
+		const js = unpkgReplace(editor.getValue());
 		const encodedJs = encodeURIComponent(js);
 		const dataUri = `data:text/javascript;charset=utf-8,${ encodedJs }`;
 
@@ -153,8 +164,9 @@ export class EsSourceEditor extends LitElement {
 			this.source = stringDedent(scriptContent);
 	}
 
-	protected handleColorScheme() {
-		this.editor.updateOptions({ theme: this.vsTheme });
+	protected async handleColorScheme() {
+		const editor = await this.editor;
+		editor.updateOptions({ theme: this.vsTheme });
 	}
 
 	protected handleResizeWrapper = (ev: PointerEvent) => {

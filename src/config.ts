@@ -24,11 +24,11 @@ export const defineDocConfig = async (
 ) => {
 	if (!props.root.startsWith('/'))
 		throw new SyntaxError('property `root` must start with /');
-	if (!props.entryDir.startsWith('/'))
+	if (!props.source.startsWith('/'))
 		throw new SyntaxError('property `entryDir` must start with /');
 
 	// We enforce it to start with a leading /, then we add a . to make it relative.
-	props.entryDir = '.' + props.entryDir;
+	props.source = '.' + props.source;
 
 	// We enforce it to start with / then we remove it.
 	props.root = props.root.replace(/^\/|^\\/, '');
@@ -37,43 +37,35 @@ export const defineDocConfig = async (
 	props.input      ??= { main: join(pRoot, props.root, 'index.html') };
 
 	// We by default look for tags where the entry dir is.
-	props.tagDirs    ??= [ { path: props.entryDir } ];
+	props.tagDirs    ??= [ { path: props.source } ];
 
 	// Cache all relevant files.
 	const [ manifestCache, tagCache, editorCache, markdownCache ] = await Promise.all([
 		createManifestCache({ directories: props.tagDirs! }),
 		createTagCache({ directories: props.tagDirs! }),
-		createFileCache({ directories: [ { path: props.entryDir, pattern: /\.editor\.ts/ } ] }),
-		createFileCache({ directories: [ { path: props.entryDir, pattern: /\.md/ } ] }),
+		createFileCache({ directories: [ { path: props.source, pattern: /\.editor\.ts/ } ] }),
+		createFileCache({ directories: [ { path: props.source, pattern: /\.md/ } ] }),
 	]);
 
 	const {
-		filesToCreate,
-		siteconfigFilePath,
-		oramaDb,
-		relativeEntryDir,
-		relativeLibDir,
-	} = await createDocFiles(
-		pRoot,
-		viteConfig?.base ?? '',
+		filesToCreate, siteconfigFilePath,
+		oramaDb, relativeEntryDir, relativeLibDir,
+	} = await createDocFiles({
+		projectRoot: pRoot,
+		base:	       viteConfig?.base ?? '',
 		props,
-		{
-			manifestCache,
-			tagCache,
-			editorCache,
-			markdownCache,
-		},
-	);
-
+		manifestCache,
+		tagCache,
+		editorCache,
+		markdownCache,
+	});
 
 	let config: ResolvedConfig;
 	const docConfig: UserConfig = {
 		appType:   'mpa',
-		publicDir: 'assets',
+		publicDir: 'assets/',
 		root:      join(pRoot, props.root),
 		build:     {
-			outDir,
-			emptyOutDir:   true,
 			rollupOptions: {
 				input: props.input,
 			},
@@ -88,12 +80,8 @@ export const defineDocConfig = async (
 					transformIndexHtml: {
 						order:   'pre',
 						handler: (html) => {
-							const shit = {
-								viteRoot: (props.root ?? '').replace(/^\.\/|^\.\\|^\\|^\//, ''),
-								siteconfigFilePath,
-								stuff:    siteconfigFilePath
-									.replace((props.root ?? '').replace(/^\.\/|^\.\\|^\\|^\//, ''), ''),
-							};
+							const siteConfigPath = siteconfigFilePath
+								.replace((props.root ?? '').replace(/^\.\/|^\.\\|^\\|^\//, ''), '');
 
 							return {
 								html,
@@ -102,21 +90,19 @@ export const defineDocConfig = async (
 										tag:   'script',
 										attrs: {
 											type: 'module',
-											src:  shit.stuff
-												.replaceAll('\\', '/')
-												.replaceAll(/\/{2,}/g, '/'),
+											src:  siteConfigPath.replaceAll('\\', '/').replaceAll(/\/{2,}/g, '/'),
 										},
 										injectTo: 'head-prepend',
 									},
 									{
 										tag:      'script',
-										attrs:    { type: 'module', id: 'i-am-a-banana1' },
+										attrs:    { type: 'module' },
 										injectTo: 'head-prepend',
 										children: 'import "@roenlie/mirage-docs/dist/app/components/layout.cmp.js"',
 									},
 									{
 										tag:      'script',
-										attrs:    { type: 'module', id: 'i-am-a-banana2' },
+										attrs:    { type: 'module' },
 										injectTo: 'head-prepend',
 										children: 'import "@roenlie/mirage-docs/assets/index.css"',
 									},
@@ -127,21 +113,14 @@ export const defineDocConfig = async (
 					load: (id) => {
 						/* if auto importer is being used, transform matching modules */
 						if (props.autoImport) {
-							const {
-								tagPrefixes,
-								loadWhitelist,
-								loadBlacklist,
-								tagCaptureExpr,
-							} = props.autoImport;
-
 							const transformed = componentAutoImportLoad({
 								id,
 								config,
 								tagCache,
-								tagPrefixes,
-								loadWhitelist,
-								loadBlacklist,
-								tagCaptureExpr,
+								tagPrefixes:    props.autoImport.tagPrefixes,
+								loadWhitelist:  props.autoImport.loadWhitelist,
+								loadBlacklist:  props.autoImport.loadBlacklist,
+								tagCaptureExpr: props.autoImport.tagCaptureExpr,
 							});
 
 							if (transformed)
@@ -196,19 +175,21 @@ export const defineDocConfig = async (
 
 	const mergedConfig = deepmerge(defineConfig(viteConfig), docConfig) as UserConfig;
 
+	mergedConfig.build ??= {};
+	mergedConfig.build.outDir ??= outDir;
+	mergedConfig.build.emptyOutDir ??= true;
 	mergedConfig.plugins?.push(
 		copy({
 			targets: [
 				{
 					src:  './node_modules/@roenlie/mirage-docs/dist/workers',
-					dest: mergedConfig.publicDir || '/assets',
+					dest: join(props.root, mergedConfig.publicDir || 'assets', '.mirage'),
 				},
 			],
 			hook:     'config',
 			copyOnce: true,
 		}) as any,
 	);
-
 
 	// Write the mirage files to mirage disc location.
 	await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {
@@ -224,7 +205,9 @@ export const defineDocConfig = async (
 	}));
 
 	// Write the search index file to public disc folder.
-	await persistToFile(oramaDb, 'json', join(mergedConfig.publicDir || '/assets', 'searchIndexes.json'));
+	const searchDir = join(pRoot, props.root, mergedConfig.publicDir || 'assets', '.mirage');
+	await promises.mkdir(searchDir, { recursive: true });
+	await persistToFile(oramaDb, 'json', join(searchDir, 'searchIndexes.json'));
 
 	return mergedConfig as ReturnType<typeof defineConfig>;
 };

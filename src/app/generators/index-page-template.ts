@@ -17,7 +17,7 @@ export const indexPageTemplate = (props: {
 		<title>${ props.title }</title>
 
 		<script type="module">
-			import '@roenlie/mirage-docs/assets/index.css';
+			import "@roenlie/mirage-docs/assets/index.css";
 		</script>
 
 		${ props.stylelinks.map(
