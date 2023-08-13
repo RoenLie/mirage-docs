@@ -14,6 +14,7 @@ import { layoutStyles } from './layout.styles.js';
 
 
 const base = window.miragedocs.siteConfig.internal.base ?? '';
+const viteRoot = window.miragedocs.siteConfig.internal.viteRoot ?? '';
 
 
 @customElement('midoc-layout')
@@ -94,7 +95,8 @@ export class MiDocLayoutCmp extends LitElement {
 			this.activeFrame = hash + '.html';
 
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
-			frame.src = (base ? base + '/' : '') + expandHash(this.activeFrame);
+			//frame.src = (base ? base + '/' : '') + expandHash(this.activeFrame)
+			frame.src = (base ? base + '/' : '') + this.activeFrame.replace(viteRoot, '');
 
 			this.frameQry.replaceWith(frame);
 			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });

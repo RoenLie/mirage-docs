@@ -16,7 +16,6 @@ export const createIndexFile = (
 		componentTag: createComponentTagFromPath(indexPath),
 	});
 
-
 	return {
 		content,
 	};

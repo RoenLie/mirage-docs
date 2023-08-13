@@ -23,5 +23,6 @@ export interface SiteConfig {
 		libDir: string;
 		rootDir: string;
 		entryDir: string;
+		viteRoot: string;
 	}>
 }
