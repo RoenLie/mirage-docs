@@ -142,6 +142,10 @@ export class GlobalSearch extends LitElement {
 				term:       this.searchValue,
 				properties: '*',
 			});
+
+			const inputEl = this.renderRoot.querySelector('input');
+			inputEl?.focus();
+			inputEl?.select();
 		}
 	}
 
@@ -264,7 +268,7 @@ export class GlobalSearch extends LitElement {
 						${ map(this.searchResult, (result) => {
 							const link = result.document.modifiedPath;
 							const pathSegments = result.document.displayPath.split('/').filter(Boolean);
-							const segmentHeader = pathSegments.slice(2, -1);
+							const segmentHeader = pathSegments.slice(0, -1);
 							const segmentBody = pathSegments.at(-1);
 
 							return html`

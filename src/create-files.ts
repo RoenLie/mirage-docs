@@ -6,6 +6,7 @@ import { join, normalize, sep } from 'path';
 import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { tsconfigTemplate } from './app/generators/tsconfig-template.js';
 import { typingsTemplate } from './app/generators/typings-template.js';
+import { _shortenUrl } from './app/utilities/shorten-url-internal.js';
 import { type FilePathCache } from './build/cache/create-file-cache.js';
 import { type AutoImportPluginProps } from './build/component/auto-import.types.js';
 import { type SiteConfig } from './build/config.types.js';
@@ -62,9 +63,11 @@ export const createDocFiles = async (
 
 	//#region gather all route paths.
 	const routes = [ ...markdownCache.cache, ...editorCache.cache ].map(([ , path ]) => {
-		const route = DocPath.createCachePath(
+		let route = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		).replace(props.root, '').replaceAll('\\', '/').replace('.html', '');
+
+		route = _shortenUrl(libDir, props.source, route);
 
 		return route;
 	});
@@ -126,9 +129,11 @@ export const createDocFiles = async (
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const content = await promises.readFile(path, { encoding: 'utf8' });
 
-		const route = DocPath.createCachePath(
+		let route = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		).replace(props.root, '').replaceAll('\\', '/').replace('.html', '');
+
+		route = _shortenUrl(libDir, props.source, route);
 
 		await populate(oramaDb, content, 'md', {
 			basePath: route + ':',

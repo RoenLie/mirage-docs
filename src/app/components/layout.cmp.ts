@@ -8,14 +8,13 @@ import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';
 
 import { componentStyles } from '../styles/component.styles.js';
-import { expandHash, trimHash } from '../utilities/trim-route-hash.js';
+import { expandUrl } from '../utilities/trim-route-hash.js';
 import { type GlobalSearch } from './global-search.cmp.js';
 import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
 import { layoutStyles } from './layout.styles.js';
 
 
 const base = window.miragedocs.siteConfig.internal.base ?? '';
-const viteRoot = window.miragedocs.siteConfig.internal.viteRoot ?? '';
 
 
 @customElement('midoc-layout')
@@ -96,7 +95,7 @@ export class MiDocLayoutCmp extends LitElement {
 			this.activeFrame = hash + '.html';
 
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
-			frame.src = (base ? base + '/' : '') + this.activeFrame.replace(viteRoot, '');
+			frame.src = base + expandUrl(this.activeFrame);
 
 			this.frameQry.replaceWith(frame);
 			this.frameQry.addEventListener('load', this.handleFrameLoad, { once: true });
@@ -128,7 +127,7 @@ export class MiDocLayoutCmp extends LitElement {
 		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
 		if (!hash) {
 			hash = window.miragedocs.routes[0] ?? '';
-			history.pushState({}, '', base + '#/' + trimHash(hash));
+			history.pushState({}, '', base + '#' + hash);
 			dispatchEvent(new HashChangeEvent('hashchange'));
 
 			return;
@@ -253,7 +252,7 @@ export class MiDocLayoutCmp extends LitElement {
 
 			<section>
 				<iframe src=${ this.activeFrame
-					? (base ? base + '/' : '') + expandHash(this.activeFrame)
+					? (base ? base + '/' : '') + expandUrl(this.activeFrame)
 					: '' }
 				></iframe>
 			</section>

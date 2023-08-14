@@ -9,7 +9,6 @@ import { buttonStyle } from '../styles/button.styles.js';
 import { componentStyles } from '../styles/component.styles.js';
 import { findActiveElement } from '../utilities/domquery.js';
 import { pathsToTree, type TreeRecord } from '../utilities/paths-to-tree.js';
-import { trimHash } from '../utilities/trim-route-hash.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
 
@@ -76,11 +75,12 @@ export class MidocPathTreeCmp extends LitElement {
 	protected handleLinkClick = (ev: Event, route: string) => {
 		ev.preventDefault();
 
-		const hash = trimHash('#' + route);
-		if (location.hash === hash)
+		if (location.hash === route)
 			return;
 
-		history.pushState({}, '', window.miragedocs.siteConfig.internal.base + '/' + hash);
+		const { base } = window.miragedocs.siteConfig.internal;
+		history.pushState({}, '', base + '#' + route);
+
 		dispatchEvent(new HashChangeEvent('hashchange'));
 	};
 
@@ -91,7 +91,7 @@ export class MidocPathTreeCmp extends LitElement {
 
 	protected handleHashChange = () => {
 		const hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
-		this.activeHref = hash.slice(Array.from(hash).findIndex(c => c !== '/'));
+		this.activeHref = hash;
 	};
 
 	protected handleKeydown = (ev: KeyboardEvent) => {
@@ -170,21 +170,21 @@ export class MidocPathTreeCmp extends LitElement {
 		return html`
 		${ map(
 			Object.entries(group),
-			([ dir, next ]: [string, Record<string, any> | string]) => html`
+			([ dir, next ]: [string, Record<string, any> | string]) => {
+				if (typeof next === 'string') {
+					return html`
+					<a
+						tabindex="0"
+						class   =${ classMap({ active: this.activeHref === next }) }
+						href    =${ next }
+						@click  =${ (ev: Event) => this.handleLinkClick(ev, next as string) }
+					>
+						${ dir }
+					</a>
+					`;
+				}
 
-			${ when(
-				typeof next === 'string',
-				() => html`
-				<a
-					tabindex="0"
-					class   =${ classMap({ active: this.activeHref === trimHash(next as string) }) }
-					href    =${ '/' + next }
-					@click  =${ (ev: Event) => this.handleLinkClick(ev, next as string) }
-				>
-					${ dir }
-				</a>
-				`,
-				() => html`
+				return html`
 				<div class="group">
 					<div class="heading" @click=${ () => this.handleToggleClick(dir) }>
 						<label>
@@ -203,9 +203,8 @@ export class MidocPathTreeCmp extends LitElement {
 						) }
 					</div>
 				</div>
-				`,
-			) }
-			`,
+				`;
+			},
 		) }
 		`;
 	};
