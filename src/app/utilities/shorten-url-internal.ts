@@ -3,10 +3,10 @@ export const _shortenUrl = (libDir: string, entryDir: string, url: string) => {
 	const splitLib = libDir.split('/').filter(Boolean);
 	const splitEntry = entryDir.replace(/^\.+/, '').split('/').filter(Boolean);
 
-	const prefix = [ ...splitLib, ...splitEntry  ].join('/');
-	const path = splitPath.join('/').slice(prefix.length);
+	splitLib.concat(splitEntry)
+		.forEach(pt => splitPath[0] === pt && splitPath.shift());
 
-	return path;
+	return '/' + splitPath.join('/');
 };
 
 
@@ -14,6 +14,9 @@ export const _expandUrl = (libDir: string, entryDir: string, url: string) => {
 	const splitPath = url.split('/').filter(Boolean);
 	const splitLib = libDir.split('/').filter(Boolean);
 	const splitEntry = entryDir.replace(/^\.+/, '').split('/').filter(Boolean);
+
+	if (splitEntry.length === 1)
+		splitEntry.length = 0;
 
 	return '/' + [ ...splitLib, ...splitEntry, ...splitPath ].join('/');
 };
