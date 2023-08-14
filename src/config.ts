@@ -73,8 +73,8 @@ export const defineDocConfig = async (
 		plugins: [
 			((): Plugin => {
 				return {
-					name:           'mirage-docs',
-					configResolved: (cfg) => {
+					name: 'mirage-docs',
+					configResolved(cfg) {
 						config = cfg;
 					},
 					transformIndexHtml: {
@@ -110,7 +110,7 @@ export const defineDocConfig = async (
 							};
 						},
 					},
-					load: (id) => {
+					load(id) {
 						/* if auto importer is being used, transform matching modules */
 						if (props.autoImport) {
 							const transformed = componentAutoImportLoad({
@@ -148,12 +148,14 @@ export const defineDocConfig = async (
 						if (module) {
 							server.moduleGraph.invalidateModule(module);
 
-							const componentTargetPath = DocPath.createCachePath(
-								pRoot, path, relativeEntryDir, relativeLibDir, 'ts',
-							);
+							//const componentTargetPath = DocPath.createCachePath(
+							//	pRoot, path, relativeEntryDir, relativeLibDir, 'ts',
+							//);
 
+							const rootDepth = props.root.split('/').filter(Boolean).length;
 							const file = await createMarkdownComponent(
 								pRoot,
+								rootDepth,
 								tagCache,
 								manifestCache,
 								componentTargetPath,

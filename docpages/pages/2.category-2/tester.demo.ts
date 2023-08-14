@@ -8,6 +8,8 @@ export class DemoComponent extends LitElement {
 	protected override render() {
 		return html`
 		DEMO COMPONENT
+
+		<mm-test-component></mm-test-component>
 		`;
 	}
 

@@ -51,6 +51,7 @@ export const createDocFiles = async (
 	props.siteConfig.internal!.libDir   ??= '.mirage';
 	props.siteConfig.internal!.base 		??= base;
 
+	const rootDepth = props.root.split('/').filter(Boolean).length;
 	const libDir = props.siteConfig.internal!.libDir;
 
 	/** Holds the path and content that will be created. */
@@ -144,6 +145,7 @@ export const createDocFiles = async (
 
 		const { content: componentContent } = await createMarkdownComponent(
 			projectRoot,
+			rootDepth,
 			tagCache,
 			manifestCache,
 			componentTargetPath,

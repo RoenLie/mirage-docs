@@ -2,7 +2,7 @@ import { promises, readFileSync } from 'fs';
 import { dirname, join, normalize } from 'path';
 
 import { docPageTemplate } from './app/generators/doc-page-template.js';
-import { getUsedTags } from './build/cache/create-tag-cache.js';
+import { TagCatcher } from './build/cache/create-tag-cache.js';
 import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
@@ -13,6 +13,7 @@ import { markdownIt } from './build/markdown/markdown-it.js';
 
 export const createMarkdownComponent = (
 	projectRoot: string,
+	rootDepth: number,
 	tagCache: Map<string, string>,
 	manifestCache: Map<string, Declarations>,
 	targetPath: string,
@@ -23,15 +24,15 @@ export const createMarkdownComponent = (
 		/* save the matching tags to a set, to avoid duplicates */
 		const componentImportPaths = new Set<string>();
 
-		/* loop through and cache paths for all tags that match the expression and whitelist. */
-		getUsedTags(content, [ /es-/, /midoc-/ ]).forEach(tag => {
+		/* loop through and cache paths for all custom element tags. */
+		TagCatcher.get(content).forEach(tag => {
 			const path = tagCache.get(tag);
 			if (path)
 				componentImportPaths.add(path);
 		});
 
 		const relativeComponentImports = [ ...componentImportPaths ]
-			.map(path => path
+			.map(path => '/..'.repeat(rootDepth) + path
 				.replace(projectRoot, '')
 				.replace(projectRoot.replaceAll('\\', '/'), ''));
 
@@ -164,6 +165,8 @@ export const createMarkdownComponent = (
 
 		const imports: string[] = [];
 		const metadata: Record<string, Declarations> = {};
+
+		imports.push(`import '${ path }?url'`);
 
 		addUsedTags(content, imports);
 		content = addHoistedImports(content, imports);

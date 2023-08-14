@@ -54,14 +54,18 @@ export const createTagCache = async (options: {
 	return componentTagCache;
 };
 
-export const getUsedTags = (
-	text: string,
-	whitelist: RegExp[],
-	tagExp = /<\/([\w-]+)>/g,
-) => {
-	return [
-		...new Set([ ...text.matchAll(tagExp) ]
-			.map(([ _, tagName ]) => tagName)
-			.filter((tag): tag is string => !!tag && whitelist.some(wl => wl.test(tag)))),
-	];
-};
+
+export class TagCatcher {
+
+	// Searches for tags that contain a hypen ( - ).
+	protected static tagExpr = /<\/(\w+-[\w-]+)>/g;
+
+	public static get(...text: string[]) {
+		const tags = new Set<string>();
+		for (const txt of text)
+			txt.replaceAll(TagCatcher.tagExpr, (s: string, c1: string) => (tags.add(c1), s));
+
+		return [ ...tags ];
+	}
+
+}

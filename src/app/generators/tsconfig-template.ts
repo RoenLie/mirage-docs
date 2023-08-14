@@ -3,7 +3,6 @@ import { stringDedent } from '../../build/helpers/string-dedent.js';
 export const tsconfigTemplate = stringDedent(`
 {
 	"compilerOptions": {
-		"rootDir": ".",
 		"baseUrl": ".",
 		"noEmit": true,
 		"incremental": false,

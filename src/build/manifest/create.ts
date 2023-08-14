@@ -2,7 +2,7 @@ import { type AnalyzePhaseParams, type Plugin } from '@custom-elements-manifest/
 import { create, litPlugin, ts } from '@custom-elements-manifest/analyzer/src/browser-entrypoint.js';
 import { readFileSync } from 'fs';
 
-import { getUsedTags } from '../cache/create-tag-cache.js';
+import { TagCatcher } from '../cache/create-tag-cache.js';
 
 
 type Module = AnalyzePhaseParams['moduleDoc'];
@@ -68,7 +68,7 @@ function litUsedTagsPlugin(): Plugin {
 					return;
 
 				const componentText = node.getText();
-				const tags = getUsedTags(componentText, [ /^es-/, /^docs-/, /^mm-/ ]);
+				const tags = TagCatcher.get(componentText);
 
 				(classDoc as any).dependencies = tags.map(tag => ({
 					name: tag,
