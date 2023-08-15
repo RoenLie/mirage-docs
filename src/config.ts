@@ -1,7 +1,7 @@
 import { persistToFile } from '@orama/plugin-data-persistence/server';
 import { deepmerge } from 'deepmerge-ts';
 import { promises } from 'fs';
-import { join, resolve, sep } from 'path';
+import { join, normalize, resolve, sep } from 'path';
 import copy from 'rollup-plugin-copy';
 import { defineConfig, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
 
@@ -34,7 +34,8 @@ export const defineDocConfig = async (
 	props.root = props.root.replace(/^\/|^\\/, '');
 
 	// Always include the main index.html file.
-	props.input      ??= { main: join(pRoot, props.root, 'index.html') };
+	//props.input      ??= { main: join(pRoot, props.root, 'index.html') };
+	props.input      ??= [ normalize(join(pRoot, props.root, 'index.html')).replaceAll(/\\+/g, '/') ];
 
 	// We by default look for tags where the entry dir is.
 	props.tagDirs    ??= [ { path: props.source } ];

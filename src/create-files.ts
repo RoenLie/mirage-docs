@@ -1,7 +1,7 @@
 import { create } from '@orama/orama';
 import { defaultHtmlSchema, populate } from '@orama/plugin-parsedoc';
 import { promises } from 'fs';
-import { join, normalize, sep } from 'path';
+import { join, normalize, resolve, sep } from 'path';
 
 import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { tsconfigTemplate } from './app/generators/tsconfig-template.js';
@@ -21,7 +21,8 @@ export interface ConfigProperties {
 	root: string;
 	source: string;
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
-	input?: Record<string, string>;
+	//input?: Record<string, string>;
+	input?: string[];
 	autoImport?: AutoImportPluginProps;
 	siteConfig?: Partial<SiteConfig>;
 	debug?: boolean;
@@ -173,9 +174,10 @@ export const createDocFiles = async (
 
 		filesToCreate.set(indexTargetPath, content);
 
-		Object.assign(props.input ??= {}, {
-			[indexTargetPath.split(sep).at(-1)!]: './' + indexTargetPath.replaceAll('\\', '/'),
-		});
+		//Object.assign(props.input ??= {}, {
+		//	[indexTargetPath.split(sep).at(-1)!]: normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'),
+		//});
+		props.input?.push(normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'));
 	}));
 	//#endregion
 
@@ -204,9 +206,10 @@ export const createDocFiles = async (
 		);
 		filesToCreate.set(indexTargetPath, content);
 
-		Object.assign(props.input ??= {}, {
-			[indexTargetPath.split(sep).at(-1)!]: './' + indexTargetPath.replaceAll('\\', '/'),
-		});
+		//Object.assign(props.input ??= {}, {
+		//	[indexTargetPath.split(sep).at(-1)!]: normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'),
+		//});
+		props.input?.push(normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'));
 	}));
 	//#endregion
 
