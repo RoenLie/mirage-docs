@@ -14,12 +14,12 @@ import { type ConfigProperties, createDocFiles } from './create-files.js';
 import { createMarkdownComponent } from './create-markdown-cmp.js';
 
 
-const pRoot = resolve(resolve());
-const outDir = resolve(resolve(), 'dist');
+const pRoot = resolve();
+const outDir = join(resolve(), 'dist');
 
 
 export const defineDocConfig = async (
-	viteConfig: Omit<UserConfig, 'root'>,
+	viteConfig: Omit<UserConfig, 'root' | 'base'>,
 	props: ConfigProperties,
 ) => {
 	if (!props.root.startsWith('/'))
@@ -27,15 +27,14 @@ export const defineDocConfig = async (
 	if (!props.source.startsWith('/'))
 		throw new SyntaxError('property `entryDir` must start with /');
 
+	// Base url of the application, will certain relative paths.
+	props.base ??= '';
+
 	// We enforce it to start with a leading /, then we add a . to make it relative.
 	props.source = '.' + props.source;
 
-	console.log('THE ROOT IS THIS BEFORE REGEX:', props.root);
-
 	// We enforce it to start with / then we remove it.
 	props.root = props.root.replace(/^\/|^\\/, '');
-
-	console.log('THE ROOT IS THIS AFTER REGEX:', props.root);
 
 	// Always include the main index.html file.
 	//props.input      ??= { main: join(pRoot, props.root, 'index.html') };
@@ -53,11 +52,9 @@ export const defineDocConfig = async (
 	]);
 
 	const {
-		filesToCreate, siteconfigFilePath,
-		oramaDb, relativeEntryDir, relativeLibDir,
+		filesToCreate, siteconfigFilePath, oramaDb,
+		absoluteRootDir, absoluteLibDir, absoluteSourceDir,
 	} = await createDocFiles({
-		projectRoot: pRoot,
-		base:	       viteConfig?.base ?? '',
 		props,
 		manifestCache,
 		tagCache,
@@ -65,10 +62,12 @@ export const defineDocConfig = async (
 		markdownCache,
 	});
 
+
 	let config: ResolvedConfig;
 	const docConfig: UserConfig = {
 		appType:   'mpa',
 		publicDir: 'assets/',
+		base:      props.base,
 		root:      join(pRoot, props.root),
 		build:     {
 			rollupOptions: {
@@ -92,7 +91,9 @@ export const defineDocConfig = async (
 										tag:   'script',
 										attrs: {
 											type: 'module',
-											src:  siteconfigFilePath,
+											src:  siteconfigFilePath
+												.replace(absoluteRootDir, '')
+												.replaceAll(/\\+/g, '/'),
 										},
 										injectTo: 'head-prepend',
 									},
@@ -140,27 +141,23 @@ export const defineDocConfig = async (
 						if (!path.endsWith('.md'))
 							return;
 
-						const componentTargetPath = DocPath.createCachePath(
-							pRoot, path, relativeEntryDir, relativeLibDir, 'ts',
+						const absoluteCmpPath = DocPath.createFileCachePath(
+							path, absoluteSourceDir, absoluteLibDir, 'ts',
 						);
 
-						const resolvedTargetPath = resolve(componentTargetPath);
-						const module = server.moduleGraph.getModuleById(resolvedTargetPath.replaceAll('\\', '/'));
-
+						const module = server.moduleGraph.getModuleById(absoluteCmpPath.replaceAll(/\\+/g, '/'));
 						if (module) {
 							server.moduleGraph.invalidateModule(module);
 
 							const rootDepth = props.root.split('/').filter(Boolean).length;
 							const file = await createMarkdownComponent(
-								pRoot,
 								rootDepth,
 								tagCache,
 								manifestCache,
-								componentTargetPath,
 								path,
+								normalize(path).replace(resolve(), '').replaceAll(/\\+/g, '/'),
 							);
 
-							const absoluteCmpPath = normalize(join(resolve(), componentTargetPath));
 							await promises.writeFile(absoluteCmpPath, file);
 
 							server.ws.send({
@@ -201,8 +198,8 @@ export const defineDocConfig = async (
 
 		await promises.writeFile(path, content);
 
-		if (props.debug)
-			console.log('Finished writing file:', path);
+		//if (props.debug)
+		//	console.log('Finished writing file:', path);
 	}));
 
 	// Write the search index file to public disc folder.
@@ -210,5 +207,5 @@ export const defineDocConfig = async (
 	await promises.mkdir(searchDir, { recursive: true });
 	await persistToFile(oramaDb, 'json', join(searchDir, 'searchIndexes.json'));
 
-	return mergedConfig as ReturnType<typeof defineConfig>;
+	return mergedConfig;
 };

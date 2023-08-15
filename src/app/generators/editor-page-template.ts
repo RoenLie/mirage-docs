@@ -26,11 +26,13 @@ export const editorPageTemplate = (props: {
 			\`;
 		}
 
-		public static override styles = css\`
+		public static override styles = [
+			css\`
 			:host {
 				display: grid;
 				overflow: hidden;
 			}
-		\`
+			\`,
+		]
 	}
 `);

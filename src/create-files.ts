@@ -1,12 +1,11 @@
 import { create } from '@orama/orama';
 import { defaultHtmlSchema, populate } from '@orama/plugin-parsedoc';
 import { promises } from 'fs';
-import { join, normalize, resolve, sep } from 'path';
+import { join, normalize, resolve } from 'path';
 
 import { siteConfigTemplate } from './app/generators/site-config-template.js';
 import { tsconfigTemplate } from './app/generators/tsconfig-template.js';
 import { typingsTemplate } from './app/generators/typings-template.js';
-import { _shortenUrl } from './app/utilities/shorten-url-internal.js';
 import { type FilePathCache } from './build/cache/create-file-cache.js';
 import { type AutoImportPluginProps } from './build/component/auto-import.types.js';
 import { type SiteConfig } from './build/config.types.js';
@@ -18,10 +17,10 @@ import { createMarkdownComponent } from './create-markdown-cmp.js';
 
 
 export interface ConfigProperties {
+	base: string;
 	root: string;
 	source: string;
 	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
-	//input?: Record<string, string>;
 	input?: string[];
 	autoImport?: AutoImportPluginProps;
 	siteConfig?: Partial<SiteConfig>;
@@ -31,8 +30,6 @@ export interface ConfigProperties {
 
 export const createDocFiles = async (
 	args: {
-		projectRoot: string,
-		base: string,
 		props: ConfigProperties,
 		manifestCache: Map<string, Declarations>,
 		tagCache: Map<string, string>,
@@ -43,32 +40,25 @@ export const createDocFiles = async (
 	if (args.props.debug)
 		console.time('timer:createDocFiles');
 
+	const { manifestCache, tagCache, editorCache, markdownCache, props } = args;
+	const libDir = '.mirage';
 
-	const {
-		manifestCache, tagCache, editorCache,
-		markdownCache, props, base, projectRoot,
-	} = args;
-
-	props.siteConfig ??= {};
-
-	props.siteConfig.internal           ??= {} as any;
-	props.siteConfig.internal!.rootDir  ??= props.root;
-	props.siteConfig.internal!.entryDir ??= props.source;
-	props.siteConfig.internal!.libDir   ??= '.mirage';
-	props.siteConfig.internal!.base 		??= base;
-
-	const rootDepth = props.root.split('/').filter(Boolean).length;
-	const libDir = props.siteConfig.internal!.libDir;
+	props.siteConfig                   ??= {};
+	props.siteConfig.internal          ??= {};
+	props.siteConfig.internal.rootDir  ??= props.root;
+	props.siteConfig.internal.entryDir ??= props.source;
+	props.siteConfig.internal.libDir   ??= libDir;
+	props.siteConfig.internal.base 	  ??= props.base;
 
 	/** Holds the path and content that will be created. */
 	const filesToCreate = new Map<string, string>();
 
-	const relativeLibDir   = '.' + sep + normalize(join(props.root, libDir));
-	const relativeEntryDir = props.source;
+	const absoluteLibDir    = normalize(join(resolve(), props.root, libDir));
+	const absoluteRootDir   = normalize(join(resolve(), props.root));
+	const absoluteSourceDir = normalize(join(resolve(), props.source));
 
 	//#region fix any potential missing props in site config
 	props.siteConfig ??= {};
-
 	props.siteConfig.styles ??= {};
 	props.siteConfig.styles.layout ??= '';
 	props.siteConfig.styles.layout ??= '';
@@ -80,18 +70,18 @@ export const createDocFiles = async (
 	props.siteConfig.styles.sourceEditor ??= '';
 	props.siteConfig.styles.pageTemplate ??= '';
 
+	props.siteConfig.links ??= {};
+	props.siteConfig.links.styles ??= [];
+	props.siteConfig.links.scripts ??= [];
+	props.siteConfig.links.darkTheme ??= '';
+	props.siteConfig.links.darkTheme ??= '';
+
 	props.siteConfig.sidebar ??= {};
 	props.siteConfig.sidebar.nameReplacements ??= [
 		[ '.docs', '' ],
 		[ '.editor', ' Editor' ],
 		[ '-', ' ' ],
 	];
-
-	props.siteConfig.links ??= {};
-	props.siteConfig.links.styles ??= [];
-	props.siteConfig.links.scripts ??= [];
-	props.siteConfig.links.darkTheme ??= '';
-	props.siteConfig.links.darkTheme ??= '';
 	//#endregion
 
 
@@ -101,16 +91,10 @@ export const createDocFiles = async (
 	});
 
 	const routes = await Promise.all([ ...markdownCache.cache, ...editorCache.cache ].map(async ([ , path ]) => {
-		let route = DocPath.createCachePath(
-			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
-		).replace(props.root, '').replaceAll('\\', '/').replace('.html', '');
-
-		route = _shortenUrl(libDir, props.source, route);
-
+		const route = DocPath.createFileRoute(path, absoluteSourceDir);
 		const content = await promises.readFile(path, { encoding: 'utf8' });
-		await populate(oramaDb, content, 'md', {
-			basePath: route + ':',
-		});
+
+		await populate(oramaDb, content, 'md', { basePath: route + ':' });
 
 		return route;
 	}));
@@ -118,94 +102,84 @@ export const createDocFiles = async (
 
 
 	//#region create site config file
-
-	console.log('THE ROOT IS THIS WHEN TRYING TO MAKE FILE: ', props.root);
-	console.log('THIS IS THE PATH PARTS', [ resolve(), props.root, libDir, 'siteconfig.ts' ]);
-
-
-	const siteconfigFilePath = normalize(join(resolve(), props.root, libDir, 'siteconfig.ts'));
+	const siteconfigFilePath = join(absoluteLibDir, 'siteconfig.ts');
 	filesToCreate.set(siteconfigFilePath, siteConfigTemplate(props.siteConfig, routes));
 	//#endregion
 
 
 	//#region create a tsconfig file for the cache folder.
-	const tsconfigFilePath = normalize(join(resolve(), props.root, libDir, 'tsconfig.json'));
+	const tsconfigFilePath = join(absoluteLibDir, 'tsconfig.json');
 	filesToCreate.set(tsconfigFilePath, tsconfigTemplate);
 	//#endregion
 
 
 	//#region create a d.ts file to make typescript happy inside the files.
-	const typingsFilePath = normalize(join(resolve(), props.root, libDir, 'typings.d.ts'));
+	const typingsFilePath = join(absoluteLibDir, 'typings.d.ts');
 	filesToCreate.set(typingsFilePath, typingsTemplate);
 	//#endregion
 
 
 	//#region create markdown routes
-	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
-		const componentTargetPath = DocPath.createCachePath(
-			projectRoot, path, relativeEntryDir, relativeLibDir, 'ts',
-		);
+	// How many levels deep the docsite root is compared to project root.
+	const rootDepth = props.root.split('/').filter(Boolean).length;
 
+	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const componentContent = await createMarkdownComponent(
-			projectRoot,
 			rootDepth,
 			tagCache,
 			manifestCache,
-			componentTargetPath,
 			path,
+			normalize(path).replace(resolve(), '').replaceAll(/\\+/g, '/'),
 		);
-
-		const absoluteCmpPath = normalize(join(resolve(), componentTargetPath));
+		const absoluteCmpPath = DocPath.createFileCachePath(
+			path, absoluteSourceDir, absoluteLibDir, 'ts',
+		);
 		filesToCreate.set(absoluteCmpPath, componentContent);
 
-		let indexTargetPath = DocPath.createCachePath(
-			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
-		);
-		indexTargetPath = normalize(join(resolve(), indexTargetPath));
 
+		const absoluteIndexPath = DocPath.createFileCachePath(
+			path, absoluteSourceDir, absoluteLibDir, 'html',
+		);
 		const content = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
 			props.siteConfig?.links?.scripts ?? [],
 			path,
-			// Here we remove the vite root from the file.
-			componentTargetPath.replace(props.root, '').replaceAll(/\\{1,}/g, '/'),
+			absoluteCmpPath.replace(absoluteRootDir, '').replaceAll(/\\+/g, '/'),
 		);
+		filesToCreate.set(absoluteIndexPath, content);
 
-		filesToCreate.set(indexTargetPath, content);
-
-		props.input?.push(indexTargetPath);
+		props.input?.push(absoluteIndexPath);
 	}));
 	//#endregion
 
 
 	//#region create editor routes
 	await Promise.all([ ...editorCache.cache ].map(async ([ , path ]) => {
-		const componentTargetPath = DocPath.createCachePath(
-			projectRoot, path, relativeEntryDir, relativeLibDir, 'ts',
-		);
+		const componentPath = DocPath.createFileCachePath(
+			path, absoluteSourceDir, absoluteLibDir, 'ts',
+		).replace(absoluteRootDir, '');
 
 		const componentContent = await createEditorComponent(
-			componentTargetPath.replace(props.root, '').replaceAll(/\\+/g, '/'),
-			path,
+			componentPath.replaceAll(/\\+/g, '/'), path,
 		);
-
-		const absoluteCmpPath = normalize(join(resolve(), componentTargetPath));
+		const absoluteCmpPath = DocPath.createFileCachePath(
+			path, absoluteSourceDir, absoluteLibDir, 'ts',
+		);
 		filesToCreate.set(absoluteCmpPath, componentContent);
 
-		let indexTargetPath = DocPath.createCachePath(
-			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
-		);
-		indexTargetPath = normalize(join(resolve(), indexTargetPath));
 
+		const absoluteIndexPath = DocPath.createFileCachePath(
+			path, absoluteSourceDir, absoluteLibDir, 'html',
+		);
 		const content = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
 			props.siteConfig?.links?.scripts ?? [],
 			path,
-			componentTargetPath.replace(props.root, '').replaceAll(/\\{1,}/g, '/'),
+			absoluteCmpPath.replace(absoluteRootDir, '').replace(/\\+/g, '/'),
 		);
-		filesToCreate.set(indexTargetPath, content);
+		filesToCreate.set(absoluteIndexPath, content);
 
-		props.input?.push(indexTargetPath);
+		props.input?.push(absoluteIndexPath);
 	}));
 	//#endregion
 
@@ -213,12 +187,12 @@ export const createDocFiles = async (
 	if (args.props.debug)
 		console.timeEnd('timer:createDocFiles');
 
-
 	return {
 		filesToCreate,
 		siteconfigFilePath,
 		oramaDb,
-		relativeEntryDir,
-		relativeLibDir,
+		absoluteRootDir,
+		absoluteSourceDir,
+		absoluteLibDir,
 	};
 };

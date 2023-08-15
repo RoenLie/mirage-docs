@@ -1,80 +1,49 @@
-import path, { join, normalize, resolve } from 'node:path';
+import { join, normalize } from 'node:path';
 
 
 export class DocPath {
 
-	public static createCachePath(
-		projectRoot: string,
-		filePath: string,
-		relativeEntryDir: string,
-		relativeCacheDir: string,
-		extension: string,
+	public static createFileRoute(
+		absoluteFilePath: string,
+		absoluteSourcePath: string,
 	) {
-		const preparedPath = DocPath.preparePath(projectRoot, filePath);
-		const entryDir = relativeEntryDir
-			.replace(/^\.\\+/, '')
-			.replace(/^\.\/+/, '');
+		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docpages\\pages\\1.category-1\\editortest.editor.ts
+		absoluteFilePath = normalize(absoluteFilePath);
+		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docpages
+		absoluteSourcePath = normalize(absoluteSourcePath);
 
-		const cachePath = join(relativeCacheDir, preparedPath.replace(entryDir, ''));
+		// \\pages\\1.category-1\\editortest.editor.ts
+		const filePathTail = absoluteFilePath.replace(absoluteSourcePath, '');
 
-		// Replace the extension with the new one.
-		const replacedExtension = cachePath
-			.split('.').slice(0, -1).join('.') + '.' + extension;
+		// \\pages\\1.category-1\\editortest.editor
+		const withoutExtension = filePathTail.split('.').slice(0, -1).join('.');
 
-		console.log({ preparedPath, entryDir, cachePath, replacedExtension });
-
-		return replacedExtension;
+		return withoutExtension.replaceAll(/\\+/g, '/');
 	}
 
-	public static preparePath(projectPath: string, filePath: string) {
-		const absFilePath = join(resolve(), filePath);
-		const absProjectPath = resolve(projectPath);
-
-		const splitFilePath = normalize(absFilePath).split(path.sep);
-		const splitProjPath = normalize(absProjectPath).split(path.sep);
-
-		return splitFilePath.slice(splitProjPath.length).join(path.sep);
-	}
-
-	public static targetLibDir(
-		preparedPath: string,
-		rootDir: string,
-		entryDir: string,
-		libDir: string,
-		extension: string,
+	public static createFileCachePath(
+		absoluteFilePath: string,
+		absoluteSourcePath: string,
+		absoluteCachePath: string,
+		newExtension: string,
 	) {
-		const invalidChars = [ './', '/', '\\' ];
-		const cleanSegment = (string: string) => {
-			let char = '';
-			while ((char = invalidChars.find(str => string.startsWith(str)) ?? '') && char)
-				string = string.slice(char.length);
-			while ((char = invalidChars.find(str => string.endsWith(str)) ?? '') && char)
-				string = string.slice(0, -char.length);
+		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docpages\\pages\\1.category-1\\editortest.editor.ts
+		absoluteFilePath = normalize(absoluteFilePath);
+		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docs\\.mirage
+		absoluteCachePath = normalize(absoluteCachePath);
+		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docpages
+		absoluteSourcePath = normalize(absoluteSourcePath);
 
-			return normalize(string);
-		};
+		// \\pages\\1.category-1\\editortest.editor.ts
+		const filePathTail = absoluteFilePath.replace(absoluteSourcePath, '');
+		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docs\\.mirage\\pages\\1.category-1\\editortest.editor.ts
+		const absoluteFileCachePath = join(absoluteCachePath, filePathTail);
 
-		// Clean rootdir and entry variable of anything but valid characters.
-		rootDir = cleanSegment(rootDir);
-		entryDir = cleanSegment(entryDir);
+		// C:\\Devstuff\\PersonalProjects\\mirage-docs\\docs\\.mirage\\pages\\1.category-1\\editortest.editor.html
+		const withNewExtension = absoluteFileCachePath
+			.split('.').slice(0, -1).join('.') + '.' + newExtension;
 
-		// Replace the entry dir with lib dir.
-		const directEntryDir = entryDir.replaceAll(/^[.\\/]+/g, '');
-		//console.log({ directEntryDir });
-
-		let libTargetPath = preparedPath.replace(rootDir, join(rootDir, libDir));
-		if (directEntryDir) {
-			libTargetPath = preparedPath.replace(
-				directEntryDir,
-				join(rootDir, libDir),
-			);
-		}
-
-		// Replace the extension with the new one.
-		const replacedExtension = libTargetPath
-			.split('.').slice(0, -1).join('.') + '.' + extension;
-
-		return replacedExtension;
+		return withNewExtension;
 	}
 
 }

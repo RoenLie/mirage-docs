@@ -2,7 +2,6 @@ import { defineDocConfig } from '@roenlie/mirage-docs';
 
 
 export default defineDocConfig({
-	base:  '/mirage-docs',
 	build: {
 		emptyOutDir: false,
 		outDir:      '../dist/preview',
@@ -10,6 +9,7 @@ export default defineDocConfig({
 	},
 }, {
 	debug:      true,
+	base:       '/mirage-docs',
 	root:       '/docs',
 	source:     '/docpages/pages',
 	siteConfig: {

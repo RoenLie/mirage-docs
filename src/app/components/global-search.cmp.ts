@@ -166,7 +166,9 @@ export class GlobalSearch extends LitElement {
 		if (location.hash === hash)
 			return;
 
-		history.pushState({}, '', hash);
+		const { base } = window.miragedocs.siteConfig.internal;
+		history.pushState({}, '', base + hash);
+
 		dispatchEvent(new HashChangeEvent('hashchange'));
 
 		this.dialogQry.close();

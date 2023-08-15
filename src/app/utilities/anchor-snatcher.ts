@@ -1,6 +1,3 @@
-import { shortenUrl } from './trim-route-hash.js';
-
-
 const _anchorSnatcher = (event: MouseEvent) => {
 	const eventPath = event.composedPath();
 	const anchor = eventPath.find(el => el instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
@@ -11,7 +8,7 @@ const _anchorSnatcher = (event: MouseEvent) => {
 
 	const route = new URL(anchor.href);
 	const path = route.pathname.replace('.md', '');
-	const hash = '#' + shortenUrl(path);
+	const hash = '#' + path;
 
 	// Don't forward external origins to the parent.
 	// Either open them in a new tab or in top, depending on if ctrl is being held.

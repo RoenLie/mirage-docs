@@ -1,5 +1,5 @@
 import { promises, readFileSync } from 'fs';
-import { dirname, join, normalize } from 'path';
+import { dirname, join, normalize, resolve } from 'path';
 
 import { docPageTemplate } from './app/generators/doc-page-template.js';
 import { TagCatcher } from './build/cache/create-tag-cache.js';
@@ -12,14 +12,14 @@ import { markdownIt } from './build/markdown/markdown-it.js';
 
 
 export const createMarkdownComponent = (
-	projectRoot: string,
 	rootDepth: number,
 	tagCache: Map<string, string>,
 	manifestCache: Map<string, Declarations>,
-	targetPath: string,
 	path: string,
-	content?: string,
+	rootBasedPath: string,
 ) => {
+	const projectRoot = resolve();
+
 	const addUsedTags = (content: string, imports: string[]) => {
 		/* save the matching tags to a set, to avoid duplicates */
 		const componentImportPaths = new Set<string>();
@@ -159,14 +159,13 @@ export const createMarkdownComponent = (
 	};
 
 
-	const combineParts = async (path: string, content?: string) => {
-		if (!content)
-			content = await promises.readFile(path, { encoding: 'utf8' });
+	const combineParts = async (path: string) => {
+		let content = await promises.readFile(path, { encoding: 'utf8' });
 
 		const imports: string[] = [];
 		const metadata: Record<string, Declarations> = {};
 
-		imports.push(`import '${ path }?url'`);
+		imports.push(`import '${ '/..'.repeat(rootDepth) + rootBasedPath }?url'`);
 
 		addUsedTags(content, imports);
 		content = addHoistedImports(content, imports);
@@ -189,5 +188,5 @@ export const createMarkdownComponent = (
 	};
 
 
-	return combineParts(path, content);
+	return combineParts(path);
 };

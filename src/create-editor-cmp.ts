@@ -8,13 +8,10 @@ import { createComponentNameFromPath, createComponentTagFromPath } from './build
 export const createEditorComponent = async (
 	targetPath: string,
 	path: string,
-	content?: string,
 ) => {
-	if (!content)
-		content = await promises.readFile(path, { encoding: 'utf8' });
-
-	const componentTag      = createComponentTagFromPath(path);
-	const componentClass    = createComponentNameFromPath(path);
+	let content = await promises.readFile(path, { encoding: 'utf8' });
+	const componentTag   = createComponentTagFromPath(path);
+	const componentClass = createComponentNameFromPath(path);
 
 	content = content
 		.replaceAll('`', '\\`')
@@ -22,7 +19,7 @@ export const createEditorComponent = async (
 
 	content = editorPageTemplate({
 		editorId: '@roenlie/mirage-docs/dist/app/components/component-editor.js',
-		codeId:   browserifyPath(targetPath),
+		codeId:   targetPath,
 		tag:      componentTag,
 		class:    componentClass,
 		code:     content,
