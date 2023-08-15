@@ -9,6 +9,7 @@ export default defineDocConfig({
 		sourcemap:   true,
 	},
 }, {
+	debug:      true,
 	root:       '/docs',
 	source:     '/docpages/pages',
 	siteConfig: {

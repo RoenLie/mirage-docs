@@ -81,9 +81,6 @@ export const defineDocConfig = async (
 					transformIndexHtml: {
 						order:   'pre',
 						handler: (html) => {
-							const siteConfigPath = siteconfigFilePath
-								.replace((props.root ?? '').replace(/^\.\/|^\.\\|^\\|^\//, ''), '');
-
 							return {
 								html,
 								tags: [
@@ -91,7 +88,7 @@ export const defineDocConfig = async (
 										tag:   'script',
 										attrs: {
 											type: 'module',
-											src:  siteConfigPath.replaceAll('\\', '/').replaceAll(/\/{2,}/g, '/'),
+											src:  siteconfigFilePath,
 										},
 										injectTo: 'head-prepend',
 									},
@@ -149,10 +146,6 @@ export const defineDocConfig = async (
 						if (module) {
 							server.moduleGraph.invalidateModule(module);
 
-							//const componentTargetPath = DocPath.createCachePath(
-							//	pRoot, path, relativeEntryDir, relativeLibDir, 'ts',
-							//);
-
 							const rootDepth = props.root.split('/').filter(Boolean).length;
 							const file = await createMarkdownComponent(
 								pRoot,
@@ -163,7 +156,8 @@ export const defineDocConfig = async (
 								path,
 							);
 
-							await promises.writeFile(componentTargetPath, file.content);
+							const absoluteCmpPath = normalize(join(resolve(), componentTargetPath));
+							await promises.writeFile(absoluteCmpPath, file);
 
 							server.ws.send({
 								type: 'full-reload',

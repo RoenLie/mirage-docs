@@ -40,6 +40,10 @@ export const createDocFiles = async (
 		markdownCache: FilePathCache
 	},
 ) => {
+	if (args.props.debug)
+		console.time('timer:createDocFiles');
+
+
 	const {
 		manifestCache, tagCache, editorCache,
 		markdownCache, props, base, projectRoot,
@@ -61,19 +65,6 @@ export const createDocFiles = async (
 
 	const relativeLibDir   = '.' + sep + normalize(join(props.root, libDir));
 	const relativeEntryDir = props.source;
-
-	//#region gather all route paths.
-	const routes = [ ...markdownCache.cache, ...editorCache.cache ].map(([ , path ]) => {
-		let route = DocPath.createCachePath(
-			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
-		).replace(props.root, '').replaceAll('\\', '/').replace('.html', '');
-
-		route = _shortenUrl(libDir, props.source, route);
-
-		return route;
-	});
-	//#endregion
-
 
 	//#region fix any potential missing props in site config
 	props.siteConfig ??= {};
@@ -104,42 +95,43 @@ export const createDocFiles = async (
 	//#endregion
 
 
-	//#region create site config file
-	const siteconfigFilePath = join(relativeLibDir, 'siteconfig.ts');
-	filesToCreate.set(siteconfigFilePath, siteConfigTemplate(props.siteConfig, routes));
-	//#endregion
-
-
-	//#region create a tsconfig file for the cache folder.
-	const tsconfigFilePath = join(relativeLibDir, 'tsconfig.json');
-	filesToCreate.set(tsconfigFilePath, tsconfigTemplate);
-	//#endregion
-
-
-	//#region create a d.ts file to make typescript happy inside the files.
-	const typingsFilePath = join(relativeLibDir, 'typings.d.ts');
-	filesToCreate.set(typingsFilePath, typingsTemplate);
-	//#endregion
-
-
-	//#region create lyra search indexes.
+	//#region create routes and populate lyra search indexes.
 	const oramaDb = await create({
 		schema: defaultHtmlSchema,
 	});
 
-	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
-		const content = await promises.readFile(path, { encoding: 'utf8' });
-
+	const routes = await Promise.all([ ...markdownCache.cache, ...editorCache.cache ].map(async ([ , path ]) => {
 		let route = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		).replace(props.root, '').replaceAll('\\', '/').replace('.html', '');
 
 		route = _shortenUrl(libDir, props.source, route);
 
+		const content = await promises.readFile(path, { encoding: 'utf8' });
 		await populate(oramaDb, content, 'md', {
 			basePath: route + ':',
 		});
+
+		return route;
 	}));
+	//#endregion
+
+
+	//#region create site config file
+	const siteconfigFilePath = normalize(join(resolve(), props.root, libDir, 'siteconfig.ts'));
+	filesToCreate.set(siteconfigFilePath, siteConfigTemplate(props.siteConfig, routes));
+	//#endregion
+
+
+	//#region create a tsconfig file for the cache folder.
+	const tsconfigFilePath = normalize(join(resolve(), props.root, libDir, 'tsconfig.json'));
+	filesToCreate.set(tsconfigFilePath, tsconfigTemplate);
+	//#endregion
+
+
+	//#region create a d.ts file to make typescript happy inside the files.
+	const typingsFilePath = normalize(join(resolve(), props.root, libDir, 'typings.d.ts'));
+	filesToCreate.set(typingsFilePath, typingsTemplate);
 	//#endregion
 
 
@@ -149,7 +141,7 @@ export const createDocFiles = async (
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'ts',
 		);
 
-		const { content: componentContent } = await createMarkdownComponent(
+		const componentContent = await createMarkdownComponent(
 			projectRoot,
 			rootDepth,
 			tagCache,
@@ -158,11 +150,13 @@ export const createDocFiles = async (
 			path,
 		);
 
-		filesToCreate.set(componentTargetPath, componentContent);
+		const absoluteCmpPath = normalize(join(resolve(), componentTargetPath));
+		filesToCreate.set(absoluteCmpPath, componentContent);
 
-		const indexTargetPath = DocPath.createCachePath(
+		let indexTargetPath = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		);
+		indexTargetPath = normalize(join(resolve(), indexTargetPath));
 
 		const content = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
@@ -174,10 +168,7 @@ export const createDocFiles = async (
 
 		filesToCreate.set(indexTargetPath, content);
 
-		//Object.assign(props.input ??= {}, {
-		//	[indexTargetPath.split(sep).at(-1)!]: normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'),
-		//});
-		props.input?.push(normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'));
+		props.input?.push(indexTargetPath);
 	}));
 	//#endregion
 
@@ -189,14 +180,17 @@ export const createDocFiles = async (
 		);
 
 		const componentContent = await createEditorComponent(
-			componentTargetPath.replace(props.root, '').replaceAll(/\\{1,}/g, '/'),
+			componentTargetPath.replace(props.root, '').replaceAll(/\\+/g, '/'),
 			path,
 		);
-		filesToCreate.set(componentTargetPath, componentContent);
 
-		const indexTargetPath = DocPath.createCachePath(
+		const absoluteCmpPath = normalize(join(resolve(), componentTargetPath));
+		filesToCreate.set(absoluteCmpPath, componentContent);
+
+		let indexTargetPath = DocPath.createCachePath(
 			projectRoot, path, relativeEntryDir, relativeLibDir, 'html',
 		);
+		indexTargetPath = normalize(join(resolve(), indexTargetPath));
 
 		const content = createIndexFile(
 			props.siteConfig?.links?.styles ?? [],
@@ -206,12 +200,13 @@ export const createDocFiles = async (
 		);
 		filesToCreate.set(indexTargetPath, content);
 
-		//Object.assign(props.input ??= {}, {
-		//	[indexTargetPath.split(sep).at(-1)!]: normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'),
-		//});
-		props.input?.push(normalize(join(resolve(), indexTargetPath)).replaceAll(/\\+/g, '/'));
+		props.input?.push(indexTargetPath);
 	}));
 	//#endregion
+
+
+	if (args.props.debug)
+		console.timeEnd('timer:createDocFiles');
 
 
 	return {

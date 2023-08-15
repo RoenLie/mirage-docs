@@ -185,9 +185,7 @@ export const createMarkdownComponent = (
 			markdown:      markdownIt.render(content),
 		});
 
-		return {
-			content,
-		};
+		return content;
 	};
 
 
