@@ -21,11 +21,13 @@ export class DocPath {
 		const replacedExtension = cachePath
 			.split('.').slice(0, -1).join('.') + '.' + extension;
 
+		console.log({ preparedPath, entryDir, cachePath, replacedExtension });
+
 		return replacedExtension;
 	}
 
 	public static preparePath(projectPath: string, filePath: string) {
-		const absFilePath = resolve(filePath);
+		const absFilePath = join(resolve(), filePath);
 		const absProjectPath = resolve(projectPath);
 
 		const splitFilePath = normalize(absFilePath).split(path.sep);
