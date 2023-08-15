@@ -118,6 +118,11 @@ export const createDocFiles = async (
 
 
 	//#region create site config file
+
+	console.log('THE ROOT IS THIS WHEN TRYING TO MAKE FILE: ', props.root);
+	console.log('THIS IS THE PATH PARTS', [ resolve(), props.root, libDir, 'siteconfig.ts' ]);
+
+
 	const siteconfigFilePath = normalize(join(resolve(), props.root, libDir, 'siteconfig.ts'));
 	filesToCreate.set(siteconfigFilePath, siteConfigTemplate(props.siteConfig, routes));
 	//#endregion

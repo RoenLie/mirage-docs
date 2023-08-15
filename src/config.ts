@@ -30,8 +30,12 @@ export const defineDocConfig = async (
 	// We enforce it to start with a leading /, then we add a . to make it relative.
 	props.source = '.' + props.source;
 
+	console.log('THE ROOT IS THIS BEFORE REGEX:', props.root);
+
 	// We enforce it to start with / then we remove it.
 	props.root = props.root.replace(/^\/|^\\/, '');
+
+	console.log('THE ROOT IS THIS AFTER REGEX:', props.root);
 
 	// Always include the main index.html file.
 	//props.input      ??= { main: join(pRoot, props.root, 'index.html') };
