@@ -11,7 +11,7 @@ const defaultHtmlSchema = {
 // exposes nodejs imports that don't work in the browser.
 const customRestore = async (
 	data: RawData,
-): Promise<Orama> => {
+): Promise<Orama<any, any, any, any>> => {
 	const db = await create({
 		schema: defaultHtmlSchema,
 	});

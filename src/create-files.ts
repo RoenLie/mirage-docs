@@ -1,4 +1,4 @@
-import { create } from '@orama/orama';
+import { create, type Orama } from '@orama/orama';
 import { defaultHtmlSchema, populate } from '@orama/plugin-parsedoc';
 import { promises } from 'fs';
 import { join, normalize, resolve } from 'path';
@@ -88,7 +88,7 @@ export const createDocFiles = async (
 	//#region create routes and populate lyra search indexes.
 	const oramaDb = await create({
 		schema: defaultHtmlSchema,
-	});
+	}) as Orama<any, any, any, any>;
 
 	const routes = await Promise.all([ ...markdownCache.cache, ...editorCache.cache ].map(async ([ , path ]) => {
 		const route = DocPath.createFileRoute(path, absoluteSourceDir);
@@ -186,6 +186,7 @@ export const createDocFiles = async (
 
 	if (args.props.debug)
 		console.timeEnd('timer:createDocFiles');
+
 
 	return {
 		filesToCreate,

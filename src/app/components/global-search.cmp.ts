@@ -102,7 +102,7 @@ export class GlobalSearch extends LitElement {
 			'../workers/search-worker.ts', import.meta.url,
 		), { type: 'module' }).terminate());
 
-		/** This is the actual creating of the worker. */
+		/** This is the actual creation of the worker. */
 		this.searchWorker = new Worker(
 			base + '/.mirage/workers/search-worker.js', { type: 'module' },
 		);

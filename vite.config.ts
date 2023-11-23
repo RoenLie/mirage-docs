@@ -11,6 +11,7 @@ const outDir = resolve(resolve(), 'dist');
 
 export default defineConfig(async () => {
 	const externalImportPaths = await getExternalImportPaths('./src');
+	const input = (await globby('./src/**/!(*.(test|demo|editor|types)).ts'));
 
 	return {
 		appType: 'mpa',
@@ -18,7 +19,16 @@ export default defineConfig(async () => {
 		worker:  {
 			rollupOptions: {
 				output: {
+					sourcemap:      true,
 					entryFileNames: (entry) => `workers/${ entry.name }.js`,
+				},
+			},
+		},
+		sourcemap: true,
+		esbuild:   {
+			tsconfigRaw: {
+				compilerOptions: {
+					experimentalDecorators: true,
 				},
 			},
 		},
@@ -26,18 +36,16 @@ export default defineConfig(async () => {
 			outDir,
 			emptyOutDir: true,
 			lib:         {
-				entry:   resolve(root, 'index.ts'),
+				entry:   input,
 				formats: [ 'es' ],
 			},
 			rollupOptions: {
 				/** We add all files as entrypoints */
-				input: (await globby('./src/**/!(*.(test|demo|editor|types)).ts')),
+				input: input,
 
 				external: externalImportPaths,
 
 				output: {
-					sourcemap: true,
-
 					/** By preseving modules, we retain the folder structure of the original source, thereby allowing
 					 *  generated d.ts files to be correctly picked up. */
 					preserveModules: true,
