@@ -62,7 +62,6 @@ export const defineDocConfig = async (
 		markdownCache,
 	});
 
-
 	let config: ResolvedConfig;
 	const docConfig: UserConfig = {
 		appType:   'mpa',
@@ -113,7 +112,17 @@ export const defineDocConfig = async (
 							};
 						},
 					},
+					buildStart() {
+						// Watch markdown files for changes.
+						for (const [ , path ] of markdownCache.cache)
+							this.addWatchFile(path);
+						// Watch component files for changes.
+						for (const [ , path ] of tagCache)
+							this.addWatchFile(path);
+					},
 					load(id) {
+						//this.addWatchFile(id);
+
 						/* if auto importer is being used, transform matching modules */
 						if (props.autoImport) {
 							const transformed = componentAutoImportLoad({
@@ -137,34 +146,23 @@ export const defineDocConfig = async (
 							return code;
 						}
 					},
-					async handleHotUpdate({ file: path, server }) {
-						if (!path.endsWith('.md'))
+					async watchChange(id) {
+						if (!id.endsWith('.md'))
 							return;
 
 						const absoluteCmpPath = DocPath.createFileCachePath(
-							path, absoluteSourceDir, absoluteLibDir, 'ts',
+							id, absoluteSourceDir, absoluteLibDir, 'ts',
 						);
 
-						const module = server.moduleGraph.getModuleById(absoluteCmpPath.replaceAll(/\\+/g, '/'));
-						if (module) {
-							server.moduleGraph.invalidateModule(module);
+						const rootDepth = props.root.split('/').filter(Boolean).length;
+						const file = await createMarkdownComponent(
+							rootDepth,
+							tagCache,
+							manifestCache,
+							id,
+						);
 
-							const rootDepth = props.root.split('/').filter(Boolean).length;
-							const file = await createMarkdownComponent(
-								rootDepth,
-								tagCache,
-								manifestCache,
-								path,
-								normalize(path).replace(resolve(), '').replaceAll(/\\+/g, '/'),
-							);
-
-							await promises.writeFile(absoluteCmpPath, file);
-
-							server.ws.send({
-								type: 'full-reload',
-								path: '*',
-							});
-						}
+						await promises.writeFile(absoluteCmpPath, file);
 					},
 				};
 			})(),

@@ -5,10 +5,9 @@ import { customElement } from 'lit/decorators.js';
 @customElement('mm-test-component')
 export class AComponent extends LitElement {
 
-	override connectedCallback(): void {
+	public override connectedCallback(): void {
 		super.connectedCallback();
 	}
-
 
 	protected override render() {
 		return html`

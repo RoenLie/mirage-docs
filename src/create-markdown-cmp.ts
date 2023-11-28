@@ -16,7 +16,6 @@ export const createMarkdownComponent = (
 	tagCache: Map<string, string>,
 	manifestCache: Map<string, Declarations>,
 	path: string,
-	rootBasedPath: string,
 ) => {
 	const projectRoot = resolve();
 
@@ -164,8 +163,6 @@ export const createMarkdownComponent = (
 
 		const imports: string[] = [];
 		const metadata: Record<string, Declarations> = {};
-
-		imports.push(`import '${ '/..'.repeat(rootDepth) + rootBasedPath }?url'`);
 
 		addUsedTags(content, imports);
 		content = addHoistedImports(content, imports);

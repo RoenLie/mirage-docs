@@ -129,7 +129,6 @@ export const createDocFiles = async (
 			tagCache,
 			manifestCache,
 			path,
-			normalize(path).replace(resolve(), '').replaceAll(/\\+/g, '/'),
 		);
 		const absoluteCmpPath = DocPath.createFileCachePath(
 			path, absoluteSourceDir, absoluteLibDir, 'ts',
