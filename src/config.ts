@@ -52,8 +52,13 @@ export const defineDocConfig = async (
 	]);
 
 	const {
-		filesToCreate, siteconfigFilePath, oramaDb,
-		absoluteRootDir, absoluteLibDir, absoluteSourceDir,
+		filesToCreate,
+		markdownComponentPaths,
+		siteconfigFilePath,
+		oramaDb,
+		absoluteRootDir,
+		absoluteLibDir,
+		absoluteSourceDir,
 	} = await createDocFiles({
 		props,
 		manifestCache,
@@ -121,8 +126,6 @@ export const defineDocConfig = async (
 							this.addWatchFile(path);
 					},
 					load(id) {
-						//this.addWatchFile(id);
-
 						/* if auto importer is being used, transform matching modules */
 						if (props.autoImport) {
 							const transformed = componentAutoImportLoad({
@@ -142,6 +145,59 @@ export const defineDocConfig = async (
 					transform(code, id) {
 						if (id.endsWith('.editor.ts')) {
 							code = `const EditorComponent = (builder) => builder;\n` + code;
+
+							return code;
+						}
+
+						// Add custom hot reload handling for main component when in dev mode.
+						if (config.env['DEV'] && markdownComponentPaths.has(id)) {
+							code = `
+							const __$original = window.customElements.define;
+							window.customElements.define = function(...args) {
+								try {
+									__$original.call(this, ...args);
+								} catch(err) { /*  */ }
+							}
+							\n` + code + `
+							if (import.meta.hot) {
+								import.meta.hot.accept();
+								import.meta.hot.on('vite:beforeUpdate', () => {
+									const currentScroll = window.scrollY;
+									localStorage.setItem('pageScrollValue', String(currentScroll));
+
+									window.location.replace(window.location.href);
+								});
+
+								let currentTry = 0;
+								const tryLimit = 120;
+
+								requestAnimationFrame(() => {
+									const { scrollHeight, offsetHeight } = window.document.body;
+
+									// In some scenarios available height is slightly off,
+									// so we do -2 to make sure it wont overflow.
+									const availableScroll = scrollHeight - offsetHeight - 2;
+
+									let savedScroll = Number(localStorage.getItem('pageScrollValue') ?? 0);
+									savedScroll = Math.min(savedScroll, availableScroll);
+
+									const scrollBack = () => {
+										if (currentTry > tryLimit)
+											return console.warn('MirageDocs: Failed to scroll back to original position');
+
+										window.scrollTo(0, savedScroll);
+										currentTry++;
+
+										if (window.scrollY === savedScroll)
+											return;
+
+										requestAnimationFrame(scrollBack);
+									};
+
+									scrollBack();
+								});
+							}
+							`;
 
 							return code;
 						}

@@ -123,6 +123,8 @@ export const createDocFiles = async (
 	// How many levels deep the docsite root is compared to project root.
 	const rootDepth = props.root.split('/').filter(Boolean).length;
 
+	const markdownComponentPaths = new Set<string>();
+
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const componentContent = await createMarkdownComponent(
 			rootDepth,
@@ -135,6 +137,7 @@ export const createDocFiles = async (
 		);
 		filesToCreate.set(absoluteCmpPath, componentContent);
 
+		markdownComponentPaths.add(absoluteCmpPath.replaceAll(/\\+/g, '/'));
 
 		const absoluteIndexPath = DocPath.createFileCachePath(
 			path, absoluteSourceDir, absoluteLibDir, 'html',
@@ -166,7 +169,6 @@ export const createDocFiles = async (
 		);
 		filesToCreate.set(absoluteCmpPath, componentContent);
 
-
 		const absoluteIndexPath = DocPath.createFileCachePath(
 			path, absoluteSourceDir, absoluteLibDir, 'html',
 		);
@@ -189,6 +191,7 @@ export const createDocFiles = async (
 
 	return {
 		filesToCreate,
+		markdownComponentPaths,
 		siteconfigFilePath,
 		oramaDb,
 		absoluteRootDir,
