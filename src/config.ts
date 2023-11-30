@@ -121,11 +121,15 @@ export const defineDocConfig = async (
 						// Watch markdown files for changes.
 						for (const [ , path ] of markdownCache.cache)
 							this.addWatchFile(path);
+
+						// Doing this part in load instead, as it is more reliable.
 						// Watch component files for changes.
-						for (const [ , path ] of tagCache)
-							this.addWatchFile(path);
+						//for (const [ , path ] of tagCache)
+						//	this.addWatchFile(path);
 					},
 					load(id) {
+						this.addWatchFile(id);
+
 						/* if auto importer is being used, transform matching modules */
 						if (props.autoImport) {
 							const transformed = componentAutoImportLoad({
