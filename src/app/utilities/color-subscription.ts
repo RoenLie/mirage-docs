@@ -26,7 +26,7 @@ const updateScheme = () => {
 	}
 
 	subscribers.forEach(ref => {
-		let el = ref.deref();
+		const el = ref.deref();
 		!el ? subscribers.delete(ref) : el?.requestUpdate();
 	});
 };

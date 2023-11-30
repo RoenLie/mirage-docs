@@ -173,6 +173,8 @@ export const defineDocConfig = async (
 									localStorage.getItem('midocColorScheme') ?? 'dark'
 								);
 
+								updateColorScheme();
+
 								let currentTry = 0;
 								const tryLimit = 120;
 
