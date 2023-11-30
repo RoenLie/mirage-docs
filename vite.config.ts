@@ -35,6 +35,7 @@ export default defineConfig(async () => {
 		build: {
 			outDir,
 			emptyOutDir: true,
+			minify:      false,
 			lib:         {
 				entry:   input,
 				formats: [ 'es' ],
