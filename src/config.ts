@@ -168,11 +168,19 @@ export const defineDocConfig = async (
 									window.location.replace(window.location.href);
 								});
 
+								document.documentElement.setAttribute(
+									'color-scheme',
+									localStorage.getItem('midocColorScheme') ?? 'dark'
+								);
+
 								let currentTry = 0;
 								const tryLimit = 120;
 
 								requestAnimationFrame(() => {
 									const { scrollHeight, offsetHeight } = window.document.body;
+
+									if (scrollHeight <= offsetHeight)
+										return;
 
 									// In some scenarios available height is slightly off,
 									// so we do -2 to make sure it wont overflow.
@@ -182,8 +190,13 @@ export const defineDocConfig = async (
 									savedScroll = Math.min(savedScroll, availableScroll);
 
 									const scrollBack = () => {
-										if (currentTry > tryLimit)
-											return console.warn('MirageDocs: Failed to scroll back to original position');
+										if (currentTry > tryLimit) {
+											const errorLog = JSON.parse(localStorage.getItem('miragedocsErrorLog') ?? '[]');
+											errorLog.push({message: 'MirageDocs: Failed to scroll back to original position', data: {}});
+											localStorage.setItem('miragedocsErrorLog', JSON.stringify(errorLog));
+
+											return;
+										}
 
 										window.scrollTo(0, savedScroll);
 										currentTry++;
