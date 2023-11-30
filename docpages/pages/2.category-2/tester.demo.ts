@@ -10,6 +10,13 @@ export class DemoComponent extends LitElement {
 		DEMO COMPONENT
 
 		<mm-test-component></mm-test-component>
+
+		<button @click=${ () => {
+			window.top?.postMessage('hmrReload', location.origin);
+			console.log('sending message');
+		} }>
+			SEND MESSAGE
+		</button>
 		`;
 	}
 

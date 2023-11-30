@@ -15,6 +15,7 @@ import { layoutStyles } from './layout.styles.js';
 
 const { base, libDir } = globalThis.miragedocs.siteConfig?.internal ?? {};
 
+
 @customElement('midoc-layout')
 export class MiDocLayoutCmp extends LitElement {
 
@@ -37,6 +38,16 @@ export class MiDocLayoutCmp extends LitElement {
 		this.handleHashChange();
 		this.handleNavToggle(true);
 		this.handleColorSchemeToggle(true);
+
+		this.updateComplete.then(() => {
+			window.addEventListener('message', (ev) => {
+				if (ev.origin !== location.origin)
+					return;
+
+				if (ev.data === 'hmrReload')
+					this.handleFrameLoad();
+			});
+		});
 	}
 
 	public override disconnectedCallback(): void {
@@ -61,6 +72,10 @@ export class MiDocLayoutCmp extends LitElement {
 
 				const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
 				contentWindow.scrollTo(0, scrollVal);
+
+				contentWindow.removeEventListener('scroll', this.handleFramePageScroll);
+				contentWindow.removeEventListener('keydown', this.handleHotkeyPress);
+
 				contentWindow.addEventListener('scroll', this.handleFramePageScroll);
 				contentWindow.addEventListener('keydown', this.handleHotkeyPress);
 			}

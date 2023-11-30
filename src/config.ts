@@ -121,11 +121,6 @@ export const defineDocConfig = async (
 						// Watch markdown files for changes.
 						for (const [ , path ] of markdownCache.cache)
 							this.addWatchFile(path);
-
-						// Doing this part in load instead, as it is more reliable.
-						// Watch component files for changes.
-						//for (const [ , path ] of tagCache)
-						//	this.addWatchFile(path);
 					},
 					load(id) {
 						this.addWatchFile(id);
@@ -166,55 +161,10 @@ export const defineDocConfig = async (
 							if (import.meta.hot) {
 								import.meta.hot.accept();
 								import.meta.hot.on('vite:beforeUpdate', () => {
-									const currentScroll = window.scrollY;
-									localStorage.setItem('pageScrollValue', String(currentScroll));
-
 									window.location.replace(window.location.href);
 								});
 
-								document.documentElement.setAttribute(
-									'color-scheme',
-									localStorage.getItem('midocColorScheme') ?? 'dark'
-								);
-
-								updateColorScheme();
-
-								let currentTry = 0;
-								const tryLimit = 120;
-
-								requestAnimationFrame(() => {
-									const { scrollHeight, offsetHeight } = window.document.body;
-
-									if (scrollHeight <= offsetHeight)
-										return;
-
-									// In some scenarios available height is slightly off,
-									// so we do -2 to make sure it wont overflow.
-									const availableScroll = scrollHeight - offsetHeight - 2;
-
-									let savedScroll = Number(localStorage.getItem('pageScrollValue') ?? 0);
-									savedScroll = Math.min(savedScroll, availableScroll);
-
-									const scrollBack = () => {
-										if (currentTry > tryLimit) {
-											const errorLog = JSON.parse(localStorage.getItem('miragedocsErrorLog') ?? '[]');
-											errorLog.push({message: 'MirageDocs: Failed to scroll back to original position', data: {}});
-											localStorage.setItem('miragedocsErrorLog', JSON.stringify(errorLog));
-
-											return;
-										}
-
-										window.scrollTo(0, savedScroll);
-										currentTry++;
-
-										if (window.scrollY === savedScroll)
-											return;
-
-										requestAnimationFrame(scrollBack);
-									};
-
-									scrollBack();
-								});
+								window.top?.postMessage('hmrReload', location.origin);
 							}
 							`;
 
