@@ -161,10 +161,8 @@ export const defineDocConfig = async (
 							if (import.meta.hot) {
 								import.meta.hot.accept();
 								import.meta.hot.on('vite:beforeUpdate', () => {
-									window.location.replace(window.location.href);
+									window.top?.postMessage('hmrReload', location.origin);
 								});
-
-								window.top?.postMessage('hmrReload', location.origin);
 							}
 							`;
 

@@ -45,7 +45,7 @@ export class MiDocLayoutCmp extends LitElement {
 					return;
 
 				if (ev.data === 'hmrReload')
-					this.handleFrameLoad();
+					this.startFrameReload();
 			});
 		});
 	}
@@ -72,9 +72,6 @@ export class MiDocLayoutCmp extends LitElement {
 
 				const scrollVal = Number(localStorage.getItem('pageScrollValue') ?? 0);
 				contentWindow.scrollTo(0, scrollVal);
-
-				contentWindow.removeEventListener('scroll', this.handleFramePageScroll);
-				contentWindow.removeEventListener('keydown', this.handleHotkeyPress);
 
 				contentWindow.addEventListener('scroll', this.handleFramePageScroll);
 				contentWindow.addEventListener('keydown', this.handleHotkeyPress);
@@ -146,11 +143,15 @@ export class MiDocLayoutCmp extends LitElement {
 			return;
 		}
 
-		if (this.activeFrame === hash)
+		if (this.activeFrame === (hash + '.html'))
 			return;
 
 		await this.updateComplete;
 
+		this.startFrameReload();
+	};
+
+	protected startFrameReload = async () => {
 		while (this.transitionSet.size)
 			await Promise.all([ ...this.transitionSet ]);
 
