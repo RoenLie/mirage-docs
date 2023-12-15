@@ -152,6 +152,8 @@ export class MiDocLayoutCmp extends LitElement {
 	};
 
 	protected startFrameReload = async () => {
+		console.clear();
+
 		while (this.transitionSet.size)
 			await Promise.all([ ...this.transitionSet ]);
 
