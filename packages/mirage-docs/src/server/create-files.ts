@@ -20,7 +20,11 @@ export interface ConfigProperties {
 	base: string;
 	root: string;
 	source: string;
-	tagDirs?: { path: string, whitelist?: RegExp[]; blacklist?: RegExp[]; }[];
+	tagDirs?: {
+		path: string;
+		whitelist?: RegExp[];
+		blacklist?: RegExp[];
+	}[];
 	input?: string[];
 	autoImport?: AutoImportPluginProps;
 	siteConfig?: Partial<SiteConfig>;
@@ -43,13 +47,6 @@ export const createDocFiles = async (
 	const { manifestCache, tagCache, editorCache, markdownCache, props } = args;
 	const libDir = '.mirage';
 
-	props.siteConfig                   ??= {};
-	props.siteConfig.internal          ??= {};
-	props.siteConfig.internal.rootDir  ??= props.root;
-	props.siteConfig.internal.entryDir ??= props.source;
-	props.siteConfig.internal.libDir   ??= libDir;
-	props.siteConfig.internal.base 	  ??= props.base;
-
 	/** Holds the path and content that will be created. */
 	const filesToCreate = new Map<string, string>();
 
@@ -58,25 +55,37 @@ export const createDocFiles = async (
 	const absoluteSourceDir = normalize(join(resolve(), props.source));
 
 	//#region fix any potential missing props in site config
-	props.siteConfig ??= {};
-	props.siteConfig.styles ??= {};
-	props.siteConfig.styles.layout ??= '';
-	props.siteConfig.styles.layout ??= '';
-	props.siteConfig.styles.sidebar ??= '';
-	props.siteConfig.styles.pathTree ??= '';
-	props.siteConfig.styles.metadata ??= '';
-	props.siteConfig.styles.cmpEditor ??= '';
-	props.siteConfig.styles.pageHeader ??= '';
+	props.siteConfig                     ??= {};
+	props.siteConfig.internal            ??= {};
+	props.siteConfig.internal.rootDir    ??= props.root;
+	props.siteConfig.internal.entryDir   ??= props.source;
+	props.siteConfig.internal.libDir     ??= libDir;
+	props.siteConfig.internal.base 	    ??= props.base;
+
+	props.siteConfig.styles              ??= {};
+	props.siteConfig.styles.layout       ??= '';
+	props.siteConfig.styles.layout       ??= '';
+	props.siteConfig.styles.sidebar      ??= '';
+	props.siteConfig.styles.pathTree     ??= '';
+	props.siteConfig.styles.metadata     ??= '';
+	props.siteConfig.styles.cmpEditor    ??= '';
+	props.siteConfig.styles.pageHeader   ??= '';
 	props.siteConfig.styles.sourceEditor ??= '';
 	props.siteConfig.styles.pageTemplate ??= '';
 
-	props.siteConfig.links ??= {};
-	props.siteConfig.links.styles ??= [];
-	props.siteConfig.links.scripts ??= [];
-	props.siteConfig.links.darkTheme ??= '';
-	props.siteConfig.links.darkTheme ??= '';
+	props.siteConfig.links               ??= {};
+	props.siteConfig.links.styles        ??= [];
+	props.siteConfig.links.scripts       ??= [];
+	props.siteConfig.links.darkTheme     ??= '';
+	props.siteConfig.links.darkTheme     ??= '';
 
-	props.siteConfig.sidebar ??= {};
+	props.siteConfig.layout              ??= {};
+	props.siteConfig.layout.logoSrc      ??= '';
+	props.siteConfig.layout.logoHeight   ??= '';
+	props.siteConfig.layout.headingText  ??= '';
+
+	props.siteConfig.sidebar                  ??= {};
+	props.siteConfig.sidebar.delimiter        ??= '_';
 	props.siteConfig.sidebar.nameReplacements ??= [
 		[ '.docs', '' ],
 		[ '.editor', ' Editor' ],
@@ -90,7 +99,10 @@ export const createDocFiles = async (
 		schema: defaultHtmlSchema,
 	}) as Orama<any, any, any, any>;
 
-	const routes = await Promise.all([ ...markdownCache.cache, ...editorCache.cache ].map(async ([ , path ]) => {
+	const routes = await Promise.all([
+		...markdownCache.cache,
+		...editorCache.cache,
+	].map(async ([ , path ]) => {
 		const route = DocPath.createFileRoute(path, absoluteSourceDir);
 		const content = await promises.readFile(path, { encoding: 'utf8' });
 
@@ -147,6 +159,7 @@ export const createDocFiles = async (
 			props.siteConfig?.links?.scripts ?? [],
 			path,
 			absoluteCmpPath.replace(absoluteRootDir, '').replaceAll(/\\+/g, '/'),
+			siteconfigFilePath.replace(absoluteRootDir, '').replace(/\\+/g, '/'),
 		);
 		filesToCreate.set(absoluteIndexPath, content);
 
@@ -177,6 +190,7 @@ export const createDocFiles = async (
 			props.siteConfig?.links?.scripts ?? [],
 			path,
 			absoluteCmpPath.replace(absoluteRootDir, '').replace(/\\+/g, '/'),
+			siteconfigFilePath.replace(absoluteRootDir, '').replace(/\\+/g, '/'),
 		);
 		filesToCreate.set(absoluteIndexPath, content);
 

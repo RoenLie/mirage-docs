@@ -1,27 +1,33 @@
-import './sidebar.cmp.js';
 import './global-search.cmp.js';
-import '../types/globals.js';
+import '../../types/globals.js';
 
+import { Adapter, ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { html, LitElement, unsafeCSS } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
+import { customElement, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';
 
-import { componentStyles } from '../styles/component.styles.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import { componentStyles } from '../../styles/component.styles.js';
 import { type GlobalSearch } from './global-search.cmp.js';
-import { chevronUpIcon, Icon, listIcon, moonIcon, spinningCircleIcon, sunIcon } from './icons.js';
+import {
+	chevronUpIcon, Icon, listIcon,
+	moonIcon, spinningCircleIcon, sunIcon,
+} from './icons.js';
 import { layoutStyles } from './layout.styles.js';
+import { MiDocSidebarCmp } from './sidebar.cmp.js';
+
+MiDocSidebarCmp.register();
 
 
-const { base, libDir } = globalThis.miragedocs.siteConfig?.internal ?? {};
+export class LayoutAdapter extends Adapter {
+
+}
 
 
 @customElement('midoc-layout')
 export class MiDocLayoutCmp extends LitElement {
 
-	@property() public logo = '';
-	@property() public logoHeight = '';
-	@property() public heading = '';
 	@state() protected loading = false;
 	@query('iframe') protected frameQry: HTMLIFrameElement;
 	@query('midoc-sidebar') protected sidebarQry: LitElement;
@@ -34,7 +40,6 @@ export class MiDocLayoutCmp extends LitElement {
 
 	public override connectedCallback(): void {
 		super.connectedCallback();
-		window.addEventListener('hashchange', this.handleHashChange, { passive: true });
 		this.handleHashChange();
 		this.handleNavToggle(true);
 		this.handleColorSchemeToggle(true);
@@ -47,6 +52,8 @@ export class MiDocLayoutCmp extends LitElement {
 				if (ev.data === 'hmrReload')
 					this.startFrameReload();
 			});
+
+			window.addEventListener('hashchange', this.handleHashChange, { passive: true });
 		});
 	}
 
@@ -104,6 +111,7 @@ export class MiDocLayoutCmp extends LitElement {
 			this.loading = true;
 			this.activeFrame = hash + '.html';
 
+			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').internal;
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
 			frame.src = [ base, libDir, this.activeFrame ].join('/').replaceAll(/\/+/g, '/');
 
@@ -136,7 +144,10 @@ export class MiDocLayoutCmp extends LitElement {
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
 		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
 		if (!hash) {
-			hash = window.miragedocs.routes[0] ?? '';
+			const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
+			const routes = ContainerLoader.get<string[]>('routes');
+
+			hash = routes[0] ?? '';
 			history.pushState({}, '', base + '#' + hash);
 			dispatchEvent(new HashChangeEvent('hashchange'));
 
@@ -206,7 +217,11 @@ export class MiDocLayoutCmp extends LitElement {
 
 	protected async setNavState(state?: boolean) {
 		this.classList.toggle(this.navClosedClass, state);
-		localStorage.setItem(this.navStorageProp, String(this.classList.contains(this.navClosedClass)));
+
+		localStorage.setItem(
+			this.navStorageProp,
+			String(this.classList.contains(this.navClosedClass)),
+		);
 
 		if (!this.classList.contains(this.navClosedClass)) {
 			this.sidebarQry?.addEventListener(
@@ -234,12 +249,10 @@ export class MiDocLayoutCmp extends LitElement {
 	}
 
 	public override render() {
+		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
+
 		return html`
-		<midoc-sidebar
-			logo=${ this.logo }
-			logoHeight=${ this.logoHeight }
-			heading=${ this.heading }
-		></midoc-sidebar>
+		<midoc-sidebar></midoc-sidebar>
 
 		<main>
 			<div class="header">
@@ -292,7 +305,7 @@ export class MiDocLayoutCmp extends LitElement {
 	public static override styles = [
 		componentStyles,
 		layoutStyles,
-		unsafeCSS(window.miragedocs.siteConfig.styles.layout),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.layout),
 	];
 
 }

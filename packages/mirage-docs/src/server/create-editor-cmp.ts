@@ -1,6 +1,9 @@
-import { promises } from 'fs';
+import { promises } from 'node:fs';
 
-import { createComponentNameFromPath, createComponentTagFromPath } from './build/helpers/virtual-helpers.js';
+import {
+	createComponentNameFromPath,
+	createComponentTagFromPath,
+} from './build/helpers/virtual-helpers.js';
 import { editorPageTemplate } from './generators/editor-page-template.js';
 
 
@@ -17,11 +20,10 @@ export const createEditorComponent = async (
 		.replaceAll('$', '\\$');
 
 	content = editorPageTemplate({
-		editorId: '@roenlie/mirage-docs/app/components/component-editor.js',
-		codeId:   targetPath,
-		tag:      componentTag,
-		class:    componentClass,
-		code:     content,
+		codeId: targetPath,
+		tag:    componentTag,
+		class:  componentClass,
+		code:   content,
 	});
 
 	return content;

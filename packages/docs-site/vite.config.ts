@@ -3,9 +3,7 @@ import { defineDocConfig } from '@roenlie/mirage-docs/server';
 
 export default defineDocConfig({
 	build: {
-		emptyOutDir: false,
-		outDir:      '../dist/preview',
-		sourcemap:   true,
+		outDir: '../dist/preview',
 	},
 }, {
 	debug:      false,
@@ -15,6 +13,11 @@ export default defineDocConfig({
 	siteConfig: {
 		links: {
 			scripts: [ '/bootstrap.ts' ],
+		},
+		layout: {
+			headingText: 'Mirage Docs',
+			logoHeight:  '40px',
+			logoSrc:     'logo.svg',
 		},
 	},
 	autoImport: {

@@ -96,6 +96,9 @@ importers:
       '@orama/plugin-parsedoc':
         specifier: 2.0.0-beta.10
         version: 2.0.0-beta.10
+      '@roenlie/lit-aegis':
+        specifier: ^1.0.21
+        version: 1.0.21(lit@3.1.0)
       '@sindresorhus/slugify':
         specifier: ^2.2.1
         version: 2.2.1
@@ -137,8 +140,8 @@ importers:
         specifier: ^13.0.7
         version: 13.0.7
       '@types/sharedworker':
-        specifier: ^0.0.109
-        version: 0.0.109
+        specifier: ^0.0.110
+        version: 0.0.110
       bootstrap-icons:
         specifier: ^1.11.2
         version: 1.11.2
@@ -149,6 +152,10 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
     dev: true
+
+  /@abraham/reflection@0.12.0:
+    resolution: {integrity: sha512-OoLlgBE5u18mc61pJNamEh2OtFpHjtvDi1pV4ojnnH77juCvQw/Z3YlHF8TJiorU7/V6UuGApFzsi+bieug7fg==}
+    dev: false
 
   /@custom-elements-manifest/analyzer@0.9.0:
     resolution: {integrity: sha512-aYCc+CmUamFG3FbHO2m1hz/qik61pgYIJkN986k2BPamQmgomST1ZnRngDjUSt6RmO8NrZydxUzg+AKdEaE4EA==}
@@ -573,6 +580,25 @@ packages:
       - supports-color
     dev: true
 
+  /@roenlie/lit-aegis@1.0.21(lit@3.1.0):
+    resolution: {integrity: sha512-SaXuofsuu0rmVGaITxVsz460r4G8hbBiUl/SbrIYRSq/HO6qZlmshlV3/b0Q/hViiWio/RhB/AVe07jdwlTvfQ==}
+    peerDependencies:
+      lit: '*'
+    dependencies:
+      '@abraham/reflection': 0.12.0
+      '@roenlie/mimic-core': 0.0.62
+      deepmerge-ts: 5.1.0
+      inversify: 6.0.2
+      lit: 3.1.0
+    dev: false
+
+  /@roenlie/mimic-core@0.0.62:
+    resolution: {integrity: sha512-GWkGlbr/7vJetY5VJ3CZuFrhArDSfZSravT89dMYw2b72oI2S6rBETb7PeiUlT1DI5TMwhDoRa+PW961PR8ffA==}
+    dependencies:
+      nanoid: 5.0.4
+      ts-toolbelt: 9.6.0
+    dev: false
+
   /@roenlie/package-toolbox@0.0.22:
     resolution: {integrity: sha512-OvoOwtFwuXsVlRH7g1ZhtkZjjfxNw8rCQKkNnH//ztao8NkDl8SOabX8bytmm0Z8YsaEOf8A3s5eme0e/KE+Hg==}
     hasBin: true
@@ -783,8 +809,8 @@ packages:
     resolution: {integrity: sha512-dn1l8LaMea/IjDoHNd9J52uBbInB796CDffS6VdIxvqYCPSG0V0DzHp76GpaWnlhg88uYyPbXCDIowa86ybd5A==}
     dev: true
 
-  /@types/sharedworker@0.0.109:
-    resolution: {integrity: sha512-EBWYvfIKm8YAPTqQqPzARGLgPmMmK3b+FXywjVXjozJ7NijCGaLrYNNjeeLc81xkUW0bWznAesQ/D9Nm0J+HfA==}
+  /@types/sharedworker@0.0.110:
+    resolution: {integrity: sha512-TN6ird5VbAD6Pbneds/xL209Gfnp1hU9ZZ71ia1gtw4YnYuGXnsjYyUQz2ZsjPLi6nVz15//v9cSvpB7x2TxfQ==}
     dev: true
 
   /@types/trusted-types@2.0.7:
@@ -2612,6 +2638,10 @@ packages:
       side-channel: 1.0.4
     dev: true
 
+  /inversify@6.0.2:
+    resolution: {integrity: sha512-i9m8j/7YIv4mDuYXUAcrpKPSaju/CIly9AHK5jvCBeoiM/2KEsuCQTTP+rzSWWpLYWRukdXFSl6ZTk2/uumbiA==}
+    dev: false
+
   /is-alphabetical@2.0.1:
     resolution: {integrity: sha512-FWyyY60MeTNyeSRpkM2Iry0G9hpr7/9kD40mD/cGQEuilcZYS4okz8SN2Q6rLCJ8gbCt6fN+rC+6tMGS99LaxQ==}
     dev: false
@@ -3290,6 +3320,12 @@ packages:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+
+  /nanoid@5.0.4:
+    resolution: {integrity: sha512-vAjmBf13gsmhXSgBrtIclinISzFFy22WwCYoyilZlsrRXNIHSwgFQ1bEdjRwMT3aoadeIF6HMuDRlOxzfXV8ig==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+    dev: false
 
   /natural-compare-lite@1.4.0:
     resolution: {integrity: sha512-Tj+HTDSJJKaZnfiuw+iaF9skdPpTo2GtEly5JHnWV/hfv2Qj/9RKsGISQtLh2ox3l5EAGw487hnBee0sIJ6v2g==}
@@ -4318,6 +4354,10 @@ packages:
   /ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
     dev: true
+
+  /ts-toolbelt@9.6.0:
+    resolution: {integrity: sha512-nsZd8ZeNUzukXPlJmTBwUAuABDe/9qtVDelJeT/qW0ow3ZS3BsQJtNkan1802aM9Uf68/Y8ljw86Hu0h5IUW3w==}
+    dev: false
 
   /tsconfig-paths@3.15.0:
     resolution: {integrity: sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==}

@@ -7,10 +7,12 @@ export const createIndexFile = (
 	scriptLinks: string[],
 	indexPath: string,
 	componentPath: string,
+	siteConfigPath: string,
 ) => {
 	const content = indexPageTemplate({
 		title:        createComponentNameFromPath(indexPath),
 		moduleId:     componentPath,
+		siteConfigId: siteConfigPath,
 		stylelinks:   styleLinks,
 		scriptlinks:  scriptLinks,
 		componentTag: createComponentTagFromPath(indexPath),

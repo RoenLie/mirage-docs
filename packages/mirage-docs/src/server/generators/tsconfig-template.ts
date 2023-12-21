@@ -6,7 +6,7 @@ export const tsconfigTemplate =
 		"incremental": false,
 		"target": "ESNext",
 		"module": "ESNext",
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"lib": [
 			"ESNext",
 			"DOM",

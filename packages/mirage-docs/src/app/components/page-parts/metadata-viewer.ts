@@ -1,10 +1,12 @@
+import { ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { css, html, LitElement, type PropertyValues, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 
-import type { Declarations } from '../../shared/metadata.types.js';
-import { componentStyles } from '../styles/component.styles.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import type { Declarations } from '../../../shared/metadata.types.js';
+import { componentStyles } from '../../styles/component.styles.js';
 
 
 @customElement('midoc-metadata-viewer')
@@ -360,7 +362,7 @@ export class MiDocMetadataViewerCmp extends LitElement {
 			color: var(--midoc-tertiary);
 		}
 	`,
-		unsafeCSS(window.miragedocs.siteConfig.styles.metadata),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.metadata),
 	];
 	//#endregion
 

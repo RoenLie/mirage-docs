@@ -1,38 +1,35 @@
-import { css, html, LitElement, type PropertyValues, type TemplateResult, unsafeCSS } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, inject, state } from '@roenlie/lit-aegis/ts';
+import { css, html, type PropertyValues, type TemplateResult, unsafeCSS } from 'lit';
+import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 import { type FocusableElement, tabbable } from 'tabbable';
 
-import { buttonStyle } from '../styles/button.styles.js';
-import { componentStyles } from '../styles/component.styles.js';
-import { findActiveElement } from '../utilities/domquery.js';
-import { pathsToTree, type TreeRecord } from '../utilities/paths-to-tree.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import { buttonStyle } from '../../styles/button.styles.js';
+import { componentStyles } from '../../styles/component.styles.js';
+import { findActiveElement } from '../../utilities/domquery.js';
+import { pathsToTree, type TreeRecord } from '../../utilities/paths-to-tree.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
 
-@customElement('midoc-path-tree')
-export class MidocPathTreeCmp extends LitElement {
+export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 
-	@property({ type: Array }) public paths: string[] = [];
-	@property({ type: Array }) public nameReplacements: [from: string, to: string][] = [];
-	@property() public delimiter = '_';
-	@property() public activeHref = '';
+	@inject('site-config') protected siteConfig: SiteConfig;
 	@state() protected groupState: Record<string, boolean> = {};
+	@state() protected activeHref = '';
+
 	protected hierarchy: TreeRecord = {};
-
 	public override connectedCallback(): void {
-		super.connectedCallback();
-
-		this.addEventListener('keydown', this.handleKeydown);
+		this.element.addEventListener('keydown', this.handleKeydown);
 		window.addEventListener('hashchange', this.handleHashChange, { passive: true });
 
 		this.groupState = JSON.parse(localStorage.getItem('midocMenuState') ?? '{}');
 
 		setTimeout(async () => {
 			await this.updateComplete;
-			this.dispatchEvent(new CustomEvent('load', {
+			this.element.dispatchEvent(new CustomEvent('load', {
 				cancelable: false,
 				bubbles:    false,
 				composed:   false,
@@ -43,19 +40,21 @@ export class MidocPathTreeCmp extends LitElement {
 	}
 
 	public override disconnectedCallback(): void {
-		super.disconnectedCallback();
-		this.removeEventListener('keydown', this.handleKeydown);
+		this.element.removeEventListener('keydown', this.handleKeydown);
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}
 
-	protected override willUpdate(props: PropertyValues): void {
-		if (props.has('paths'))
-			this.hierarchy = pathsToTree(this.paths, this.delimiter, this.nameReplacements);
+	public override willUpdate(props: PropertyValues): void {
+		if (props.has('paths')) {
+			this.hierarchy = pathsToTree(
+				this.element.paths,
+				this.siteConfig.sidebar.delimiter!,
+				this.siteConfig.sidebar.nameReplacements!,
+			);
+		}
 
 		if (props.has('groupState'))
 			localStorage.setItem('midocMenuState', JSON.stringify(this.groupState));
-
-		super.updated(props);
 	}
 
 	public toggleAll(value: boolean) {
@@ -78,7 +77,7 @@ export class MidocPathTreeCmp extends LitElement {
 		if (location.hash === route)
 			return;
 
-		const { base } = window.miragedocs.siteConfig.internal;
+		const { base } = this.siteConfig.internal;
 		history.pushState({}, '', base + '#' + route);
 
 		dispatchEvent(new HashChangeEvent('hashchange'));
@@ -86,7 +85,7 @@ export class MidocPathTreeCmp extends LitElement {
 
 	protected handleToggleClick = (key: string) => {
 		this.groupState = { ...this.groupState, [key]: !this.groupState[key] };
-		this.dispatchEvent(new CustomEvent('toggle', { detail: { state: this.groupState } }));
+		this.element.dispatchEvent(new CustomEvent('toggle', { detail: { state: this.groupState } }));
 	};
 
 	protected handleHashChange = () => {
@@ -96,15 +95,15 @@ export class MidocPathTreeCmp extends LitElement {
 
 	protected handleKeydown = (ev: KeyboardEvent) => {
 		if (ev.code === 'Tab') {
-			this.setAttribute('inert', '');
-			setTimeout(() => this.removeAttribute('inert'), 0);
+			this.element.setAttribute('inert', '');
+			setTimeout(() => this.element.removeAttribute('inert'), 0);
 		}
 
 		if (![ 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight' ].includes(ev.code))
 			return;
 
-		const tabbableElements = tabbable(this, { getShadowRoot: true });
-		const activeElement = findActiveElement(this) as HTMLElement | null;
+		const tabbableElements = tabbable(this.element, { getShadowRoot: true });
+		const activeElement = findActiveElement(this.element) as HTMLElement | null;
 
 		const indexOfActive = tabbableElements.findIndex(el => el === activeElement) ?? 0;
 		let nextIndex = indexOfActive;
@@ -197,10 +196,8 @@ export class MidocPathTreeCmp extends LitElement {
 						</button>
 					</div>
 					<div class="items">
-						${ when(
-							this.groupState[dir],
-							() => this.groupTemplate(next as TreeRecord),
-						) }
+						${ when(this.groupState[dir],
+							() => this.groupTemplate(next as TreeRecord)) }
 					</div>
 				</div>
 				`;
@@ -293,7 +290,24 @@ export class MidocPathTreeCmp extends LitElement {
 			outline-offset: -2px;
 		}
 		`,
-		unsafeCSS(window.miragedocs.siteConfig.styles.pathTree),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.pathTree),
 	];
+
+}
+
+
+@customElement('midoc-path-tree')
+export class MidocPathTreeCmp extends AegisComponent {
+
+	@property({ type: Array }) public paths: string[] = [];
+	protected override adapter: PathTreeAdapter;
+
+	constructor() {
+		super(PathTreeAdapter);
+	}
+
+	public toggleAll(value: boolean) {
+		this.adapter.toggleAll(value);
+	}
 
 }

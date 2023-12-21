@@ -1,4 +1,5 @@
 import { type ElapsedTime } from '@orama/orama';
+import { ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -6,7 +7,8 @@ import { live } from 'lit/directives/live.js';
 import { map } from 'lit/directives/map.js';
 import { when } from 'lit/directives/when.js';
 
-import { componentStyles } from '../styles/component.styles.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import { componentStyles } from '../../styles/component.styles.js';
 import { Icon, xIcon } from './icons.js';
 
 
@@ -32,9 +34,6 @@ interface ExpandedDoc {
 		displayText: string;
 	};
 }
-
-
-const base = window.miragedocs.siteConfig.internal.base ?? '';
 
 
 @customElement('docs-global-search')
@@ -97,10 +96,7 @@ export class GlobalSearch extends LitElement {
 	public override async connectedCallback() {
 		super.connectedCallback();
 
-		/** This is here so the worker is included in the build. */
-		(() => new Worker(new URL(
-			'../workers/search-worker.ts', import.meta.url,
-		), { type: 'module' }).terminate());
+		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
 
 		/** This is the actual creation of the worker. */
 		this.searchWorker = new Worker(
@@ -166,7 +162,7 @@ export class GlobalSearch extends LitElement {
 		if (location.hash === hash)
 			return;
 
-		const { base } = window.miragedocs.siteConfig.internal;
+		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
 		history.pushState({}, '', base + hash);
 
 		dispatchEvent(new HashChangeEvent('hashchange'));

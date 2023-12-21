@@ -9,8 +9,14 @@ export interface SiteConfig {
 		sourceEditor: string;
 		pageTemplate: string;
 	}>,
+	layout: Partial<{
+		logoSrc: string;
+		logoHeight: string;
+		headingText: string;
+	}>
 	sidebar: Partial<{
 		nameReplacements: [from: string, to: string][];
+		delimiter: string;
 	}>
 	links: Partial<{
 		styles: string[];

@@ -13,8 +13,9 @@
 	},
 	"type": "module",
 	"scripts": {
-		"dev": "vite --config ./vite.config.mts",
-		"build": "vite build"
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview"
 	},
 	"dependencies": {
 		"@roenlie/mirage-docs": "workspace:^",

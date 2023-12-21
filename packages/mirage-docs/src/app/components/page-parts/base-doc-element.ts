@@ -1,10 +1,16 @@
+import { ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { css, LitElement, unsafeCSS } from 'lit';
 
-import { componentStyles } from '../styles/component.styles.js';
-import { highlightjsStyles } from '../styles/highlightjs.styles.js';
-import { markdownStyles } from '../styles/markdown.styles.js';
-import { anchorSnatcher } from '../utilities/anchor-snatcher.js';
-import { subscribeToColorChange } from '../utilities/color-subscription.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import { componentStyles } from '../../styles/component.styles.js';
+import { highlightjsStyles } from '../../styles/highlightjs.styles.js';
+import { markdownStyles } from '../../styles/markdown.styles.js';
+import { anchorSnatcher } from '../../utilities/anchor-snatcher.js';
+import { subscribeToColorChange } from '../../utilities/color-subscription.js';
+import { AdapterTestCmp } from '../layout-parts/adapter-test.cmp.js';
+
+
+AdapterTestCmp.register();
 
 
 export class BaseDocElement extends LitElement {
@@ -125,7 +131,7 @@ export class BaseDocElement extends LitElement {
 			font-family: var(--code-font);
 		}
 		`,
-		unsafeCSS(window.miragedocs.siteConfig?.styles.pageTemplate),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.pageTemplate),
 	];
 	//#endregion
 

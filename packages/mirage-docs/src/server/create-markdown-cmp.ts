@@ -76,7 +76,7 @@ export const createMarkdownComponent = (
 		});
 
 		if (hasHeader) {
-			const importValue = '@roenlie/mirage-docs/app/components/page-header.js';
+			const importValue = '@roenlie/mirage-docs/app/components/page-parts/page-header.js';
 			imports.push(`import '${ importValue }';`);
 		}
 
@@ -107,7 +107,7 @@ export const createMarkdownComponent = (
 
 		/* Only import the metadata viewer component if it is being used. */
 		if (!isEmptyObject(metadata)) {
-			const importValue = '@roenlie/mirage-docs/app/components/metadata-viewer.js';
+			const importValue = '@roenlie/mirage-docs/app/components/page-parts/metadata-viewer.js';
 			imports.push(`import '${ importValue }';`);
 		}
 
@@ -147,7 +147,7 @@ export const createMarkdownComponent = (
 
 		/* only import the editor if it there are examples to be displayed. */
 		if (!isEmptyObject(examples)) {
-			const editorPath = '@roenlie/mirage-docs/app/components/source-editor.js';
+			const editorPath = '@roenlie/mirage-docs/app/components/page-parts/source-editor.js';
 			imports.push(`import '${ editorPath }';`);
 		}
 

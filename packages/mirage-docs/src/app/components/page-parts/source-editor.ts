@@ -1,12 +1,14 @@
+import { ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { css, html, LitElement, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { type DirectiveResult } from 'lit/directive.js';
 import type { UnsafeHTMLDirective } from 'lit/directives/unsafe-html.js';
 
-import { debounce } from '../utilities/debounce.js';
-import { drag } from '../utilities/drag.js';
-import { type LoadedEditor, monaco } from '../utilities/monaco.js';
-import { unpkgReplace } from '../utilities/unpkg-replace.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import { debounce } from '../../utilities/debounce.js';
+import { drag } from '../../utilities/drag.js';
+import { type LoadedEditor, monaco } from '../../utilities/monaco.js';
+import { unpkgReplace } from '../../utilities/unpkg-replace.js';
 
 
 @customElement('docs-source-editor')
@@ -325,7 +327,7 @@ export class EsSourceEditor extends LitElement {
 			border-radius: inherit;
 		}
 		`,
-		unsafeCSS(window.miragedocs.siteConfig.styles.sourceEditor),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.sourceEditor),
 	];
 	//#endregion
 

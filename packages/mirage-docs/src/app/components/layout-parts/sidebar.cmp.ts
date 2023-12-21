@@ -1,50 +1,38 @@
-import './path-tree.cmp.js';
-
-import { css, html, LitElement, unsafeCSS } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, inject, query, state } from '@roenlie/lit-aegis/ts';
+import { css, html, unsafeCSS } from 'lit';
+import { property } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
 
-import { buttonStyle } from '../styles/button.styles.js';
-import { componentStyles } from '../styles/component.styles.js';
-import { inputStyle } from '../styles/input.styles.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import { buttonStyle } from '../../styles/button.styles.js';
+import { componentStyles } from '../../styles/component.styles.js';
+import { inputStyle } from '../../styles/input.styles.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
-import type { MidocPathTreeCmp } from './path-tree.cmp.js';
+import { MidocPathTreeCmp } from './path-tree.cmp.js';
+
+MidocPathTreeCmp.register();
 
 
-const base = window.miragedocs.siteConfig.internal.base ?? '';
+export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 
-
-@customElement('midoc-sidebar')
-export class MiDocSidebarCmp extends LitElement {
-
-	@property() public logo = '';
-	@property() public logoHeight = '';
-	@property() public heading = '';
-	@property({ type: Array }) public nameReplacements: [from: string, to: string][] = [
-		...window.miragedocs.siteConfig.sidebar.nameReplacements!,
-		[ '-', '' ],
-	];
-
+	@inject('site-config') protected siteConfig: SiteConfig;
+	@inject('routes') protected routes: string[];
 	@state() protected toggleAllValue = false;
 	@state() protected toggleIndeterminate = false;
 	@state() protected filteredRoutes: string[] = [];
 	@query('midoc-path-tree') protected pathTreeQry: MidocPathTreeCmp;
 	protected scrollValue = 0;
 	protected searchValue = localStorage.getItem('midocSidebarSearch') ?? '';
-	protected allRoutes: string[] = window.miragedocs.routes;
 
 	public override connectedCallback(): void {
-		super.connectedCallback();
-
-		this.addEventListener('scroll', this.handleScroll);
+		this.element.addEventListener('scroll', this.handleScroll);
 
 		this.setIndeterminateState();
 		this.handleSearch(this.searchValue, true);
 	}
 
 	public override disconnectedCallback(): void {
-		super.disconnectedCallback();
-		this.removeEventListener('scroll', this.handleScroll);
+		this.element.removeEventListener('scroll', this.handleScroll);
 	}
 
 	public toggleAll = () => {
@@ -65,13 +53,13 @@ export class MiDocSidebarCmp extends LitElement {
 	};
 
 	protected handleScroll = () => {
-		this.scrollValue = this.scrollTop;
+		this.scrollValue = this.element.scrollTop;
 		localStorage.setItem('midocSidebarScrollValue', String(this.scrollValue));
 	};
 
 	protected handleLoad = () => {
 		setTimeout(() => {
-			this.scrollTop	= Number(localStorage.getItem('midocSidebarScrollValue')) ?? 0;
+			this.element.scrollTop	= Number(localStorage.getItem('midocSidebarScrollValue')) ?? 0;
 
 			if (this.searchValue)
 				this.pathTreeQry?.toggleAll(this.toggleAllValue);
@@ -89,11 +77,10 @@ export class MiDocSidebarCmp extends LitElement {
 	};
 
 	protected handleSearch = (search: string, initial?: boolean) => {
-		const stringReplacement = (str: string) => this.nameReplacements.reduce(
-			(acc, [ from, to ]) => acc.replaceAll(from, to), str,
-		);
+		const stringReplacement = (str: string) => this.siteConfig.sidebar.nameReplacements!
+			.reduce((acc, [ from, to ]) => acc.replaceAll(from, to), str);
 
-		this.filteredRoutes = this.allRoutes.filter(path =>
+		this.filteredRoutes = this.routes.filter(path =>
 			stringReplacement(path).toUpperCase().includes(search.toUpperCase()));
 
 		if ((this.searchValue && !search) || search)
@@ -111,19 +98,23 @@ export class MiDocSidebarCmp extends LitElement {
 	};
 
 	public override render() {
+		const layoutCfg = this.siteConfig.layout;
+		const base = this.siteConfig.internal.base;
+
 		return html`
 			<div class="greeting">
-				${ when(this.logo, () => html`
+				${ when(layoutCfg.logoSrc, () => html`
 				<picture>
 					<img
-						height=${ this.logoHeight }
-						src=${ (base ? base + '/' : '') + this.logo } alt="Logo"
+						height=${ layoutCfg.logoHeight! }
+						src=${ (base ? base + '/' : '') + layoutCfg.logoSrc }
+						alt="Logo"
 					/>
 				</picture>
 				`) }
 
 				<div class="title">
-					${ this.heading }
+					${ layoutCfg.headingText! }
 				</div>
 			</div>
 
@@ -146,7 +137,6 @@ export class MiDocSidebarCmp extends LitElement {
 			<div class="menu-wrapper">
 				<midoc-path-tree
 					.paths=${ this.filteredRoutes }
-					.nameReplacements=${ this.nameReplacements }
 					@load=${ this.handleLoad }
 					@toggle=${ this.handleToggle }
 				></midoc-path-tree>
@@ -213,8 +203,18 @@ export class MiDocSidebarCmp extends LitElement {
 			flex-flow: column nowrap;
 		}
 		`,
-		unsafeCSS(window.miragedocs.siteConfig.styles.sidebar),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.sidebar),
 	];
+
+}
+
+
+@customElement('midoc-sidebar')
+export class MiDocSidebarCmp extends AegisComponent {
+
+	constructor() {
+		super(SidebarAdapter);
+	}
 
 }
 

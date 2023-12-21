@@ -1,6 +1,6 @@
 import { parse } from 'path';
 
-import { toPascalCase } from './to-pascal-case.js';
+import { toPascalCase } from '../../../shared/to-pascal-case.js';
 import { toTagName } from './to-tag-name.js';
 
 

@@ -13,7 +13,7 @@ export const docPageTemplate = (props: {
 	import { css, html, LitElement, unsafeCSS } from 'lit';
 	import { customElement } from 'lit/decorators.js';
 	import {ifDefined} from 'lit/directives/if-defined.js'
-	import { BaseDocElement } from '@roenlie/mirage-docs/app/components/base-doc-element.js';
+	import { BaseDocElement } from '@roenlie/mirage-docs/app/components/page-parts/base-doc-element.js';
 	// injected imports
 	${ props.imports }
 	// hoisted

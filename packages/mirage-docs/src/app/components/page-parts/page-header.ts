@@ -1,10 +1,12 @@
+import { ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import { toPascalCase } from '../../build/helpers/to-pascal-case.js';
-import { toWords } from '../../build/helpers/to-words.js';
-import type { Declarations } from '../../build/manifest/metadata.types.js';
-import { componentStyles } from '../styles/component.styles.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import type { Declarations } from '../../../shared/metadata.types.js';
+import { toPascalCase } from '../../../shared/to-pascal-case.js';
+import { toWords } from '../../../shared/to-words.js';
+import { componentStyles } from '../../styles/component.styles.js';
 
 
 @customElement('midoc-page-header')
@@ -104,7 +106,7 @@ export class MiDocHeaderCmp extends LitElement {
 			color: var(--midoc-tertiary);
 		}
 		`,
-		unsafeCSS(window.miragedocs.siteConfig.styles.pageHeader),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.pageHeader),
 	];
 
 }

@@ -1,15 +1,14 @@
+import { ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { type IDisposable } from 'monaco-editor';
 
-import editorCmpTypes from '../types/editor-component.d.ts?raw';
-import { monaco } from '../utilities/monaco.js';
-import { unpkgReplace } from '../utilities/unpkg-replace.js';
+import type { SiteConfig } from '../../../shared/config.types.js';
+import editorCmpTypes from '../../types/editor-component.d.ts?raw';
+import { monaco } from '../../utilities/monaco.js';
+import { unpkgReplace } from '../../utilities/unpkg-replace.js';
 import { EsSourceEditor } from './source-editor.js';
-
-
-const base = window.miragedocs.siteConfig.internal.base ?? '';
 
 
 @customElement('docs-component-editor')
@@ -25,10 +24,7 @@ export class EsComponentEditor extends EsSourceEditor {
 			(await monaco).languages.typescript.typescriptDefaults.addExtraLib(editorCmpTypes),
 		);
 
-		/** This is here so the worker is included in the build. */
-		(() => new Worker(new URL(
-			'../workers/typescript-worker.ts', import.meta.url,
-		), { type: 'module' }).terminate());
+		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
 
 		/** This is the actual creating of the worker. */
 		this.tsWorker = new Worker(
@@ -106,7 +102,7 @@ export class EsComponentEditor extends EsSourceEditor {
 			border-top: 1px solid var(--midoc-surface-variant);
 		}
 		`,
-		unsafeCSS(window.miragedocs.siteConfig.styles.cmpEditor),
+		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.cmpEditor),
 	];
 
 }

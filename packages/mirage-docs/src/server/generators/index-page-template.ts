@@ -1,38 +1,36 @@
-import { stringDedent } from '../build/helpers/string-dedent.js';
-
-
 export const indexPageTemplate = (props: {
 	title: string;
 	moduleId: string;
+	siteConfigId: string;
 	stylelinks: string[];
 	scriptlinks: string[];
 	componentTag: string;
 }) => {
-	return stringDedent(`
-	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>${ props.title }</title>
+	const stylelinks = props.stylelinks.map(
+		l => `<link rel="stylesheet" href="${ l }">`,
+	).join('\n	');
 
-		<script type="module">
-			import "@roenlie/mirage-docs/assets/index.css";
-		</script>
+	const scriptlinks = props.scriptlinks.map(
+		l => `<script type="module" src="${ l }"></script>`,
+	).join('\n	');
 
-		${ props.stylelinks.map(
-			l => `<link rel="stylesheet" href="${ l }">`,
-		).join('\n	') }
+	return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>${ props.title }</title>
 
-		${ props.scriptlinks.map(
-			l => `<script type="module" src="${ l }"></script>`,
-		).join('\n	') }
-
-		<script type="module" src="${ props.moduleId }"></script>
-	</head>
-	<body>
-		<${ props.componentTag }></${ props.componentTag }>
-	</body>
-	</html>
-	`);
+	<script type="module">import "@roenlie/mirage-docs/assets/index.css";</script>
+	<script type="module" src="${ props.siteConfigId }"></script>
+	<script type="module" src="${ props.moduleId }"></script>
+	${ stylelinks }
+	${ scriptlinks }
+</head>
+<body>
+	<${ props.componentTag }></${ props.componentTag }>
+</body>
+</html>
+	`;
 };

@@ -13,30 +13,12 @@ export default defineConfig(async (): Promise<UserConfig> => {
 	const externalImportPaths = await getExternalImportPaths('./src/server');
 	const input = (await globby('./src/server/**/!(*.(test|demo|editor|types)).ts'));
 
-	console.log({ externalImportPaths, input });
-
 	return {
-		//appType: 'mpa',
 		root,
-		//worker:  {
-		//	rollupOptions: {
-		//		output: {
-		//			sourcemap:      true,
-		//			entryFileNames: (entry) => `workers/${ entry.name }.js`,
-		//		},
-		//	},
-		//},
-		esbuild: {
-			tsconfigRaw: {
-				compilerOptions: {
-					experimentalDecorators: true,
-				},
-			},
-		},
 		build: {
 			outDir,
 			emptyOutDir: true,
-			minify:      false,
+			minify:      true,
 			sourcemap:   true,
 			lib:         {
 				entry:   input,

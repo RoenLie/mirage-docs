@@ -1,4 +1,7 @@
+import { ContainerLoader } from '@roenlie/lit-aegis/ts';
 import { LitElement } from 'lit';
+
+import type { SiteConfig } from '../../shared/config.types.js';
 
 
 const subscribers = new Set<WeakRef<LitElement>>();
@@ -10,11 +13,10 @@ export const subscribeToColorChange = (element: LitElement) => {
 
 
 const updateScheme = () => {
+	const { darkTheme, lightTheme } = ContainerLoader.get<SiteConfig>('site-config').links;
 	const mode = document.documentElement.getAttribute('color-scheme') ?? 'dark';
 	const schemeLink = document.head.querySelector<HTMLLinkElement>('link#color-scheme');
-	const href = (mode === 'dark'
-		? miragedocs.siteConfig.links.darkTheme
-		: miragedocs.siteConfig.links.lightTheme) ?? '';
+	const href = (mode === 'dark' ? darkTheme : lightTheme) ?? '';
 
 	if (!schemeLink) {
 		const schemeLink = document.createElement('link');

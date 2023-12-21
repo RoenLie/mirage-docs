@@ -1,4 +1,4 @@
-import { toWords } from './to-words.js';
+import { toWords } from '../../../shared/to-words.js';
 
 
 /** Split the `text` by words and apply kebab casing. */

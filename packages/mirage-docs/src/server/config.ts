@@ -87,10 +87,20 @@ export const defineDocConfig = async (
 					},
 					transformIndexHtml: {
 						order:   'pre',
-						handler: (html) => {
+						handler: (html, ctx) => {
+							// When there is not base, default is '/'
+							if (ctx.originalUrl !== '/' && ctx.originalUrl !== props.base)
+								return;
+
 							return {
 								html,
 								tags: [
+									{
+										tag:      'script',
+										attrs:    { type: 'module' },
+										injectTo: 'head-prepend',
+										children: 'import "@roenlie/mirage-docs/assets/index.css"',
+									},
 									{
 										tag:   'script',
 										attrs: {
@@ -105,13 +115,10 @@ export const defineDocConfig = async (
 										tag:      'script',
 										attrs:    { type: 'module' },
 										injectTo: 'head-prepend',
-										children: 'import "@roenlie/mirage-docs/app/components/layout.cmp.ts"',
-									},
-									{
-										tag:      'script',
-										attrs:    { type: 'module' },
-										injectTo: 'head-prepend',
-										children: 'import "@roenlie/mirage-docs/assets/index.css"',
+										children: `
+										import "@roenlie/mirage-docs/app/components/layout-parts/layout.cmp.ts"
+										document.body.appendChild(document.createElement('midoc-layout'));
+										`,
 									},
 								],
 							};
