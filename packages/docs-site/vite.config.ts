@@ -3,14 +3,15 @@ import { defineDocConfig } from '@roenlie/mirage-docs/server';
 
 export default defineDocConfig({
 	build: {
-		outDir: '../dist/preview',
+		outDir: '../dist',
 	},
 }, {
-	debug:      false,
-	base:       '/mirage-docs',
-	root:       '/',
-	source:     '/src/pages',
-	siteConfig: {
+	debug:          false,
+	logPerformance: true,
+	base:           '/mirage-docs',
+	root:           '/',
+	source:         '/src/pages',
+	siteConfig:     {
 		links: {
 			scripts: [ '/bootstrap.ts' ],
 		},

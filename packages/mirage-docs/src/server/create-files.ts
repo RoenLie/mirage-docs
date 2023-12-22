@@ -10,7 +10,7 @@ import { type AutoImportPluginProps } from './build/component/auto-import.types.
 import { DocPath } from './build/helpers/docpath.js';
 import { createEditorComponent } from './create-editor-cmp.js';
 import { createIndexFile } from './create-index-file.js';
-import { createMarkdownComponent } from './create-markdown-cmp.js';
+import { MarkdownComponentFactory } from './create-markdown-cmp.js';
 import { siteConfigTemplate } from './generators/site-config-template.js';
 import { tsconfigTemplate } from './generators/tsconfig-template.js';
 import { typingsTemplate } from './generators/typings-template.js';
@@ -29,6 +29,7 @@ export interface ConfigProperties {
 	autoImport?: AutoImportPluginProps;
 	siteConfig?: Partial<SiteConfig>;
 	debug?: boolean;
+	logPerformance?: boolean;
 }
 
 
@@ -41,9 +42,6 @@ export const createDocFiles = async (
 		markdownCache: FilePathCache
 	},
 ) => {
-	if (args.props.debug)
-		console.time('timer:createDocFiles');
-
 	const { manifestCache, tagCache, editorCache, markdownCache, props } = args;
 	const libDir = '.mirage';
 
@@ -93,29 +91,27 @@ export const createDocFiles = async (
 	];
 	//#endregion
 
+	const markdownAndEditorPaths = [
+		...markdownCache.cache.values(),
+		...editorCache.cache.values(),
+	];
 
-	//#region create routes and populate lyra search indexes.
+	const routes = markdownAndEditorPaths.map(path =>
+		DocPath.createFileRoute(path, absoluteSourceDir));
+
+	//#region create and populate orama search indexes.
+	props.logPerformance && console.time('create oramaDb');
 	const oramaDb = await create({
 		schema: defaultHtmlSchema,
 	}) as Orama<any, any, any, any>;
 
-	const routes = await Promise.all([
-		...markdownCache.cache,
-		...editorCache.cache,
-	].map(async ([ , path ]) => {
-		const route = DocPath.createFileRoute(path, absoluteSourceDir);
+	await Promise.all(markdownAndEditorPaths.map(async path => {
 		const content = await promises.readFile(path, { encoding: 'utf8' });
-
+		const route = DocPath.createFileRoute(path, absoluteSourceDir);
 		await populate(oramaDb, content, 'md', { basePath: route + ':' });
-
-		return route;
 	}));
-	//#endregion
 
-
-	//#region create site config file
-	const siteconfigFilePath = join(absoluteLibDir, 'siteconfig.ts');
-	filesToCreate.set(siteconfigFilePath, siteConfigTemplate(props.siteConfig, routes));
+	props.logPerformance && console.timeEnd('create oramaDb');
 	//#endregion
 
 
@@ -131,22 +127,31 @@ export const createDocFiles = async (
 	//#endregion
 
 
+	//#region create site config file
+	const siteconfigFilePath = join(absoluteLibDir, 'siteconfig.ts');
+	filesToCreate.set(siteconfigFilePath, siteConfigTemplate(props.siteConfig, routes));
+	//#endregion
+
+
 	//#region create markdown routes
 	// How many levels deep the docsite root is compared to project root.
 	const rootDepth = props.root.split('/').filter(Boolean).length;
-
 	const markdownComponentPaths = new Set<string>();
 
+	props.logPerformance && console.time('create markdown scaffolding');
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
-		const componentContent = await createMarkdownComponent(
-			rootDepth,
-			tagCache,
-			manifestCache,
+		const factory = new MarkdownComponentFactory({
 			path,
-		);
+			tagCache,
+			rootDepth,
+			manifestCache,
+		});
+
+		const componentContent = await factory.create();
 		const absoluteCmpPath = DocPath.createFileCachePath(
 			path, absoluteSourceDir, absoluteLibDir, 'ts',
 		);
+
 		filesToCreate.set(absoluteCmpPath, componentContent);
 
 		markdownComponentPaths.add(absoluteCmpPath.replaceAll(/\\+/g, '/'));
@@ -155,8 +160,8 @@ export const createDocFiles = async (
 			path, absoluteSourceDir, absoluteLibDir, 'html',
 		);
 		const content = createIndexFile(
-			props.siteConfig?.links?.styles ?? [],
-			props.siteConfig?.links?.scripts ?? [],
+			props.siteConfig?.links?.styles,
+			props.siteConfig?.links?.scripts,
 			path,
 			absoluteCmpPath.replace(absoluteRootDir, '').replaceAll(/\\+/g, '/'),
 			siteconfigFilePath.replace(absoluteRootDir, '').replace(/\\+/g, '/'),
@@ -165,10 +170,12 @@ export const createDocFiles = async (
 
 		props.input?.push(absoluteIndexPath);
 	}));
+	props.logPerformance && console.timeEnd('create markdown scaffolding');
 	//#endregion
 
 
 	//#region create editor routes
+	props.logPerformance && console.time('create editor scaffolding');
 	await Promise.all([ ...editorCache.cache ].map(async ([ , path ]) => {
 		const componentPath = DocPath.createFileCachePath(
 			path, absoluteSourceDir, absoluteLibDir, 'ts',
@@ -196,11 +203,8 @@ export const createDocFiles = async (
 
 		props.input?.push(absoluteIndexPath);
 	}));
+	props.logPerformance && console.timeEnd('create editor scaffolding');
 	//#endregion
-
-
-	if (args.props.debug)
-		console.timeEnd('timer:createDocFiles');
 
 
 	return {

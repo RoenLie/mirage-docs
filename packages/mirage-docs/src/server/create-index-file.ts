@@ -3,8 +3,8 @@ import { indexPageTemplate } from './generators/index-page-template.js';
 
 
 export const createIndexFile = (
-	styleLinks: string[],
-	scriptLinks: string[],
+	styleLinks: string[] | undefined,
+	scriptLinks: string[] | undefined,
 	indexPath: string,
 	componentPath: string,
 	siteConfigPath: string,
@@ -13,8 +13,8 @@ export const createIndexFile = (
 		title:        createComponentNameFromPath(indexPath),
 		moduleId:     componentPath,
 		siteConfigId: siteConfigPath,
-		stylelinks:   styleLinks,
-		scriptlinks:  scriptLinks,
+		stylelinks:   styleLinks ?? [],
+		scriptlinks:  scriptLinks ?? [],
 		componentTag: createComponentTagFromPath(indexPath),
 	});
 

@@ -11,49 +11,61 @@ import { markdownIt } from './build/markdown/markdown-it.js';
 import { docPageTemplate } from './generators/doc-page-template.js';
 
 
-export const createMarkdownComponent = (
-	rootDepth: number,
-	tagCache: Map<string, string>,
-	manifestCache: Map<string, Declarations>,
-	path: string,
-) => {
-	const projectRoot = resolve();
+export class MarkdownComponentFactory {
 
-	const addUsedTags = (content: string, imports: string[]) => {
+	protected readonly projectRoot = resolve();
+	protected readonly rootDepth: number;
+	protected readonly tagCache: Map<string, string>;
+	protected readonly manifestCache: Map<string, Declarations>;
+	protected readonly path: string;
+	protected imports: string[] = [];
+	protected examples: Record<string, string> = {};
+	protected metadata: Record<string, Declarations> = {};
+	protected content = '';
+
+	constructor(args: {
+		path:          string,
+		tagCache:      Map<string, string>,
+		rootDepth:     number,
+		manifestCache: Map<string, Declarations>,
+	}) {
+		this.path          = args.path;
+		this.tagCache      = args.tagCache;
+		this.rootDepth     = args.rootDepth;
+		this.manifestCache = args.manifestCache;
+	}
+
+	protected addUsedTags() {
 		/* save the matching tags to a set, to avoid duplicates */
 		const componentImportPaths = new Set<string>();
 
 		/* loop through and cache paths for all custom element tags. */
-		TagCatcher.get(content).forEach(tag => {
-			const path = tagCache.get(tag);
+		TagCatcher.get(this.content).forEach(tag => {
+			const path = this.tagCache.get(tag);
 			if (path)
 				componentImportPaths.add(path);
 		});
 
 		const relativeComponentImports = [ ...componentImportPaths ]
-			.map(path => '/..'.repeat(rootDepth) + path
-				.replace(projectRoot, '')
-				.replace(projectRoot.replaceAll('\\', '/'), ''));
+			.map(path => '/..'.repeat(this.rootDepth) + path
+				.replace(this.projectRoot, '')
+				.replace(this.projectRoot.replaceAll('\\', '/'), ''));
 
-		imports.push(...relativeComponentImports.map(f => `import '${ f }';`));
-	};
+		this.imports.push(...relativeComponentImports.map(f => `import '${ f }';`));
+	}
 
-
-	const addHoistedImports = (content: string, imports: string[]) => {
+	protected addHoistedImports() {
 		/* remove hoist expressions and cache the desires imports to hoist. */
 		const hoistExpression = /```typescript hoist\s+(.*?)```/gs;
 
-		content = content.replace(hoistExpression, (_, hoist) => {
-			imports.push((hoist + ';').replaceAll(';;', ';'));
+		this.content = this.content.replace(hoistExpression, (_, hoist) => {
+			this.imports.push((hoist + ';').replaceAll(';;', ';'));
 
 			return '';
 		});
+	}
 
-		return content;
-	};
-
-
-	const addHeader = (content: string, imports: string[], metadata: Record<string, Declarations>) => {
+	protected addHeader() {
 		/* extract the tag that requests component header, replace them with instances of docs component header */
 		const headerExpression = /(\[component-header: *(.*?)])/g;
 		const headerReplacement = (key: string) => stringDedent(`
@@ -67,24 +79,21 @@ export const createMarkdownComponent = (
 
 		let hasHeader = false;
 
-		content = content.replace(headerExpression, (val, expr, tag) => {
+		this.content = this.content.replace(headerExpression, (val, expr, tag) => {
 			hasHeader = true;
-			if (manifestCache.has(tag))
-				metadata[tag] = manifestCache.get(tag)!;
+			if (this.manifestCache.has(tag))
+				this.metadata[tag] = this.manifestCache.get(tag)!;
 
 			return val.replace(expr, headerReplacement(tag));
 		});
 
 		if (hasHeader) {
 			const importValue = '@roenlie/mirage-docs/app/components/page-parts/page-header.js';
-			imports.push(`import '${ importValue }';`);
+			this.imports.push(`import '${ importValue }';`);
 		}
+	}
 
-		return content;
-	};
-
-
-	const addMetadata = (content: string, imports: string[], metadata: Record<string, Declarations>) => {
+	protected addMetadata() {
 		/* extract the tags that request metadata, replace them with instances of the metadata viewer */
 		const metadataExpression   = /(\[component-metadata: *(.*?)])/g;
 		const metadataReplacement  = (key: string) => stringDedent(`
@@ -95,9 +104,9 @@ export const createMarkdownComponent = (
 		</div>
 		`);
 
-		content = content.replaceAll(metadataExpression, (val, expr, tag) => {
-			if (manifestCache.has(tag)) {
-				metadata[tag] = manifestCache.get(tag)!;
+		this.content = this.content.replaceAll(metadataExpression, (val, expr, tag) => {
+			if (this.manifestCache.has(tag)) {
+				this.metadata[tag] = this.manifestCache.get(tag)!;
 
 				return val.replace(expr, metadataReplacement(tag));
 			}
@@ -106,18 +115,14 @@ export const createMarkdownComponent = (
 		});
 
 		/* Only import the metadata viewer component if it is being used. */
-		if (!isEmptyObject(metadata)) {
+		if (!isEmptyObject(this.metadata)) {
 			const importValue = '@roenlie/mirage-docs/app/components/page-parts/metadata-viewer.js';
-			imports.push(`import '${ importValue }';`);
+			this.imports.push(`import '${ importValue }';`);
 		}
+	}
 
-		return content;
-	};
-
-
-	const addEditors = (content: string, imports: string[], path: string) => {
+	protected addEditors() {
 		/* Mutate and inject the script editors */
-		const examples: Record<string, string> = {};
 		const exampleExpression = /<!--\s*Example:\s*((?:\w+\.)+js)\s*-->/gi;
 		const exampleScriptExpr = /<script type="module" id="(\w+)">(.*?)<\/script>/gs;
 		const exampleReplacement = (key: string) => stringDedent(`
@@ -129,61 +134,49 @@ export const createMarkdownComponent = (
 			></docs-source-editor>
 		</div>`);
 
-		content = content.replace(exampleExpression, (_, exampleFile: string) => {
+		this.content = this.content.replace(exampleExpression, (_, exampleFile: string) => {
 			const exampleId      = toCamelCase(exampleFile);
-			const examplePath    = normalize(join(dirname(path), exampleFile));
+			const examplePath    = normalize(join(dirname(this.path), exampleFile));
 			const exampleContent = readFileSync(examplePath, { encoding: 'utf8' }).trim();
 
-			examples[exampleId]  = exampleContent;
+			this.examples[exampleId]  = exampleContent;
 
 			return exampleReplacement(exampleId);
 		});
 
-		content = content.replace(exampleScriptExpr, (_, exampleId: string, exampleContent: string) => {
-			examples[exampleId] = stringDedent(exampleContent);
+		this.content = this.content.replace(exampleScriptExpr, (_, exampleId: string, exampleContent: string) => {
+			this.examples[exampleId] = stringDedent(exampleContent);
 
 			return exampleReplacement(exampleId);
 		});
 
 		/* only import the editor if it there are examples to be displayed. */
-		if (!isEmptyObject(examples)) {
+		if (!isEmptyObject(this.examples)) {
 			const editorPath = '@roenlie/mirage-docs/app/components/page-parts/source-editor.js';
-			imports.push(`import '${ editorPath }';`);
+			this.imports.push(`import '${ editorPath }';`);
 		}
+	}
 
-		return {
-			examples,
-			content,
-		};
-	};
+	public create = async () => {
+		this.content = await promises.readFile(this.path, { encoding: 'utf8' });
 
+		this.addUsedTags();
+		this.addHoistedImports();
+		this.addHeader();
+		this.addMetadata();
+		this.addEditors();
 
-	const combineParts = async (path: string) => {
-		let content = await promises.readFile(path, { encoding: 'utf8' });
-
-		const imports: string[] = [];
-		const metadata: Record<string, Declarations> = {};
-
-		addUsedTags(content, imports);
-		content = addHoistedImports(content, imports);
-		content = addHeader(content, imports, metadata);
-		content = addMetadata(content, imports, metadata);
-		const examples = addEditors(content, imports, path);
-		content = examples.content;
-
-		content = docPageTemplate({
-			componentName: createComponentNameFromPath(path),
-			componentTag:  createComponentTagFromPath(path),
-			examples:      JSON.stringify(examples.examples, null, 3),
-			metadata:      JSON.stringify(metadata, null, 3),
+		this.content = docPageTemplate({
+			componentName: createComponentNameFromPath(this.path),
+			componentTag:  createComponentTagFromPath(this.path),
+			examples:      JSON.stringify(this.examples, null, 3),
+			metadata:      JSON.stringify(this.metadata, null, 3),
 			hoisted:       '',
-			imports:       imports.join('\n'),
-			markdown:      markdownIt.render(content),
+			imports:       this.imports.join('\n'),
+			markdown:      markdownIt.render(this.content),
 		});
 
-		return content;
+		return this.content;
 	};
 
-
-	return combineParts(path);
-};
+}
