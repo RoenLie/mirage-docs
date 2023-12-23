@@ -29,9 +29,9 @@ jobs:
           pnpm build
 
       - name: Change package version
-        run: pnpm |
+        run: |
           cd packages/mirage-docs
-          increment-version
+          pnpm increment-version
 
       - name: Publish package
         env:
