@@ -9,6 +9,7 @@ import { when } from 'lit/directives/when.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';
+import { createSearchWorker } from '../../workers/search-worker.js';
 import { Icon, xIcon } from './icons.js';
 
 
@@ -96,13 +97,7 @@ export class GlobalSearch extends LitElement {
 	public override async connectedCallback() {
 		super.connectedCallback();
 
-		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
-
-		/** This is the actual creation of the worker. */
-		this.searchWorker = new Worker(
-			base + '/.mirage/workers/search-worker.js', { type: 'module' },
-		);
-
+		this.searchWorker = createSearchWorker();
 		this.searchWorker.onmessage = this.handleWorkerResponse;
 		this.colorSchemeObs.observe(document.documentElement,
 			{ attributes: true, attributeFilter: [ 'color-scheme' ] });

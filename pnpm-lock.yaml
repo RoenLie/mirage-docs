@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      tslib:
-        specifier: ^2.6.2
-        version: 2.6.2
     devDependencies:
       '@roenlie/eslint-config':
         specifier: ^1.3.0

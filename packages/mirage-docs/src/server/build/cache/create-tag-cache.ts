@@ -30,6 +30,7 @@ export const createTagCache = async (options: {
 			const fileContent = readFileSync(file, { encoding: 'utf8' });
 			const normalizedFileName = file.replaceAll('\\', '/');
 
+			// Extract tags from HTMLElementTagNameMap interfaces in file.
 			fileContent.replaceAll(/HTMLElementTagNameMap.*?{(.*?)}/gs, (val, capture: string) => {
 				capture.replaceAll(/([-\w]+)['"]/g, (val, tag: string) => {
 					if (!/[^-\w]/.test(tag))
@@ -41,6 +42,7 @@ export const createTagCache = async (options: {
 				return val;
 			});
 
+			// Extract tags from the supplied tag capture patterns.
 			options.tagCapturePatterns.forEach(expr => {
 				fileContent.replaceAll(expr, (val, tag) => {
 					componentTagCache.set(tag, normalizedFileName);

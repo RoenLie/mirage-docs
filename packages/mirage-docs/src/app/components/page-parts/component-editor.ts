@@ -8,6 +8,7 @@ import type { SiteConfig } from '../../../shared/config.types.js';
 import editorCmpTypes from '../../types/editor-component.d.ts?raw';
 import { monaco } from '../../utilities/monaco.js';
 import { unpkgReplace } from '../../utilities/unpkg-replace.js';
+import { createTSWorker } from '../../workers/typescript-worker.js';
 import { EsSourceEditor } from './source-editor.js';
 
 
@@ -24,12 +25,7 @@ export class EsComponentEditor extends EsSourceEditor {
 			(await monaco).languages.typescript.typescriptDefaults.addExtraLib(editorCmpTypes),
 		);
 
-		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
-
-		/** This is the actual creating of the worker. */
-		this.tsWorker = new Worker(
-			base + '/.mirage/workers/typescript-worker.js', { type: 'module' },
-		);
+		this.tsWorker = createTSWorker();
 		this.tsWorker.onmessage = this.handleWorkerResponse;
 
 		await super.firstUpdated();

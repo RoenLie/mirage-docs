@@ -16,7 +16,7 @@ export const createPlugin = (args: {
 	manifestCache: Map<string, Declarations>;
 	markdownCache: FilePathCache;
 	markdownComponentPaths: Set<string>;
-	siteconfigFilePath: string;
+	siteconfigImportPath: string;
 	absoluteRootDir: string;
 	absoluteLibDir: string;
 	absoluteSourceDir: string;
@@ -28,7 +28,7 @@ export const createPlugin = (args: {
 		manifestCache,
 		markdownCache,
 		markdownComponentPaths,
-		siteconfigFilePath,
+		siteconfigImportPath,
 		absoluteRootDir,
 		absoluteLibDir,
 		absoluteSourceDir,
@@ -42,8 +42,10 @@ export const createPlugin = (args: {
 		transformIndexHtml: {
 			order:   'pre',
 			handler: (html, ctx) => {
-				// When there is not base, default is '/'
-				if (ctx.originalUrl !== '/' && ctx.originalUrl !== props.base)
+				// Only transform the root index.html file.
+				// This isn't a perfect way to check, but we are not generting other index.html
+				// files in mirage-docs, so it can only fail if user ends up adding one as an input.
+				if (!ctx.filename.endsWith('index.html'))
 					return;
 
 				return {
@@ -58,10 +60,9 @@ export const createPlugin = (args: {
 						{
 							tag:   'script',
 							attrs: {
+								id:   'site-config',
 								type: 'module',
-								src:  siteconfigFilePath
-									.replace(absoluteRootDir, '')
-									.replaceAll(/\\+/g, '/'),
+								src:  siteconfigImportPath,
 							},
 							injectTo: 'head-prepend',
 						},

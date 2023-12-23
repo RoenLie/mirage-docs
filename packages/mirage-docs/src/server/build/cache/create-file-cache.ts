@@ -15,13 +15,12 @@ export const createFileCache = async (options: {
 	const { cache = new Map<string, string>() } = options;
 
 	for (const { path, pattern } of options.directories) {
-		let files = await genToArray(getFiles(path, pattern));
-		files = files.filter(pth => pattern.test(pth));
+		const files = await genToArray(getFiles(path, pattern));
 
-		files.forEach(file => {
+		for (const file of files.filter(pth => pattern.test(pth))) {
 			const name = Path.parse(file).name;
 			cache.set(name, file.replaceAll('\\', '/'));
-		});
+		}
 	}
 
 	return {

@@ -3,7 +3,8 @@ import { defineDocConfig } from '@roenlie/mirage-docs/server';
 
 export default defineDocConfig({
 	build: {
-		outDir: '../dist',
+		emptyOutDir: true,
+		outDir:      './dist',
 	},
 }, {
 	debug:          false,
