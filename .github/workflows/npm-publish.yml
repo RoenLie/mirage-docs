@@ -24,11 +24,19 @@ jobs:
         run: pnpm install
 
       - name: Build complete project.
-        run: pnpm build
+        run: |
+          cd packages/mirage-docs
+          pnpm build
 
       - name: Change package version
-        run: pnpm increment-version
+        run: pnpm |
+          cd packages/mirage-docs
+          increment-version
 
-      - run: npm publish --access public
+      - name: Publish package
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+        run: |
+          cd packages/mirage-docs
+          npm publish --access public
+

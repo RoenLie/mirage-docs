@@ -1,0 +1,23 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"outDir": "../../dist",
+		"rootDir": "..",
+		"baseUrl": ".",
+		"noEmit": false,
+		"emitDeclarationOnly": true,
+		"types": [
+			"vite/client",
+		],
+	},
+	"include": [
+		"./**/*.ts",
+		"./**/*.js",
+		"../app/utilities/to-words.ts",
+		"../shared/to-pascal-case.ts",
+	],
+	"exclude": [
+		"./**/*.test.ts",
+		"./**/*.bench.ts",
+	]
+}

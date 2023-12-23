@@ -1,0 +1,31 @@
+{
+	"extends": "@roenlie/tsconfig",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"baseUrl": ".",
+		"noEmit": false,
+		"emitDeclarationOnly": true,
+		"types": [
+			"node",
+			"vite/client",
+			"sharedworker"
+		],
+		"lib": [
+			"ESNext",
+			"DOM",
+			"DOM.Iterable",
+			"webworker"
+		],
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.js",
+		"./typings/**/*.d.ts",
+	],
+	"exclude": [
+		"./**/*.test.ts",
+		"./**/*.bench.ts",
+		"./**/*.editor.d.ts"
+	]
+}

@@ -27,4 +27,33 @@
 	"typescript.preferences.importModuleSpecifierEnding": "js",
 	"lit-plugin.rules.no-incompatible-type-binding": "off",
 	"typescript.tsdk": "node_modules\\typescript\\lib",
+	"restoreTerminals.runOnStartup": true,
+	"restoreTerminals.terminals": [
+		{
+			"splitTerminals": [
+				{
+					"name": "root",
+					"commands": []
+				}
+			]
+		},
+		{
+			"splitTerminals": [
+				{
+					"name": "dev",
+					"commands": [
+						"cd packages/docs-site",
+						"clear"
+					]
+				},
+				{
+					"name": "docs",
+					"commands": [
+						"cd packages/mirage-docs",
+						"clear"
+					]
+				}
+			]
+		},
+	],
 }
