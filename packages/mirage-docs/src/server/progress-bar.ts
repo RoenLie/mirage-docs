@@ -1,5 +1,7 @@
 // taken from https://github.com/superjojo140/ascii-bar
 
+import { stdout } from 'node:process';
+
 
 export interface ProgressbarOptions {
 	/**
@@ -188,7 +190,7 @@ export class ConsoleBar {
 	private lastUpdate = new Date().getTime();
 	private timeToFinish = 0;
 	private overallTime = 0;
-	private stream = process.stdout;
+	private stream = stdout;
 	private spinnerTimeout;
 	private enableSpinner = false;
 	private currentSpinnerSymbol = '';
