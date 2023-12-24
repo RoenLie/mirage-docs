@@ -1,7 +1,7 @@
 // taken from https://github.com/superjojo140/ascii-bar
 
 import { stdout } from 'node:process';
-import { cursorTo } from 'node:readline';
+import { clearLine, cursorTo } from 'node:readline';
 
 
 export interface ProgressbarOptions {
@@ -289,7 +289,7 @@ export class ConsoleBar {
 
 		cursorTo(this.stream, 0);
 		this.stream.write(this.renderLine());
-		this.stream.clearLine(1);
+		clearLine(this.stream, 1);
 	}
 
 	/**
