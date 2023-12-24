@@ -7,12 +7,11 @@ export default defineDocConfig({
 		outDir:      './dist',
 	},
 }, {
-	debug:          false,
-	logPerformance: true,
-	base:           '/mirage-docs',
-	root:           '/',
-	source:         '/src/pages',
-	siteConfig:     {
+	debug:      false,
+	base:       '/mirage-docs',
+	root:       '/',
+	source:     '/src/pages',
+	siteConfig: {
 		links: {
 			scripts: [ '/bootstrap.ts' ],
 		},

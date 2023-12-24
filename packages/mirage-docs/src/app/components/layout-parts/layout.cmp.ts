@@ -1,7 +1,7 @@
 import './global-search.cmp.js';
 import '../../types/globals.js';
 
-import { Adapter, ContainerLoader } from '@roenlie/lit-aegis/ts';
+import { Adapter, ContainerLoader } from '@roenlie/lit-aegis/js';
 import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

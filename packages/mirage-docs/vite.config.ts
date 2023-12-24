@@ -1,6 +1,6 @@
 import { globby } from 'globby';
 import { resolve } from 'path';
-import { defineConfig, UserConfig } from 'vite';
+import { defineConfig, type UserConfig } from 'vite';
 
 import { getExternalImportPaths } from './src/server/build/helpers/get-external-paths.js';
 
@@ -10,11 +10,20 @@ const outDir = resolve(resolve(), 'dist');
 
 
 export default defineConfig(async (): Promise<UserConfig> => {
-	const externalImportPaths = await getExternalImportPaths('./src/server');
-	const input = (await globby('./src/server/**/!(*.(test|demo|editor|types)).ts'));
+	const externalImportPaths = await getExternalImportPaths('./src');
+	const inputApp = (await globby('./src/app/**/!(*.(test|demo|editor|types)).ts'));
+	const inputServer = (await globby('./src/server/**/!(*.(test|demo|editor|types)).ts'));
+	const input = [ ...inputApp, ...inputServer ];
 
 	return {
 		root,
+		esbuild: {
+			tsconfigRaw: {
+				compilerOptions: {
+					experimentalDecorators: true,
+				},
+			},
+		},
 		build: {
 			outDir,
 			emptyOutDir: true,

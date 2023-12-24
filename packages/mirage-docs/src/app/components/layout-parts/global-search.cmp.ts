@@ -1,5 +1,5 @@
 import { type ElapsedTime } from '@orama/orama';
-import { ContainerLoader } from '@roenlie/lit-aegis/ts';
+import { ContainerLoader } from '@roenlie/lit-aegis/js';
 import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

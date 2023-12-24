@@ -1,4 +1,4 @@
-import { ContainerLoader } from '@roenlie/lit-aegis/ts';
+import { ContainerLoader } from '@roenlie/lit-aegis/js';
 
 import type { SiteConfig } from '../../shared/config.types.js';
 

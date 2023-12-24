@@ -29,7 +29,6 @@ export interface ConfigProperties {
 	autoImport?: AutoImportPluginProps;
 	siteConfig?: Partial<SiteConfig>;
 	debug?: boolean;
-	logPerformance?: boolean;
 }
 
 

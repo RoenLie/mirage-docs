@@ -1,6 +1,6 @@
 import { globby } from 'globby';
 import { resolve } from 'path';
-import { defineConfig, UserConfig } from 'vite';
+import { defineConfig, type UserConfig } from 'vite';
 
 
 const root = resolve(resolve(), 'src');

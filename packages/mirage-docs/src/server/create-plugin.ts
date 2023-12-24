@@ -17,7 +17,6 @@ export const createPlugin = (args: {
 	markdownCache: FilePathCache;
 	markdownComponentPaths: Set<string>;
 	siteconfigImportPath: string;
-	absoluteRootDir: string;
 	absoluteLibDir: string;
 	absoluteSourceDir: string;
 }): Plugin => {
@@ -29,7 +28,6 @@ export const createPlugin = (args: {
 		markdownCache,
 		markdownComponentPaths,
 		siteconfigImportPath,
-		absoluteRootDir,
 		absoluteLibDir,
 		absoluteSourceDir,
 	} = args;
@@ -71,7 +69,7 @@ export const createPlugin = (args: {
 							attrs:    { type: 'module' },
 							injectTo: 'head-prepend',
 							children: `
-							import "@roenlie/mirage-docs/app/components/layout-parts/layout.cmp.ts"
+							import "@roenlie/mirage-docs/app/components/layout-parts/layout.cmp.js"
 							document.body.appendChild(document.createElement('midoc-layout'));
 							`,
 						},

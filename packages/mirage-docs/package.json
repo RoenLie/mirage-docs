@@ -10,23 +10,32 @@
 		"email": "KristofferRoenLie@gmail.com"
 	},
 	"type": "module",
+	"files": [
+		"./dist",
+		"./src",
+		"./LICENSE",
+		"./package.json",
+		"./README.md"
+	],
 	"exports": {
 		"./server": {
 			"types": "./dist/server/index.d.ts",
 			"default": "./dist/server/index.js"
 		},
-		"./app": "./src/app/index.ts",
-		"./app/*": "./src/app/*",
-		"./assets/*": "./src/assets/*",
-		"./workers/*": "./dist/workers/*"
+		"./app/*": "./dist/app/*",
+		"./workers/*": "./dist/workers/*",
+		"./assets/*": "./src/assets/*"
 	},
 	"scripts": {
 		"build": "pnpm build-server && pnpm build-workers",
-		"build-server": "vite build --config ./vite.config.ts && tsc --project ./src/server/tsconfig.json",
+		"build-server": "vite build --config ./vite.config.ts && pnpm emit-types:server && pnpm emit-types:app",
 		"build-workers": "vite build --config ./vite-workers.config.ts",
+		"emit-types:app": "tsc --project ./src/app/tsconfig.json",
+		"emit-types:server": "tsc --project ./src/server/tsconfig.json",
 		"test": "vitest run --config ./tests/vite.config.ts",
 		"updatedeps": "pnpm update --interactive",
-		"increment-version": "pnpm mimic increment-version"
+		"increment-version": "package-toolbox increment-version",
+		"package:local": "pnpm pack --pack-destination ../../_packages/"
 	},
 	"dependencies": {
 		"tslib": "^2.6.2",

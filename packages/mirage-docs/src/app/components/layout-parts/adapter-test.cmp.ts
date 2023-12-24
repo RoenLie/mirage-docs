@@ -1,4 +1,4 @@
-import { Adapter, AegisComponent, ContainerModule, customElement, inject } from '@roenlie/lit-aegis/ts';
+import { Adapter, AegisComponent, ContainerModule, customElement, inject } from '@roenlie/lit-aegis/js';
 import { html } from 'lit';
 
 

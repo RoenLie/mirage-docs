@@ -21,12 +21,11 @@ export const indexPageTemplate = (props: {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>${ props.title }</title>
-
+	${ stylelinks }
+	${ scriptlinks }
 	<script type="module">import "@roenlie/mirage-docs/assets/index.css";</script>
 	<script type="module" src="${ props.siteConfigId }"></script>
 	<script type="module" src="${ props.moduleId }"></script>
-	${ stylelinks }
-	${ scriptlinks }
 </head>
 <body>
 	<${ props.componentTag }></${ props.componentTag }>

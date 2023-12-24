@@ -70,7 +70,6 @@ export const defineDocConfig = async (
 		oramaDb,
 		markdownComponentPaths,
 		siteconfigImportPath,
-		absoluteRootDir,
 		absoluteLibDir,
 		absoluteSourceDir,
 	} = await createDocFiles({
@@ -101,7 +100,6 @@ export const defineDocConfig = async (
 				markdownCache,
 				markdownComponentPaths,
 				siteconfigImportPath,
-				absoluteRootDir,
 				absoluteLibDir,
 				absoluteSourceDir,
 			}),
@@ -129,7 +127,7 @@ export const defineDocConfig = async (
 	mergedConfig.build.rollupOptions ??= {};
 	mergedConfig.build.rollupOptions.output ??= {};
 	if (Array.isArray(mergedConfig.build.rollupOptions.output))
-		throw new Error('Mirage docs does not support: rollupOptions => output as an Array.');
+		throw new Error('Mirage Docs does not support: rollupOptions => output as an Array.');
 
 	mergedConfig.build.rollupOptions.output.manualChunks = (id) => {
 		if (id.includes('monaco-editor'))
