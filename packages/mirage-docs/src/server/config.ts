@@ -83,11 +83,10 @@ export const defineDocConfig = async (
 	bar.update(bar.current + 1, 'Finished creating file scaffolding');
 
 	const docConfig: UserConfig = {
-		appType:   'mpa',
-		publicDir: 'assets/',
-		base:      props.base,
-		root:      join(pRoot, props.root),
-		build:     {
+		appType: 'mpa',
+		base:    props.base,
+		root:    join(pRoot, props.root),
+		build:   {
 			rollupOptions: {
 				input: props.input,
 			},
@@ -130,6 +129,8 @@ export const defineDocConfig = async (
 		throw new Error('Mirage Docs does not support: rollupOptions => output as an Array.');
 
 	mergedConfig.build.rollupOptions.output.manualChunks = (id) => {
+		console.log(id);
+
 		if (id.includes('monaco-editor'))
 			return 'monaco-editor';
 		if (id.endsWith('siteconfig.ts'))
@@ -151,7 +152,7 @@ export const defineDocConfig = async (
 	// Write the search index file to public disc folder.
 	bar.update(bar.current + 1, 'Writing search indexes to disk');
 
-	const searchDir = join(pRoot, props.root, mergedConfig.publicDir || 'assets', '.mirage');
+	const searchDir = join(pRoot, props.root, mergedConfig.publicDir || 'public', '.mirage');
 	await promises.mkdir(searchDir, { recursive: true });
 	await persistToFile(oramaDb, 'json', join(searchDir, 'searchIndexes.json'));
 

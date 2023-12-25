@@ -1,5 +1,6 @@
 import loader from '@monaco-editor/loader';
-import { type editor } from 'monaco-editor';
+import type { editor } from 'monaco-editor';
+
 
 interface CancelablePromise<T> extends Promise<T> {
 	cancel: () => void;

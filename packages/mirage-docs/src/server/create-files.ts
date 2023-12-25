@@ -99,7 +99,6 @@ export const createDocFiles = async (
 		DocPath.createFileRoute(path, absoluteSourceDir));
 
 	//#region create and populate orama search indexes.
-	//props.logPerformance && console.time('create oramaDb');
 	const oramaDb = await create({
 		schema: defaultHtmlSchema,
 	}) as Orama<any, any, any, any>;
@@ -109,8 +108,6 @@ export const createDocFiles = async (
 		const route = DocPath.createFileRoute(path, absoluteSourceDir);
 		await populate(oramaDb, content, 'md', { basePath: route + ':' });
 	}));
-
-	//props.logPerformance && console.timeEnd('create oramaDb');
 	//#endregion
 
 
@@ -137,7 +134,6 @@ export const createDocFiles = async (
 	const rootDepth = props.root.split('/').filter(Boolean).length;
 	const markdownComponentPaths = new Set<string>();
 
-	//props.logPerformance && console.time('create markdown scaffolding');
 	await Promise.all([ ...markdownCache.cache ].map(async ([ , path ]) => {
 		const factory = new MarkdownComponentFactory({
 			path,
@@ -169,12 +165,10 @@ export const createDocFiles = async (
 
 		props.input?.push(absoluteIndexPath);
 	}));
-	//props.logPerformance && console.timeEnd('create markdown scaffolding');
 	//#endregion
 
 
 	//#region create editor routes
-	//props.logPerformance && console.time('create editor scaffolding');
 	await Promise.all([ ...editorCache.cache ].map(async ([ , path ]) => {
 		const componentPath = DocPath.createFileCachePath(
 			path, absoluteSourceDir, absoluteLibDir, 'ts',
@@ -202,7 +196,6 @@ export const createDocFiles = async (
 
 		props.input?.push(absoluteIndexPath);
 	}));
-	//props.logPerformance && console.timeEnd('create editor scaffolding');
 	//#endregion
 
 

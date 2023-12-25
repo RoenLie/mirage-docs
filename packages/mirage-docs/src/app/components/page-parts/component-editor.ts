@@ -2,7 +2,7 @@ import { ContainerLoader } from '@roenlie/lit-aegis/js';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { type IDisposable } from 'monaco-editor';
+import type { IDisposable } from 'monaco-editor';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import editorCmpTypes from '../../types/editor-component.d.ts?raw';

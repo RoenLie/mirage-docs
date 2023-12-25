@@ -41,7 +41,7 @@ export const createPlugin = (args: {
 			order:   'pre',
 			handler: (html, ctx) => {
 				// Only transform the root index.html file.
-				// This isn't a perfect way to check, but we are not generting other index.html
+				// This isn't a perfect way to check, but we are not generating other index.html
 				// files in mirage-docs, so it can only fail if user ends up adding one as an input.
 				if (!ctx.filename.endsWith('index.html'))
 					return;
