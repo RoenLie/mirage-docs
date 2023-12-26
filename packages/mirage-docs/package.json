@@ -38,13 +38,12 @@
 		"package:local": "pnpm pack --pack-destination ../../_packages/"
 	},
 	"dependencies": {
-		"tslib": "^2.6.2",
 		"@custom-elements-manifest/analyzer": "^0.9.0",
 		"@monaco-editor/loader": "^1.4.0",
-		"@orama/orama": "2.0.0-beta.10",
-		"@orama/plugin-data-persistence": "2.0.0-beta.10",
-		"@orama/plugin-match-highlight": "2.0.0-beta.10",
-		"@orama/plugin-parsedoc": "2.0.0-beta.10",
+		"@orama/orama": "2.0.0-beta.11",
+		"@orama/plugin-data-persistence": "2.0.0-beta.11",
+		"@orama/plugin-match-highlight": "2.0.0-beta.11",
+		"@orama/plugin-parsedoc": "2.0.0-beta.11",
 		"@roenlie/lit-aegis": "^1.0.21",
 		"@sindresorhus/slugify": "^2.2.1",
 		"deepmerge-ts": "^5.1.0",
@@ -54,7 +53,8 @@
 		"markdown-it-anchor": "^8.6.7",
 		"monaco-editor": "^0.45.0",
 		"rollup-plugin-copy": "^3.5.0",
-		"tabbable": "^6.2.0"
+		"tabbable": "^6.2.0",
+		"tslib": "^2.6.2"
 	},
 	"peerDependencies": {
 		"lit": "^3.1.0",
