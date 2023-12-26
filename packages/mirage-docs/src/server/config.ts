@@ -107,6 +107,8 @@ export const defineDocConfig = async (
 
 	const mergedConfig = deepmerge(defineConfig(viteConfig), docConfig);
 
+	mergedConfig.publicDir ||= 'public';
+
 	mergedConfig.build ??= {};
 	mergedConfig.build.outDir ??= outDir;
 	mergedConfig.build.emptyOutDir ??= true;
@@ -115,7 +117,7 @@ export const defineDocConfig = async (
 			targets: [
 				{
 					src:  './node_modules/@roenlie/mirage-docs/dist/workers',
-					dest: join(props.root, mergedConfig.publicDir || 'assets', '.mirage'),
+					dest: join(props.root, mergedConfig.publicDir, '.mirage'),
 				},
 			],
 			hook:     'config',
@@ -129,8 +131,6 @@ export const defineDocConfig = async (
 		throw new Error('Mirage Docs does not support: rollupOptions => output as an Array.');
 
 	mergedConfig.build.rollupOptions.output.manualChunks = (id) => {
-		console.log(id);
-
 		if (id.includes('monaco-editor'))
 			return 'monaco-editor';
 		if (id.endsWith('siteconfig.ts'))
@@ -152,7 +152,7 @@ export const defineDocConfig = async (
 	// Write the search index file to public disc folder.
 	bar.update(bar.current + 1, 'Writing search indexes to disk');
 
-	const searchDir = join(pRoot, props.root, mergedConfig.publicDir || 'public', '.mirage');
+	const searchDir = join(pRoot, props.root, mergedConfig.publicDir, '.mirage');
 	await promises.mkdir(searchDir, { recursive: true });
 	await persistToFile(oramaDb, 'json', join(searchDir, 'searchIndexes.json'));
 
