@@ -1,4 +1,8 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement, inject, state } from '@roenlie/lit-aegis/js';
+import {
+	Adapter, AegisComponent,
+	ContainerLoader, customElement,
+	inject, state,
+} from '@roenlie/lit-aegis/js';
 import { css, html, type PropertyValues, type TemplateResult, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
@@ -16,11 +20,15 @@ import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
 export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 
+	//#region properties
 	@inject('site-config') protected siteConfig: SiteConfig;
 	@state() protected groupState: Record<string, boolean> = {};
 	@state() protected activeHref = '';
-
 	protected hierarchy: TreeRecord = {};
+	//#endregion
+
+
+	//#region lifecycle
 	public override connectedCallback(): void {
 		this.element.addEventListener('keydown', this.handleKeydown);
 		window.addEventListener('hashchange', this.handleHashChange, { passive: true });
@@ -46,17 +54,22 @@ export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 
 	public override willUpdate(props: PropertyValues): void {
 		if (props.has('paths')) {
+			const { delimiter, nameReplacements } = this.siteConfig.root!.sidebar!;
+
 			this.hierarchy = pathsToTree(
 				this.element.paths,
-				this.siteConfig.sidebar.delimiter!,
-				this.siteConfig.sidebar.nameReplacements!,
+				delimiter!,
+				nameReplacements!,
 			);
 		}
 
 		if (props.has('groupState'))
 			localStorage.setItem('midocMenuState', JSON.stringify(this.groupState));
 	}
+	//#endregion
 
+
+	//#region logic
 	public toggleAll(value: boolean) {
 		const toggle = (hierarchy: Record<string, string | any>) => {
 			Object.entries(hierarchy).forEach(([ dir, next ]) => {
@@ -77,7 +90,7 @@ export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 		if (location.hash === route)
 			return;
 
-		const { base } = this.siteConfig.internal;
+		const { base } = this.siteConfig.env!;
 		history.pushState({}, '', base + '#' + route);
 
 		dispatchEvent(new HashChangeEvent('hashchange'));
@@ -164,7 +177,10 @@ export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 		if (nextElement)
 			nextElement?.focus();
 	};
+	//#endregion
 
+
+	//#region template
 	protected groupTemplate = (group: TreeRecord): TemplateResult => {
 		return html`
 		${ map(
@@ -209,7 +225,10 @@ export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 	public override render() {
 		return this.groupTemplate(this.hierarchy);
 	}
+	//#endregion
 
+
+	//#region styles
 	public static override styles = [
 		componentStyles,
 		css`
@@ -290,8 +309,14 @@ export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 			outline-offset: -2px;
 		}
 		`,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.pathTree),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.pathTree;
+		this.styles.push(unsafeCSS(style));
+	}
+	//#endregion
 
 }
 

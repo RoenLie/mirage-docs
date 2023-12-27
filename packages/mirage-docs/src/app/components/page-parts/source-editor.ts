@@ -327,8 +327,14 @@ export class EsSourceEditor extends LitElement {
 			border-radius: inherit;
 		}
 		`,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.sourceEditor),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root?.styleOverrides?.sourceEditor;
+		if (style)
+			this.styles.push(unsafeCSS(style));
+	}
 	//#endregion
 
 }

@@ -1,4 +1,4 @@
-import { type SiteConfig } from '../../shared/config.types.js';
+import type { SiteConfig } from '../../shared/config.types.js';
 
 
 export const siteConfigTemplate = (siteConfig: Partial<SiteConfig>, routes: string[]) =>

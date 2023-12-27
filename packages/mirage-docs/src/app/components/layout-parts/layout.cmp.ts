@@ -111,7 +111,7 @@ export class MiDocLayoutCmp extends LitElement {
 			this.loading = true;
 			this.activeFrame = hash + '.html';
 
-			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').internal;
+			const { base, libDir } = ContainerLoader.get<SiteConfig>('site-config').env;
 			const frame = this.frameQry.cloneNode() as HTMLIFrameElement;
 			frame.src = [ base, libDir, this.activeFrame ].join('/').replaceAll(/\/+/g, '/');
 
@@ -144,7 +144,7 @@ export class MiDocLayoutCmp extends LitElement {
 	protected handleHashChange = async (_ev?: HashChangeEvent) => {
 		let hash = location.hash.split('#').filter(Boolean).at(0) ?? '';
 		if (!hash) {
-			const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
+			const { base } = ContainerLoader.get<SiteConfig>('site-config').env;
 			const routes = ContainerLoader.get<string[]>('routes');
 
 			hash = routes[0] ?? '';
@@ -249,7 +249,7 @@ export class MiDocLayoutCmp extends LitElement {
 	}
 
 	public override render() {
-		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
+		const { base } = ContainerLoader.get<SiteConfig>('site-config').env;
 
 		return html`
 		<midoc-sidebar></midoc-sidebar>

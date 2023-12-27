@@ -157,7 +157,7 @@ export class GlobalSearch extends LitElement {
 		if (location.hash === hash)
 			return;
 
-		const { base } = ContainerLoader.get<SiteConfig>('site-config').internal;
+		const { base } = ContainerLoader.get<SiteConfig>('site-config').env!;
 		history.pushState({}, '', base + hash);
 
 		dispatchEvent(new HashChangeEvent('hashchange'));

@@ -13,7 +13,7 @@ export const subscribeToColorChange = (element: LitElement) => {
 
 
 const updateScheme = () => {
-	const { darkTheme, lightTheme } = ContainerLoader.get<SiteConfig>('site-config').links;
+	const { darkTheme, lightTheme } = ContainerLoader.get<SiteConfig>('site-config').pages;
 	const mode = document.documentElement.getAttribute('color-scheme') ?? 'dark';
 	const schemeLink = document.head.querySelector<HTMLLinkElement>('link#color-scheme');
 	const href = (mode === 'dark' ? darkTheme : lightTheme) ?? '';

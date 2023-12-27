@@ -12,6 +12,7 @@ import { componentStyles } from '../../styles/component.styles.js';
 @customElement('midoc-page-header')
 export class MiDocHeaderCmp extends LitElement {
 
+	//#region properties
 	@property({ type: Boolean }) public editor?: boolean;
 	@property({ type: Object }) public declaration: Declarations;
 
@@ -22,13 +23,13 @@ export class MiDocHeaderCmp extends LitElement {
 		this.requestUpdate('name', old);
 	}
 
-	public get componentName() {
-		return this._name;
-	}
-
+	public get componentName() { return this._name; }
 	protected _name = '';
 	protected _slug = '';
+	//#endregion
 
+
+	//#region template
 	public override render() {
 		const clsname = this.declaration?.name;
 		const tagname = this.declaration?.tagName;
@@ -49,7 +50,10 @@ export class MiDocHeaderCmp extends LitElement {
 		</div>
 		`;
 	}
+	//#endregion
 
+
+	//#region styles
 	public static override styles = [
 		componentStyles,
 		css`
@@ -106,8 +110,15 @@ export class MiDocHeaderCmp extends LitElement {
 			color: var(--midoc-tertiary);
 		}
 		`,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.pageHeader),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root?.styleOverrides?.pageHeader;
+		if (style)
+			this.styles.push(unsafeCSS(style));
+	}
+	//#endregion
 
 }
 

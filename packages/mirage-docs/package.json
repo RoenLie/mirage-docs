@@ -22,7 +22,7 @@
 			"types": "./dist/server/index.d.ts",
 			"default": "./dist/server/index.js"
 		},
-		"./app/*": "./dist/app/*",
+		"./app/*": "./src/app/*",
 		"./workers/*": "./dist/workers/*",
 		"./assets/*": "./src/assets/*"
 	},

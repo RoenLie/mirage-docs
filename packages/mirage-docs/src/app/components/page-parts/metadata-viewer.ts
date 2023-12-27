@@ -362,8 +362,14 @@ export class MiDocMetadataViewerCmp extends LitElement {
 			color: var(--midoc-tertiary);
 		}
 	`,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.metadata),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root?.styleOverrides?.metadata;
+		if (style)
+			this.styles.push(unsafeCSS(style));
+	}
 	//#endregion
 
 }

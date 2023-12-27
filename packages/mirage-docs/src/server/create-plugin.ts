@@ -1,4 +1,5 @@
-import { promises } from 'node:fs';
+import { promises, readFileSync } from 'node:fs';
+import { join, sep } from 'node:path';
 
 import type { Plugin, ResolvedConfig } from 'vite';
 
@@ -32,6 +33,15 @@ export const createPlugin = (args: {
 		absoluteSourceDir,
 	} = args;
 
+	const currentProjectPath = import.meta.url
+		.replace('file:///', '').split('/').slice(0, -3).join(sep);
+
+	const pkgJsonPath = join(currentProjectPath, 'package.json');
+	const pkgJson = readFileSync(pkgJsonPath, { encoding: 'utf8' });
+	const parsedPkg = JSON.parse(pkgJson) as { exports: { './app/*': string; }};
+	const inDevMode = parsedPkg.exports['./app/*'].includes('./src');
+
+
 	return {
 		name: 'mirage-docs',
 		configResolved(cfg) {
@@ -52,7 +62,7 @@ export const createPlugin = (args: {
 						{
 							tag:      'script',
 							attrs:    { type: 'module' },
-							injectTo: 'head-prepend',
+							injectTo: 'head',
 							children: 'import "@roenlie/mirage-docs/assets/index.css"',
 						},
 						{
@@ -62,14 +72,14 @@ export const createPlugin = (args: {
 								type: 'module',
 								src:  siteconfigImportPath,
 							},
-							injectTo: 'head-prepend',
+							injectTo: 'head',
 						},
 						{
 							tag:      'script',
 							attrs:    { type: 'module' },
-							injectTo: 'head-prepend',
+							injectTo: 'head',
 							children: `
-							import "@roenlie/mirage-docs/app/components/layout-parts/layout.cmp.js"
+							import "@roenlie/mirage-docs/app/components/layout-parts/layout.cmp.${ inDevMode ? 'ts' : 'js' }"
 							document.body.appendChild(document.createElement('midoc-layout'));
 							`,
 						},

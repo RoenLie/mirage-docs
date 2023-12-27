@@ -15,11 +15,15 @@ import { EsSourceEditor } from './source-editor.js';
 @customElement('docs-component-editor')
 export class EsComponentEditor extends EsSourceEditor {
 
+	//#region properties
 	public override maxHeight = Infinity;
 	protected override editorLang = 'typescript' as const;
 	protected tsWorker: Worker;
 	protected languageDisposable: IDisposable[] = [];
+	//#endregion
 
+
+	//#region lifecycle
 	public override async firstUpdated(): Promise<void> {
 		this.languageDisposable.push(
 			(await monaco).languages.typescript.typescriptDefaults.addExtraLib(editorCmpTypes),
@@ -36,7 +40,10 @@ export class EsComponentEditor extends EsSourceEditor {
 		this.languageDisposable.forEach(d => d.dispose());
 		this.tsWorker.terminate();
 	}
+	//#endregion
 
+
+	//#region logic
 	protected override async updateHeight() {
 		const editor = await this.editor;
 		const contentHeight = Math.min(this.maxHeight, this.editorWrapperQry.clientHeight ?? 0 - 50);
@@ -81,7 +88,10 @@ export class EsComponentEditor extends EsSourceEditor {
 
 		this.requestUpdate();
 	};
+	//#endregion
 
+
+	//#region styles
 	public static override styles = [
 		...EsSourceEditor.styles,
 		css`
@@ -98,8 +108,15 @@ export class EsComponentEditor extends EsSourceEditor {
 			border-top: 1px solid var(--midoc-surface-variant);
 		}
 		`,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.cmpEditor),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root?.styleOverrides?.cmpEditor;
+		if (style)
+			this.styles.push(unsafeCSS(style));
+	}
+	//#endregion
 
 }
 
@@ -107,13 +124,17 @@ export class EsComponentEditor extends EsSourceEditor {
 @customElement('docs-editor-scratchpad')
 export class EsEditorScratchpad extends LitElement {
 
+	//#region properties
 	@property({ type: Object, attribute: false }) public mixins: {
 		connectedCallback?(): void;
 		disconnectedCallback?(): void;
 		render?(): string;
 		styles?(): string;
 	};
+	//#endregion
 
+
+	//#region lifecycle
 	public override connectedCallback(): void {
 		super.connectedCallback();
 		this.mixins.connectedCallback?.apply(this);
@@ -123,7 +144,10 @@ export class EsEditorScratchpad extends LitElement {
 		super.disconnectedCallback();
 		this.mixins.disconnectedCallback?.apply(this);
 	}
+	//#endregion
 
+
+	//#region template
 	protected override render() {
 		const styles = unsafeHTML(`
 		<style>${ this.mixins.styles?.apply(this) ?? '' }</style>
@@ -136,5 +160,6 @@ export class EsEditorScratchpad extends LitElement {
 		${ template ?? '' }
 		`;
 	}
+	//#endregion
 
 }

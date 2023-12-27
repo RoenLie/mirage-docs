@@ -47,7 +47,7 @@ export class BaseDocElement extends LitElement {
 		super.connectedCallback();
 
 		subscribeToColorChange(this);
-		this.insertFontLink();
+		//this.insertFontLink();
 		this.resizeObserver.observe(this);
 
 		anchorSnatcher.register();
@@ -131,8 +131,13 @@ export class BaseDocElement extends LitElement {
 			font-family: var(--code-font);
 		}
 		`,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.pageTemplate),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.pageTemplate;
+		this.styles.push(unsafeCSS(style));
+	}
 	//#endregion
 
 }

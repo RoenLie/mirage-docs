@@ -2,14 +2,14 @@ import { promises } from 'node:fs';
 import { join, normalize, resolve, sep } from 'node:path';
 
 import { persistToFile } from '@orama/plugin-data-persistence/server';
-import { deepmerge } from 'deepmerge-ts';
+import { deepmerge, deepmergeInto } from 'deepmerge-ts';
 import copy from 'rollup-plugin-copy';
 import { defineConfig, type UserConfig } from 'vite';
 
 import { createFileCache } from './build/cache/create-file-cache.js';
 import { createTagCache } from './build/cache/create-tag-cache.js';
 import { createManifestCache } from './build/manifest/create-manifest-cache.js';
-import { type ConfigProperties, createDocFiles } from './create-files.js';
+import { type ConfigProperties, createDocFiles, type InternalConfigProperties } from './create-files.js';
 import { createPlugin } from './create-plugin.js';
 import { ConsoleBar } from './progress-bar.js';
 
@@ -37,21 +37,63 @@ export const defineDocConfig = async (
 		undoneSymbol:  ' ',
 	});
 
-	// Base url of the application, will certain relative paths.
-	props.base ??= '';
+	const internalProps: InternalConfigProperties =  {
+		debug: false,
 
-	// We enforce it to start with a leading /, then we add a . to make it relative.
-	props.source = '.' + props.source;
+		// Base url of the application, will certain relative paths.
+		base:    '',
+		// We enforce it to start with a leading /, then we add a . to make it relative.
+		source:  '.' + props.source,
+		// We enforce it to start with / for consistency, then we remove it.
+		root:    props.root.replace(/^\/|^\\/, ''),
+		// Always include the main index.html file.
+		input:   [ normalize(join(pRoot, props.root, 'index.html')) ],
+		// We by default look for tags where the entry dir is.
+		tagDirs: [ { path: props.source } ],
 
-	// We enforce it to start with / then we remove it.
-	props.root = props.root.replace(/^\/|^\\/, '');
-
-	// Always include the main index.html file.
-	props.input ??= [];
-	props.input.push(normalize(join(pRoot, props.root, 'index.html')));
-
-	// We by default look for tags where the entry dir is.
-	props.tagDirs    ??= [ { path: props.source } ];
+		siteConfig: {
+			env: {
+				rootDir:  props.root,
+				entryDir: props.source,
+				libDir:   '.mirage',
+				base:     props.base,
+			},
+			root: {
+				styleImports:  [],
+				scriptImports: [],
+				layout:        {
+					headingText: '',
+					logoHeight:  '',
+					logoSrc:     '',
+				},
+				sidebar: {
+					delimiter:        '_',
+					nameReplacements: [
+						[ '.docs', '' ],
+						[ '.editor', ' Editor' ],
+						[ '-', ' ' ],
+					],
+				},
+				styleOverrides: {
+					layout:       '',
+					sidebar:      '',
+					metadata:     '',
+					pathTree:     '',
+					cmpEditor:    '',
+					sourceEditor: '',
+					pageHeader:   '',
+					pageTemplate: '',
+				},
+			},
+			pages: {
+				darkTheme:  '',
+				lightTheme: '',
+				styles:     [],
+				scripts:    [],
+			},
+		},
+	};
+	deepmergeInto(internalProps, props);
 
 	// Cache all relevant files.
 	bar.update(bar.current + 1, 'Caching files');
@@ -73,7 +115,7 @@ export const defineDocConfig = async (
 		absoluteLibDir,
 		absoluteSourceDir,
 	} = await createDocFiles({
-		props,
+		props: internalProps,
 		manifestCache,
 		tagCache,
 		editorCache,

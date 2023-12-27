@@ -12,8 +12,12 @@ export default defineDocConfig({
 	root:       '/',
 	source:     '/src/pages',
 	siteConfig: {
-		links: {
-			scripts: [ '/bootstrap.ts' ],
+		pages: {
+			scripts: [
+				{
+					src: '/bootstrap.ts',
+				},
+			],
 		},
 		layout: {
 			headingText: 'Mirage Docs',

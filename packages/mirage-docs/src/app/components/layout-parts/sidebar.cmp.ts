@@ -1,6 +1,8 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement, inject, query, state } from '@roenlie/lit-aegis/js';
+import {
+	Adapter, AegisComponent, ContainerLoader,
+	customElement, inject, query, state,
+} from '@roenlie/lit-aegis/js';
 import { css, html, unsafeCSS } from 'lit';
-import { property } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
@@ -15,6 +17,7 @@ MidocPathTreeCmp.register();
 
 export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 
+	//#region properties
 	@inject('site-config') protected siteConfig: SiteConfig;
 	@inject('routes') protected routes: string[];
 	@state() protected toggleAllValue = false;
@@ -23,7 +26,10 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 	@query('midoc-path-tree') protected pathTreeQry: MidocPathTreeCmp;
 	protected scrollValue = 0;
 	protected searchValue = localStorage.getItem('midocSidebarSearch') ?? '';
+	//#endregion
 
+
+	//#region lifecycle
 	public override connectedCallback(): void {
 		this.element.addEventListener('scroll', this.handleScroll);
 
@@ -34,7 +40,10 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 	public override disconnectedCallback(): void {
 		this.element.removeEventListener('scroll', this.handleScroll);
 	}
+	//#endregion
 
+
+	//#region logic
 	public toggleAll = () => {
 		this.toggleAllValue = this.toggleIndeterminate === true
 			? false
@@ -77,7 +86,9 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 	};
 
 	protected handleSearch = (search: string, initial?: boolean) => {
-		const stringReplacement = (str: string) => this.siteConfig.sidebar.nameReplacements!
+		const { nameReplacements } = this.siteConfig.root!.sidebar!;
+
+		const stringReplacement = (str: string) => nameReplacements!
 			.reduce((acc, [ from, to ]) => acc.replaceAll(from, to), str);
 
 		this.filteredRoutes = this.routes.filter(path =>
@@ -96,10 +107,13 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 			});
 		}
 	};
+	//#endregion
 
+
+	//#region template
 	public override render() {
-		const layoutCfg = this.siteConfig.layout;
-		const base = this.siteConfig.internal.base;
+		const base = this.siteConfig.env!.base;
+		const layoutCfg = this.siteConfig.root!.layout!;
 
 		return html`
 			<div class="greeting">
@@ -143,7 +157,10 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 			</div>
 		`;
 	}
+	//#endregion
 
+
+	//#region styles
 	public static override styles = [
 		componentStyles,
 		css`
@@ -203,8 +220,15 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 			flex-flow: column nowrap;
 		}
 		`,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.sidebar),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root?.styleOverrides?.sidebar;
+		if (style)
+			this.styles.push(unsafeCSS(style));
+	}
+	//#endregion
 
 }
 
