@@ -1,4 +1,4 @@
-import { promises, readFileSync } from 'node:fs';
+import { existsSync, promises, readFileSync } from 'node:fs';
 import { join, normalize, resolve, sep } from 'node:path';
 
 import { persistToFile } from '@orama/plugin-data-persistence/server';
@@ -51,14 +51,22 @@ export const defineDocConfig = async (
 	props.tagDirs.push({ path: props.source });
 
 	// Use package.json to check if we are in a dev mode situation.
-	const currentProjectPath = import.meta.url
-		.replace('file:///', '').split('/').slice(0, -3).join(sep);
+	const currentProjectPath = resolve('../mirage-docs');
+	const pathExists = existsSync(currentProjectPath);
+	if (pathExists) {
+		const pkgJsonPath = join(currentProjectPath, 'package.json');
 
-	const pkgJsonPath = join(currentProjectPath, 'package.json');
-	const pkgJson = readFileSync(pkgJsonPath, { encoding: 'utf8' });
-	const parsedPkg = JSON.parse(pkgJson) as { exports: { './app/*': string; }};
-	const inDevMode = parsedPkg.exports['./app/*'].includes('./src');
-	setDevMode(inDevMode);
+		const pkgJson = readFileSync(pkgJsonPath, { encoding: 'utf8' });
+		const parsedPkg = JSON.parse(pkgJson) as { exports: { './app/*': string; }};
+		const inDevMode = parsedPkg.exports['./app/*'].includes('./src');
+		setDevMode(inDevMode);
+	}
+	else {
+		setDevMode(false);
+	}
+
+	console.log(pathExists);
+
 
 	const internalProps: InternalConfigProperties =  {
 		debug:      false,
