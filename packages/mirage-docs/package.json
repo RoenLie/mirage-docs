@@ -22,7 +22,7 @@
 			"types": "./dist/server/index.d.ts",
 			"default": "./dist/server/index.js"
 		},
-		"./app/*": "./src/app/*",
+		"./app/*": "./dist/app/*",
 		"./workers/*": "./dist/workers/*",
 		"./assets/*": "./src/assets/*"
 	},
@@ -30,6 +30,7 @@
 		"build": "pnpm build-server && pnpm build-workers",
 		"build-server": "vite build --config ./vite.config.ts && pnpm emit-types:server && pnpm emit-types:app",
 		"build-workers": "vite build --config ./vite-workers.config.ts",
+		"build-indexes": "package-toolbox build-indexes",
 		"emit-types:app": "tsc --project ./src/app/tsconfig.json",
 		"emit-types:server": "tsc --project ./src/server/tsconfig.json",
 		"test": "vitest run --config ./tests/vite.config.ts",

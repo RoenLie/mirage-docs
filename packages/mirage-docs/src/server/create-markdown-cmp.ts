@@ -2,11 +2,12 @@ import { promises, readFileSync } from 'fs';
 import { dirname, join, normalize, resolve } from 'path';
 
 import { type Declarations } from '../shared/metadata.types.js';
+import { getCache } from './build/cache/cache-registry.js';
 import { TagCatcher } from './build/cache/create-tag-cache.js';
+import { fileExt } from './build/helpers/is-dev-mode.js';
 import { isEmptyObject } from './build/helpers/is-empty-object.js';
 import { stringDedent } from './build/helpers/string-dedent.js';
 import { toCamelCase } from './build/helpers/to-camel-case.js';
-import { createComponentNameFromPath, createComponentTagFromPath } from './build/helpers/virtual-helpers.js';
 import { markdownIt } from './build/markdown/markdown-it.js';
 import { docPageTemplate } from './generators/doc-page-template.js';
 
@@ -25,14 +26,14 @@ export class MarkdownComponentFactory {
 
 	constructor(args: {
 		path:          string,
-		tagCache:      Map<string, string>,
 		rootDepth:     number,
-		manifestCache: Map<string, Declarations>,
 	}) {
+		const cache = getCache();
+		this.tagCache      = cache.tag;
+		this.manifestCache = cache.manifest;
+
 		this.path          = args.path;
-		this.tagCache      = args.tagCache;
 		this.rootDepth     = args.rootDepth;
-		this.manifestCache = args.manifestCache;
 	}
 
 	protected addUsedTags() {
@@ -88,7 +89,7 @@ export class MarkdownComponentFactory {
 		});
 
 		if (hasHeader) {
-			const importValue = '@roenlie/mirage-docs/app/components/page-parts/page-header.js';
+			const importValue = `@roenlie/mirage-docs/app/components/page/page-header.${ fileExt() }`;
 			this.imports.push(`import '${ importValue }';`);
 		}
 	}
@@ -116,7 +117,7 @@ export class MarkdownComponentFactory {
 
 		/* Only import the metadata viewer component if it is being used. */
 		if (!isEmptyObject(this.metadata)) {
-			const importValue = '@roenlie/mirage-docs/app/components/page-parts/metadata-viewer.js';
+			const importValue = `@roenlie/mirage-docs/app/components/page/metadata-viewer.${ fileExt() }`;
 			this.imports.push(`import '${ importValue }';`);
 		}
 	}
@@ -152,7 +153,7 @@ export class MarkdownComponentFactory {
 
 		/* only import the editor if it there are examples to be displayed. */
 		if (!isEmptyObject(this.examples)) {
-			const editorPath = '@roenlie/mirage-docs/app/components/page-parts/source-editor.js';
+			const editorPath = `@roenlie/mirage-docs/app/components/page/source-editor.${ fileExt() }`;
 			this.imports.push(`import '${ editorPath }';`);
 		}
 	}
@@ -167,13 +168,11 @@ export class MarkdownComponentFactory {
 		this.addEditors();
 
 		this.content = docPageTemplate({
-			componentName: createComponentNameFromPath(this.path),
-			componentTag:  createComponentTagFromPath(this.path),
-			examples:      JSON.stringify(this.examples, null, 3),
-			metadata:      JSON.stringify(this.metadata, null, 3),
-			hoisted:       '',
-			imports:       this.imports.join('\n'),
-			markdown:      markdownIt.render(this.content),
+			examples: JSON.stringify(this.examples, null, 3),
+			metadata: JSON.stringify(this.metadata, null, 3),
+			hoisted:  '',
+			imports:  this.imports.join('\n'),
+			markdown: markdownIt.render(this.content),
 		});
 
 		return this.content;

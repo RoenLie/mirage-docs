@@ -1,23 +1,27 @@
+import { fileExt } from '../build/helpers/is-dev-mode.js';
+import { randomString } from '../build/helpers/string.js';
+
+
 export const docPageTemplate = (props: {
 	hoisted:       string;
 	imports:       string;
 	examples:      string;
 	metadata:      string;
 	markdown:      string;
-	componentTag:  string;
-	componentName: string;
-}) => `
+}) => {
+	const className = randomString(10);
+
+	return `
+import { ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.${ fileExt() }';
+import { PageAdapter } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
 import { html } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js'
-import { BaseDocElement } from '@roenlie/mirage-docs/app/components/page-parts/base-doc-element.js';
 // injected imports
 ${ props.imports }
 // hoisted
 ${ props.hoisted }
 
-@customElement('${ props.componentTag }')
-export class ${ props.componentName } extends BaseDocElement {
+class ${ className } extends PageAdapter {
 
 	//#region properties
 	protected examples: Record<string, string> = ${ props.examples };
@@ -34,5 +38,13 @@ export class ${ props.componentName } extends BaseDocElement {
 		\`;
 	}
 	//#endregion
+
 }
+
+const module = new ContainerModule(({rebind}) => {
+	rebind('midoc-page').to(${ className });
+});
+
+ContainerLoader.load(module);
 `;
+};

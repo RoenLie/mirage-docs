@@ -10,12 +10,12 @@ import { buttonStyle } from '../../styles/button.styles.js';
 import { componentStyles } from '../../styles/component.styles.js';
 import { inputStyle } from '../../styles/input.styles.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
-import { MidocPathTreeCmp } from './path-tree.cmp.js';
+import { PathTreeCmp } from './path-tree.cmp.js';
 
-MidocPathTreeCmp.register();
+PathTreeCmp.register();
 
 
-export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
+export class SidebarAdapter extends Adapter<SidebarCmp> {
 
 	//#region properties
 	@inject('site-config') protected siteConfig: SiteConfig;
@@ -23,7 +23,7 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 	@state() protected toggleAllValue = false;
 	@state() protected toggleIndeterminate = false;
 	@state() protected filteredRoutes: string[] = [];
-	@query('midoc-path-tree') protected pathTreeQry: MidocPathTreeCmp;
+	@query('midoc-path-tree') protected pathTreeQry: PathTreeCmp;
 	protected scrollValue = 0;
 	protected searchValue = localStorage.getItem('midocSidebarSearch') ?? '';
 	//#endregion
@@ -234,7 +234,7 @@ export class SidebarAdapter extends Adapter<MiDocSidebarCmp> {
 
 
 @customElement('midoc-sidebar')
-export class MiDocSidebarCmp extends AegisComponent {
+export class SidebarCmp extends AegisComponent {
 
 	constructor() {
 		super(SidebarAdapter);
@@ -245,6 +245,6 @@ export class MiDocSidebarCmp extends AegisComponent {
 
 declare global {
 	interface HTMLElementTagNameMap {
-		'midoc-sidebar': MiDocSidebarCmp;
+		'midoc-sidebar': SidebarCmp;
 	}
 }

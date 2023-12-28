@@ -1,4 +1,4 @@
-import { promises } from 'node:fs';
+import { promises, readFileSync } from 'node:fs';
 import { join, normalize, resolve, sep } from 'node:path';
 
 import { persistToFile } from '@orama/plugin-data-persistence/server';
@@ -6,9 +6,8 @@ import { deepmerge, deepmergeInto } from 'deepmerge-ts';
 import copy from 'rollup-plugin-copy';
 import { defineConfig, type UserConfig } from 'vite';
 
-import { createFileCache } from './build/cache/create-file-cache.js';
-import { createTagCache } from './build/cache/create-tag-cache.js';
-import { createManifestCache } from './build/manifest/create-manifest-cache.js';
+import { createCache } from './build/cache/cache-registry.js';
+import { setDevMode } from './build/helpers/is-dev-mode.js';
 import { type ConfigProperties, createDocFiles, type InternalConfigProperties } from './create-files.js';
 import { createPlugin } from './create-plugin.js';
 import { ConsoleBar } from './progress-bar.js';
@@ -37,20 +36,37 @@ export const defineDocConfig = async (
 		undoneSymbol:  ' ',
 	});
 
+	// We enforce it to start with a leading /, then we add a . to make it relative.
+	props.source = '.' + props.source;
+
+	// We enforce it to start with / for consistency, then we remove it.
+	props.root = props.root.replace(/^\/|^\\/, '');
+
+	// Always include the main index.html file.
+	props.input ??= [];
+	props.input.push(normalize(join(pRoot, props.root, 'index.html')));
+
+	// We by default look for tags where the entry dir is.
+	props.tagDirs ??= [];
+	props.tagDirs.push({ path: props.source });
+
+	// Use package.json to check if we are in a dev mode situation.
+	const currentProjectPath = import.meta.url
+		.replace('file:///', '').split('/').slice(0, -3).join(sep);
+
+	const pkgJsonPath = join(currentProjectPath, 'package.json');
+	const pkgJson = readFileSync(pkgJsonPath, { encoding: 'utf8' });
+	const parsedPkg = JSON.parse(pkgJson) as { exports: { './app/*': string; }};
+	const inDevMode = parsedPkg.exports['./app/*'].includes('./src');
+	setDevMode(inDevMode);
+
 	const internalProps: InternalConfigProperties =  {
-		debug: false,
-
-		// Base url of the application, will certain relative paths.
-		base:    '',
-		// We enforce it to start with a leading /, then we add a . to make it relative.
-		source:  '.' + props.source,
-		// We enforce it to start with / for consistency, then we remove it.
-		root:    props.root.replace(/^\/|^\\/, ''),
-		// Always include the main index.html file.
-		input:   [ normalize(join(pRoot, props.root, 'index.html')) ],
-		// We by default look for tags where the entry dir is.
-		tagDirs: [ { path: props.source } ],
-
+		debug:      false,
+		base:       '',
+		source:     '',
+		root:       '',
+		input:      [],
+		tagDirs:    [],
 		siteConfig: {
 			env: {
 				rootDir:  props.root,
@@ -93,17 +109,13 @@ export const defineDocConfig = async (
 			},
 		},
 	};
+
 	deepmergeInto(internalProps, props);
 
 	// Cache all relevant files.
 	bar.update(bar.current + 1, 'Caching files');
 
-	const [ manifestCache, tagCache, editorCache, markdownCache ] = await Promise.all([
-		createManifestCache({ directories: props.tagDirs! }),
-		createTagCache({ directories: props.tagDirs! }),
-		createFileCache({ directories: [ { path: props.source, pattern: /\.editor\.ts/ } ] }),
-		createFileCache({ directories: [ { path: props.source, pattern: /\.md/ } ] }),
-	]);
+	await createCache(internalProps);
 
 	bar.update(bar.current + 1, 'Creating file scaffolding');
 
@@ -114,31 +126,22 @@ export const defineDocConfig = async (
 		siteconfigImportPath,
 		absoluteLibDir,
 		absoluteSourceDir,
-	} = await createDocFiles({
-		props: internalProps,
-		manifestCache,
-		tagCache,
-		editorCache,
-		markdownCache,
-	});
+	} = await createDocFiles(internalProps);
 
 	bar.update(bar.current + 1, 'Finished creating file scaffolding');
 
 	const docConfig: UserConfig = {
-		appType: 'mpa',
-		base:    props.base,
-		root:    join(pRoot, props.root),
+		appType: 'spa',
+		base:    internalProps.base,
+		root:    join(pRoot, internalProps.root),
 		build:   {
 			rollupOptions: {
-				input: props.input,
+				input: internalProps.input,
 			},
 		},
 		plugins: [
 			createPlugin({
-				props,
-				tagCache,
-				manifestCache,
-				markdownCache,
+				props: internalProps,
 				markdownComponentPaths,
 				siteconfigImportPath,
 				absoluteLibDir,
@@ -150,7 +153,6 @@ export const defineDocConfig = async (
 	const mergedConfig = deepmerge(defineConfig(viteConfig), docConfig);
 
 	mergedConfig.publicDir ||= 'public';
-
 	mergedConfig.build ??= {};
 	mergedConfig.build.outDir ??= outDir;
 	mergedConfig.build.emptyOutDir ??= true;
@@ -159,7 +161,7 @@ export const defineDocConfig = async (
 			targets: [
 				{
 					src:  './node_modules/@roenlie/mirage-docs/dist/workers',
-					dest: join(props.root, mergedConfig.publicDir, '.mirage'),
+					dest: join(internalProps.root, mergedConfig.publicDir, '.mirage'),
 				},
 			],
 			hook:     'config',
@@ -183,18 +185,18 @@ export const defineDocConfig = async (
 	bar.update(bar.current + 1, 'Writing files to disk');
 
 	await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {
-		props.debug && console.log('Attempting to write file:', path);
+		internalProps.debug && console.log('Attempting to write file:', path);
 
 		await promises.mkdir(path.split(sep).slice(0, -1).join(sep), { recursive: true });
 		await promises.writeFile(path, content);
 
-		props.debug && console.log('Finished writing file:', path);
+		internalProps.debug && console.log('Finished writing file:', path);
 	}));
 
 	// Write the search index file to public disc folder.
 	bar.update(bar.current + 1, 'Writing search indexes to disk');
 
-	const searchDir = join(pRoot, props.root, mergedConfig.publicDir, '.mirage');
+	const searchDir = join(pRoot, internalProps.root, mergedConfig.publicDir, '.mirage');
 	await promises.mkdir(searchDir, { recursive: true });
 	await persistToFile(oramaDb, 'json', join(searchDir, 'searchIndexes.json'));
 

@@ -17,7 +17,8 @@ export const createEditorComponent = async (
 
 	content = content
 		.replaceAll('`', '\\`')
-		.replaceAll('$', '\\$');
+		.replaceAll('$', '\\$')
+		.replace("import { editorComponent } from '@roenlie/mirage-docs/app/components/page/editor-component.js';", '');
 
 	content = editorPageTemplate({
 		codeId: targetPath,

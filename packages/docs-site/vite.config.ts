@@ -12,17 +12,19 @@ export default defineDocConfig({
 	root:       '/',
 	source:     '/src/pages',
 	siteConfig: {
+		root: {
+			layout: {
+				headingText: 'Mirage Docs',
+				logoHeight:  '40px',
+				logoSrc:     'logo.svg',
+			},
+		},
 		pages: {
 			scripts: [
 				{
 					src: '/bootstrap.ts',
 				},
 			],
-		},
-		layout: {
-			headingText: 'Mirage Docs',
-			logoHeight:  '40px',
-			logoSrc:     'logo.svg',
 		},
 	},
 	autoImport: {

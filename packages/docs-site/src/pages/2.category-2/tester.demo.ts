@@ -7,7 +7,7 @@ export class DemoComponent extends LitElement {
 
 	protected override render() {
 		return html`
-		<midoc-adapter-test></midoc-adapter-test>
+		Hello
 		`;
 	}
 

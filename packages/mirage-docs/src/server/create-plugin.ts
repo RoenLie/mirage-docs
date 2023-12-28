@@ -1,45 +1,31 @@
-import { promises, readFileSync } from 'node:fs';
-import { join, sep } from 'node:path';
+import { promises } from 'node:fs';
 
 import type { Plugin, ResolvedConfig } from 'vite';
 
-import type { Declarations } from '../shared/metadata.types.js';
-import type { FilePathCache } from './build/cache/create-file-cache.js';
+import { getCache } from './build/cache/cache-registry.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
 import { DocPath } from './build/helpers/docpath.js';
-import type { ConfigProperties } from './create-files.js';
+import { fileExt } from './build/helpers/is-dev-mode.js';
+import type { InternalConfigProperties } from './create-files.js';
 import { MarkdownComponentFactory } from './create-markdown-cmp.js';
 
 
 export const createPlugin = (args: {
-	props: ConfigProperties;
-	tagCache: Map<string, string>;
-	manifestCache: Map<string, Declarations>;
-	markdownCache: FilePathCache;
+	props: InternalConfigProperties;
 	markdownComponentPaths: Set<string>;
 	siteconfigImportPath: string;
 	absoluteLibDir: string;
 	absoluteSourceDir: string;
 }): Plugin => {
 	let config: ResolvedConfig;
+	const cache = getCache();
 	const {
 		props,
-		tagCache,
-		manifestCache,
-		markdownCache,
 		markdownComponentPaths,
 		siteconfigImportPath,
 		absoluteLibDir,
 		absoluteSourceDir,
 	} = args;
-
-	const currentProjectPath = import.meta.url
-		.replace('file:///', '').split('/').slice(0, -3).join(sep);
-
-	const pkgJsonPath = join(currentProjectPath, 'package.json');
-	const pkgJson = readFileSync(pkgJsonPath, { encoding: 'utf8' });
-	const parsedPkg = JSON.parse(pkgJson) as { exports: { './app/*': string; }};
-	const inDevMode = parsedPkg.exports['./app/*'].includes('./src');
 
 
 	return {
@@ -79,7 +65,8 @@ export const createPlugin = (args: {
 							attrs:    { type: 'module' },
 							injectTo: 'head',
 							children: `
-							import "@roenlie/mirage-docs/app/components/layout-parts/layout.cmp.${ inDevMode ? 'ts' : 'js' }"
+							import { LayoutCmp } from "@roenlie/mirage-docs/app/components/layout/layout.cmp.${ fileExt() }"
+							LayoutCmp.register();
 							document.body.appendChild(document.createElement('midoc-layout'));
 							`,
 						},
@@ -89,7 +76,7 @@ export const createPlugin = (args: {
 		},
 		buildStart() {
 			// Watch markdown files for changes.
-			for (const [ , path ] of markdownCache.cache)
+			for (const [ , path ] of cache.markdown)
 				this.addWatchFile(path);
 		},
 		load(id) {
@@ -100,7 +87,7 @@ export const createPlugin = (args: {
 				const transformed = componentAutoImportLoad({
 					id,
 					config,
-					tagCache,
+					tagCache:       cache.tag,
 					tagPrefixes:    props.autoImport.tagPrefixes,
 					loadWhitelist:  props.autoImport.loadWhitelist,
 					loadBlacklist:  props.autoImport.loadBlacklist,
@@ -148,13 +135,7 @@ export const createPlugin = (args: {
 			);
 
 			const rootDepth = props.root.split('/').filter(Boolean).length;
-			const factory = new MarkdownComponentFactory({
-				path: id,
-				tagCache,
-				rootDepth,
-				manifestCache,
-			});
-
+			const factory = new MarkdownComponentFactory({ path: id, rootDepth });
 			const file = await factory.create();
 
 			await promises.writeFile(absoluteCmpPath, file);

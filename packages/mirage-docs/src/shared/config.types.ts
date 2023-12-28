@@ -48,4 +48,4 @@ export interface SiteConfig {
 }
 
 
-export type UserSiteConfig = DeepPartial<SiteConfig>;
+export type UserSiteConfig = Omit<DeepPartial<SiteConfig>, 'env'>;

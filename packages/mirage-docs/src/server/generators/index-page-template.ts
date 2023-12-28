@@ -1,21 +1,20 @@
 import type { SiteConfig } from '../../shared/config.types.js';
+import { fileExt } from '../build/helpers/is-dev-mode.js';
 
 
 export const indexPageTemplate = (props: {
-	title: string;
 	moduleId: string;
 	siteConfigId: string;
-	styleLinks: SiteConfig['pages']['styles'],
-	scriptLinks: SiteConfig['pages']['scripts'],
-	componentTag: string;
+	styleLinks: SiteConfig['pages']['styles'];
+	scriptLinks: SiteConfig['pages']['scripts'];
 }) => {
 	interface HeadTemplate { template: string; order: number; }
 
 	const styleTemplate = (src: string) => `<link rel="stylesheet" href="${ src }">`;
 	const scriptTemplate = (src: string) => `<script type="module" src="${ src }"></script>`;
 	const setOrder = (order?: number | 'post' | 'pre') =>
-		order === 'post' ? 800
-			: order === 'pre' ? 300
+		order === 'post' ? 1000
+			: order === 'pre' ? 0
 				: order ?? 500;
 
 	const styleLinks: HeadTemplate[] = (props.styleLinks ?? [])
@@ -27,6 +26,10 @@ export const indexPageTemplate = (props: {
 	const links = [
 		...styleLinks,
 		...scriptLinks,
+		{
+			template: '<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono">',
+			order:    300,
+		},
 		{
 			template: '<script type="module">import "@roenlie/mirage-docs/assets/index.css";</script>',
 			order:    400,
@@ -47,11 +50,14 @@ export const indexPageTemplate = (props: {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>${ props.title }</title>
 	${ links }
 </head>
 <body>
-	<${ props.componentTag }></${ props.componentTag }>
+	<midoc-page></midoc-page>
+	<script type="module">
+		import { PageElement } from '@roenlie/mirage-docs/app/components/page/page-element.${ fileExt() }';
+		PageElement.register();
+	</script>
 </body>
 </html>
 `;

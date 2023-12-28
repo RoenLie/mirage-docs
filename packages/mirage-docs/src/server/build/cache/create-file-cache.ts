@@ -3,10 +3,10 @@ import Path from 'node:path';
 import { genToArray, getFiles } from '../helpers/get-files.js';
 
 
-export interface FilePathCache {
-	cache: Map<string, string>;
+export type FilePathCache = Map<string, string> & {
 	recreate: () => Promise<void>;
 }
+
 
 export const createFileCache = async (options: {
 	directories: { path: string; pattern: RegExp }[];
@@ -23,11 +23,11 @@ export const createFileCache = async (options: {
 		}
 	}
 
-	return {
-		cache,
-		recreate: async () => {
-			cache.clear();
-			await createFileCache({ ...options, cache: cache });
-		},
+	const fileCache = cache as FilePathCache;
+	fileCache.recreate = async () => {
+		cache.clear();
+		await createFileCache({ ...options, cache: cache });
 	};
+
+	return fileCache;
 };

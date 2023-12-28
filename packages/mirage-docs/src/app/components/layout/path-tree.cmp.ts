@@ -18,7 +18,7 @@ import { pathsToTree, type TreeRecord } from '../../utilities/paths-to-tree.js';
 import { chevronDownIcon, chevronRightIcon, Icon } from './icons.js';
 
 
-export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
+export class PathTreeAdapter extends Adapter<PathTreeCmp> {
 
 	//#region properties
 	@inject('site-config') protected siteConfig: SiteConfig;
@@ -322,7 +322,7 @@ export class PathTreeAdapter extends Adapter<MidocPathTreeCmp> {
 
 
 @customElement('midoc-path-tree')
-export class MidocPathTreeCmp extends AegisComponent {
+export class PathTreeCmp extends AegisComponent {
 
 	@property({ type: Array }) public paths: string[] = [];
 	protected override adapter: PathTreeAdapter;

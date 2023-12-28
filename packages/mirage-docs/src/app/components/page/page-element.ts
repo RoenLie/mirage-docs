@@ -1,5 +1,5 @@
-import { ContainerLoader } from '@roenlie/lit-aegis/js';
-import { css, LitElement, unsafeCSS } from 'lit';
+import { Adapter, AegisComponent, ContainerLoader, customElement } from '@roenlie/lit-aegis/js';
+import { css, unsafeCSS } from 'lit';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';
@@ -7,13 +7,9 @@ import { highlightjsStyles } from '../../styles/highlightjs.styles.js';
 import { markdownStyles } from '../../styles/markdown.styles.js';
 import { anchorSnatcher } from '../../utilities/anchor-snatcher.js';
 import { subscribeToColorChange } from '../../utilities/color-subscription.js';
-import { AdapterTestCmp } from '../layout-parts/adapter-test.cmp.js';
 
 
-AdapterTestCmp.register();
-
-
-export class BaseDocElement extends LitElement {
+export class PageAdapter extends Adapter {
 
 	//#region properties
 	public get colorScheme() {
@@ -26,36 +22,32 @@ export class BaseDocElement extends LitElement {
 	protected resizeObserver = new ResizeObserver(([ entry ]) => {
 		const height = entry!.contentRect.height;
 
-		let stringValue = this.style.minHeight;
+		let stringValue = this.element.style.minHeight;
 		if (!stringValue) {
 			stringValue = height + 'px';
-			this.style.setProperty('minHeight', Math.round(height) + 'px');
+			this.element.style.setProperty('minHeight', Math.round(height) + 'px');
 		}
 
 		const previousMinHeight = Number(stringValue.replaceAll(/[^\\d.]/g, ''));
 
 		if (height < previousMinHeight)
-			this.style.removeProperty('minHeight');
+			this.element.style.removeProperty('minHeight');
 		else
-			this.style.setProperty('minHeight', Math.round(height) + 'px');
+			this.element.style.setProperty('minHeight', Math.round(height) + 'px');
 	});
 	//#endregion
 
 
 	//#region lifecycle
 	public override connectedCallback() {
-		super.connectedCallback();
-
-		subscribeToColorChange(this);
-		//this.insertFontLink();
-		this.resizeObserver.observe(this);
+		subscribeToColorChange(this.element);
+		this.resizeObserver.observe(this.element);
 
 		anchorSnatcher.register();
 		window.addEventListener('hashchange', this.handleHashChange);
 	}
 
 	public override disconnectedCallback() {
-		super.disconnectedCallback();
 		anchorSnatcher.unregister();
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}
@@ -65,37 +57,13 @@ export class BaseDocElement extends LitElement {
 	//#region logic
 	protected handleHashChange = () => {
 		const hash = window.location.hash;
-		const anchor = this.renderRoot.querySelector('a[href="' + hash + '"].header-anchor');
+		const anchor = this.querySelector('a[href="' + hash + '"].header-anchor');
 		anchor?.scrollIntoView({
 			behavior: 'smooth',
 			block:    'start',
 			inline:   'start',
 		});
 	};
-
-	protected insertFontLink() {
-		const fontRef = 'https://fonts.googleapis.com/css?family=Roboto+Mono';
-		const linkId = 'code-preview-font';
-		const linkHref = fontRef;
-		let fontLink = document.head.querySelector<HTMLLinkElement>('[href="' + fontRef + '"]');
-		if (!fontLink) {
-			fontLink = document.createElement('link');
-			Object.assign(fontLink, {
-				id:   linkId,
-				type: 'text/css',
-				rel:  'stylesheet',
-				href: linkHref,
-			});
-
-			document.head.appendChild(fontLink);
-		}
-
-		const fontFamily = fontRef
-			.slice(fontRef.lastIndexOf('=') + 1)
-			.replace('+', ' ');
-
-		this.style.setProperty('--code-font', fontFamily);
-	}
 	//#endregion
 
 
@@ -139,5 +107,15 @@ export class BaseDocElement extends LitElement {
 		this.styles.push(unsafeCSS(style));
 	}
 	//#endregion
+
+}
+
+
+@customElement('midoc-page')
+export class PageElement extends AegisComponent {
+
+	constructor() {
+		super(PageAdapter);
+	}
 
 }

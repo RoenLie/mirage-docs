@@ -1,7 +1,6 @@
 import { type ElapsedTime } from '@orama/orama';
-import { ContainerLoader } from '@roenlie/lit-aegis/js';
-import { css, html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis/js';
+import { css, html } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { live } from 'lit/directives/live.js';
 import { map } from 'lit/directives/map.js';
@@ -37,8 +36,7 @@ interface ExpandedDoc {
 }
 
 
-@customElement('docs-global-search')
-export class GlobalSearch extends LitElement {
+export class GlobalSearchAdapter extends Adapter {
 
 	@state() protected searchValue = '';
 	@state() protected searchResult: any[] = [];
@@ -50,7 +48,7 @@ export class GlobalSearch extends LitElement {
 	}
 
 	protected colorSchemeObs = new MutationObserver(() => {
-		this.setAttribute('color-scheme', this.colorScheme);
+		this.element.setAttribute('color-scheme', this.colorScheme);
 	});
 
 	protected dialogObs = new MutationObserver(() => this.handleDialogToggle());
@@ -64,7 +62,7 @@ export class GlobalSearch extends LitElement {
 	protected inputKeyListener(ev: KeyboardEvent) {
 		if (ev.code === 'ArrowUp') {
 			ev.preventDefault();
-			const allEls = [ ...this.renderRoot.querySelectorAll('ul li') ] as HTMLElement[];
+			const allEls = [ ...this.querySelectorAll('ul li')! ] as HTMLElement[];
 			if (!this.activeSearchEl) {
 				this.activeSearchEl = allEls[0];
 				this.activeSearchEl?.classList?.toggle('active', true);
@@ -77,7 +75,7 @@ export class GlobalSearch extends LitElement {
 		}
 		if (ev.code === 'ArrowDown') {
 			ev.preventDefault();
-			const allEls = [ ...this.renderRoot.querySelectorAll('ul li') ] as HTMLElement[];
+			const allEls = [ ...this.querySelectorAll('ul li')! ] as HTMLElement[];
 			if (!this.activeSearchEl) {
 				this.activeSearchEl = allEls[0];
 				this.activeSearchEl?.classList?.toggle('active', true);
@@ -95,8 +93,6 @@ export class GlobalSearch extends LitElement {
 	}
 
 	public override async connectedCallback() {
-		super.connectedCallback();
-
 		this.searchWorker = createSearchWorker();
 		this.searchWorker.onmessage = this.handleWorkerResponse;
 		this.colorSchemeObs.observe(document.documentElement,
@@ -105,13 +101,12 @@ export class GlobalSearch extends LitElement {
 		window.addEventListener('keydown', this.hotkeyListener);
 
 		setTimeout(() => this.updateComplete.then(() => {
-			this.setAttribute('color-scheme', this.colorScheme);
+			this.element.setAttribute('color-scheme', this.colorScheme);
 			this.dialogObs.observe(this.dialogQry, { attributes: true, attributeFilter: [ 'open' ] });
 		}));
 	}
 
 	public override disconnectedCallback() {
-		super.disconnectedCallback();
 		this.searchWorker.terminate();
 		this.dialogObs.disconnect();
 		this.colorSchemeObs.disconnect();
@@ -125,7 +120,7 @@ export class GlobalSearch extends LitElement {
 
 	protected handleDialogToggle() {
 		if (this.dialogQry.open) {
-			const allEls = [ ...this.renderRoot.querySelectorAll('ul li') ] as HTMLElement[];
+			const allEls = [ ...this.querySelectorAll('ul li')! ] as HTMLElement[];
 			if (!allEls.some(el => this.activeSearchEl === el))
 				this.activeSearchEl = allEls[0];
 
@@ -134,7 +129,7 @@ export class GlobalSearch extends LitElement {
 				properties: '*',
 			});
 
-			const inputEl = this.renderRoot.querySelector('input');
+			const inputEl = this.querySelector<HTMLInputElement>('input');
 			inputEl?.focus();
 			inputEl?.select();
 		}
@@ -202,7 +197,7 @@ export class GlobalSearch extends LitElement {
 		});
 
 		await this.updateComplete;
-		const allEls = [ ...this.renderRoot.querySelectorAll('ul li:not(:has(a.current))') ] as HTMLElement[];
+		const allEls = [ ...this.querySelectorAll('ul li:not(:has(a.current))')! ] as HTMLElement[];
 		if (!this.activeSearchEl || !allEls.some(el => this.activeSearchEl === el)) {
 			this.activeSearchEl?.classList.toggle('active', false);
 			this.activeSearchEl = allEls[0];
@@ -292,7 +287,7 @@ export class GlobalSearch extends LitElement {
 		`;
 	}
 
-	protected override render() {
+	public override render() {
 		return html`
 		${ this.buttonTemplate() }
 		${ this.dialogTemplate() }
@@ -472,5 +467,17 @@ export class GlobalSearch extends LitElement {
 		`,
 	];
 	//#endregion
+
+}
+
+
+@customElement('midoc-global-search')
+export class GlobalSearchCmp extends AegisComponent {
+
+	public override adapter: GlobalSearchAdapter;
+
+	constructor() {
+		super(GlobalSearchAdapter);
+	}
 
 }

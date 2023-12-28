@@ -1,32 +1,23 @@
-import './global-search.cmp.js';
-import '../../types/globals.js';
-
-import { Adapter, ContainerLoader } from '@roenlie/lit-aegis/js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis/js';
 import { html, LitElement, unsafeCSS } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';
-import { type GlobalSearch } from './global-search.cmp.js';
+import { GlobalSearchCmp } from './global-search.cmp.js';
 import {
 	chevronUpIcon, Icon, listIcon,
 	moonIcon, spinningCircleIcon, sunIcon,
 } from './icons.js';
 import { layoutStyles } from './layout.styles.js';
-import { MiDocSidebarCmp } from './sidebar.cmp.js';
+import { SidebarCmp } from './sidebar.cmp.js';
 
-MiDocSidebarCmp.register();
+SidebarCmp.register();
+GlobalSearchCmp.register();
 
 
 export class LayoutAdapter extends Adapter {
-
-}
-
-
-@customElement('midoc-layout')
-export class MiDocLayoutCmp extends LitElement {
 
 	@state() protected loading = false;
 	@query('iframe') protected frameQry: HTMLIFrameElement;
@@ -39,7 +30,6 @@ export class MiDocLayoutCmp extends LitElement {
 	protected navStorageProp = 'midocNavClosed';
 
 	public override connectedCallback(): void {
-		super.connectedCallback();
 		this.handleHashChange();
 		this.handleNavToggle(true);
 		this.handleColorSchemeToggle(true);
@@ -58,7 +48,6 @@ export class MiDocLayoutCmp extends LitElement {
 	}
 
 	public override disconnectedCallback(): void {
-		super.disconnectedCallback();
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}
 
@@ -209,21 +198,20 @@ export class MiDocLayoutCmp extends LitElement {
 		if (ev.code === 'KeyP' && ev.ctrlKey) {
 			ev.preventDefault();
 
-			const searchEl = this.renderRoot
-				.querySelector('docs-global-search') as GlobalSearch;
-			searchEl.dialogQry.showModal();
+			const searchEl = this.querySelector<GlobalSearchCmp>('midoc-global-search');
+			searchEl?.adapter.dialogQry.showModal();
 		}
 	};
 
 	protected async setNavState(state?: boolean) {
-		this.classList.toggle(this.navClosedClass, state);
+		this.element.classList.toggle(this.navClosedClass, state);
 
 		localStorage.setItem(
 			this.navStorageProp,
-			String(this.classList.contains(this.navClosedClass)),
+			String(this.element.classList.contains(this.navClosedClass)),
 		);
 
-		if (!this.classList.contains(this.navClosedClass)) {
+		if (!this.element.classList.contains(this.navClosedClass)) {
 			this.sidebarQry?.addEventListener(
 				'transitionend',
 				() => {
@@ -265,7 +253,7 @@ export class MiDocLayoutCmp extends LitElement {
 				</div>
 
 				<div class="middle">
-					<docs-global-search></docs-global-search>
+					<midoc-global-search></midoc-global-search>
 				</div>
 
 				<div class="end">
@@ -302,17 +290,35 @@ export class MiDocLayoutCmp extends LitElement {
 		`;
 	}
 
+
+	//#region styles
 	public static override styles = [
 		componentStyles,
 		layoutStyles,
-		unsafeCSS(ContainerLoader.get<SiteConfig>('site-config').styles.layout),
 	];
+
+	static {
+		const cfg = ContainerLoader.get<SiteConfig>('site-config');
+		const style = cfg.root.styleOverrides.layout;
+		this.styles.push(unsafeCSS(style));
+	}
+	//#endregion
+
+}
+
+
+@customElement('midoc-layout')
+export class LayoutCmp extends AegisComponent {
+
+	constructor() {
+		super(LayoutAdapter);
+	}
 
 }
 
 
 declare global {
 	interface HTMLElementTagNameMap {
-		'midoc-layout': MiDocLayoutCmp;
+		'midoc-layout': LayoutCmp;
 	}
 }
