@@ -59,7 +59,7 @@ export class LayoutAdapter extends Adapter {
 
 
 	//#region logic
-	protected handleHmrReload = debounce(this.startFrameReload, 100);
+	protected handleHmrReload = debounce(() => this.startFrameReload(), 100);
 
 	protected handleFrameLoad = () => {
 		Object.assign(this.frameQry.style, { opacity: 1 });

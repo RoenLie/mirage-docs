@@ -2,7 +2,6 @@ import { Adapter, ContainerLoader, ContainerModule, injectable } from '@roenlie/
 import { html } from 'lit';
 
 
-@injectable()
 class NewSidebar extends Adapter {
 
 	public override render() {

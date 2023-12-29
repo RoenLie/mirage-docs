@@ -24,14 +24,10 @@ jobs:
         run: pnpm install
 
       - name: Build complete project.
-        run: |
-          cd packages/mirage-docs
-          pnpm build
+        run: pnpm build
 
       - name: Change package version
-        run: |
-          cd packages/mirage-docs
-          pnpm increment-version
+        run: pnpm increment-version
 
       - name: Publish package
         env:
