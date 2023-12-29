@@ -65,9 +65,6 @@ export const defineDocConfig = async (
 		setDevMode(false);
 	}
 
-	console.log(pathExists);
-
-
 	const internalProps: InternalConfigProperties =  {
 		debug:      false,
 		base:       '',

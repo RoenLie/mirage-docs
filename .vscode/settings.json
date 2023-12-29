@@ -42,7 +42,7 @@
 				{
 					"name": "dev",
 					"commands": [
-						"cd packages/docs-site",
+						"cd packages/doc-site",
 						"clear"
 					]
 				},

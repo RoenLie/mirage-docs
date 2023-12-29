@@ -7,7 +7,6 @@ export default defineDocConfig({
 		outDir:      './dist',
 	},
 }, {
-	debug:      false,
 	base:       '/mirage-docs',
 	root:       '/',
 	source:     '/src/pages',
@@ -22,7 +21,7 @@ export default defineDocConfig({
 		pages: {
 			scripts: [
 				{
-					src: '/bootstrap.ts',
+					src: '/bootstrap-page.ts',
 				},
 			],
 		},

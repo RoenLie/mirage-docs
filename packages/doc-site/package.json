@@ -15,7 +15,8 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"updatedeps": "pnpm update --interactive --latest"
 	},
 	"dependencies": {
 		"tslib": "^2.6.2",

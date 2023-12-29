@@ -48,7 +48,7 @@ export const createPlugin = (args: {
 						{
 							tag:      'script',
 							attrs:    { type: 'module' },
-							injectTo: 'head',
+							injectTo: 'head-prepend',
 							children: 'import "@roenlie/mirage-docs/assets/index.css"',
 						},
 						{
@@ -58,7 +58,7 @@ export const createPlugin = (args: {
 								type: 'module',
 								src:  siteconfigImportPath,
 							},
-							injectTo: 'head',
+							injectTo: 'head-prepend',
 						},
 						{
 							tag:      'script',
@@ -116,10 +116,9 @@ export const createPlugin = (args: {
 				}
 				\n` + code + `
 				if (import.meta.hot) {
+					const reload = () => window.top?.postMessage('hmrReload', location.origin);
 					import.meta.hot.accept();
-					import.meta.hot.on('vite:beforeUpdate', () => {
-						window.top?.postMessage('hmrReload', location.origin);
-					});
+					import.meta.hot.on('vite:beforeUpdate', () => reload);
 				}
 				`;
 

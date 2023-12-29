@@ -1,7 +1,7 @@
 import {
 	Adapter, AegisComponent, ContainerLoader,
 	customElement, inject, query, state,
-} from '@roenlie/lit-aegis/js';
+} from '@roenlie/lit-aegis';
 import { css, html, unsafeCSS } from 'lit';
 import { when } from 'lit/directives/when.js';
 

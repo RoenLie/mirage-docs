@@ -1,4 +1,4 @@
-import { ContainerLoader } from '@roenlie/lit-aegis/js';
+import { ContainerLoader } from '@roenlie/lit-aegis';
 import { css, html, LitElement, type TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { type DirectiveResult } from 'lit/directive.js';
@@ -134,7 +134,7 @@ export class EsSourceEditor extends LitElement {
 		editor.layout();
 	}
 
-	protected delayedExecute = debounce(1000, () => this.execute());
+	protected delayedExecute = debounce(() => this.execute(), 1000);
 
 	protected async execute(force = false) {
 		const editor = await this.editor;
@@ -143,7 +143,7 @@ export class EsSourceEditor extends LitElement {
 		const dataUri = `data:text/javascript;charset=utf-8,${ encodedJs }`;
 
 		try {
-			this.content = (await import(/* @vite-ignore */ dataUri)).default;
+			this.content = (await import(/*@vite-ignore*/dataUri)).default;
 		}
 		catch (error) {
 			console.warn('Import failed. Reason:', error);
@@ -185,7 +185,8 @@ export class EsSourceEditor extends LitElement {
 					const buffer = (((resizer * 2) + (gap * 2)) / totalWidth) * 100;
 
 					Object.assign(this.panelQry.style, {
-						'gridTemplateColumns': Math.min(percentage, (100 - buffer)) + '%' + ' auto ' + '1fr',
+						'gridTemplateColumns': Math.min(percentage, (100 - buffer))
+							+ '%' + ' auto ' + '1fr',
 					});
 				},
 				initialEvent: ev,

@@ -2,7 +2,7 @@ import {
 	Adapter, AegisComponent,
 	ContainerLoader, customElement,
 	inject, state,
-} from '@roenlie/lit-aegis/js';
+} from '@roenlie/lit-aegis';
 import { css, html, type PropertyValues, type TemplateResult, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';

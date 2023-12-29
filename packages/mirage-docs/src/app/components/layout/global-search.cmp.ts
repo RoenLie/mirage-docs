@@ -1,5 +1,5 @@
 import { type ElapsedTime } from '@orama/orama';
-import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis/js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis';
 import { css, html } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { live } from 'lit/directives/live.js';

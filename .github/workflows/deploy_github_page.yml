@@ -50,7 +50,7 @@ jobs:
 
       - name: Build docsite
         run: |
-          cd packages/docs-site
+          cd packages/doc-site
           pnpm build
 
       - name: Setup Pages
@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload preview folder
-          path: "./packages/docs-site/dist"
+          path: "./packages/doc-site/dist"
 
       - name: Deploy to GitHub Pages
         id: deployment

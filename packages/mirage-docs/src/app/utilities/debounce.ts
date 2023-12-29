@@ -1,40 +1,19 @@
 /**
- * Debounce implementation that returns a curry function used for assigning a callback
- * to each individual usage scenario.
+ * Returns the supplied function wrapped in a that runs only once, after a `delay`.
  *
- * Using the curry functionality is not mandatory.
- * @example
- * ```ts
- * 	const debouncedFilter = debounce(500, (value: string) => navMenuService.filterMenu(value));
- *
- * 	debouncedFilter(value)(res => navMenu = res);
- * ```
- * .
+ * Repeated calls to this function within the delay period will reset the timeout,
+ * effectively delaying the call of the original function.
  */
-export const debounce = <
-	T extends ((...args: any[]) => ReturnType<T>) | ((...args: any[]) => Promise<ReturnType<T>>)
->(
-	timeout = 300,
-	fn: T = (() => {}) as T,
+export const debounce = <T extends (...args: any[]) => any>(
+	func: T,
+	delay = 0,
 ) => {
-	const callbacks = new Map<string, Function>();
-	let timer: number;
+	let timeout: number;
 
-	const debounceFn = (...args: any[]) => {
-		clearTimeout(timer);
-
-		timer = setTimeout(async () => {
-			const result = await fn(...args);
-
-			callbacks.forEach(c => c(result));
-			callbacks.clear();
-		}, timeout, ...args);
-
-		return (callback: T) => {
-			callbacks.set(callback.toString(), callback);
-		};
+	const fn = (...args: any[]) => {
+		clearTimeout(timeout);
+		timeout = setTimeout(() => func(...args), delay);
 	};
 
-	return debounceFn as unknown as (...args: Parameters<T>) =>
-		(callback: (result: Awaited<ReturnType<T>>) => void) => void;
+	return fn as (...args: Parameters<T>) => void;
 };

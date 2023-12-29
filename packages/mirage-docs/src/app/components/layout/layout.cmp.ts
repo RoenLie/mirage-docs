@@ -1,10 +1,11 @@
-import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis/js';
+import { Adapter, AegisComponent, ContainerLoader, customElement, query, state } from '@roenlie/lit-aegis';
 import { html, LitElement, unsafeCSS } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { when } from 'lit/directives/when.js';
 
 import type { SiteConfig } from '../../../shared/config.types.js';
 import { componentStyles } from '../../styles/component.styles.js';
+import { debounce } from '../../utilities/debounce.js';
 import { GlobalSearchCmp } from './global-search.cmp.js';
 import {
 	chevronUpIcon, Icon, listIcon,
@@ -19,6 +20,7 @@ GlobalSearchCmp.register();
 
 export class LayoutAdapter extends Adapter {
 
+	//#region properties
 	@state() protected loading = false;
 	@query('iframe') protected frameQry: HTMLIFrameElement;
 	@query('midoc-sidebar') protected sidebarQry: LitElement;
@@ -28,7 +30,10 @@ export class LayoutAdapter extends Adapter {
 	protected transitionSet = new Set<Promise<void>>();
 	protected navClosedClass = 'nav--closed';
 	protected navStorageProp = 'midocNavClosed';
+	//#endregion
 
+
+	//#region lifecycle
 	public override connectedCallback(): void {
 		this.handleHashChange();
 		this.handleNavToggle(true);
@@ -40,7 +45,7 @@ export class LayoutAdapter extends Adapter {
 					return;
 
 				if (ev.data === 'hmrReload')
-					this.startFrameReload();
+					this.handleHmrReload();
 			});
 
 			window.addEventListener('hashchange', this.handleHashChange, { passive: true });
@@ -50,6 +55,11 @@ export class LayoutAdapter extends Adapter {
 	public override disconnectedCallback(): void {
 		window.removeEventListener('hashchange', this.handleHashChange);
 	}
+	//#endregion
+
+
+	//#region logic
+	protected handleHmrReload = debounce(this.startFrameReload, 100);
 
 	protected handleFrameLoad = () => {
 		Object.assign(this.frameQry.style, { opacity: 1 });
@@ -152,7 +162,7 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected startFrameReload = async () => {
-		console.clear();
+		//console.clear();
 
 		while (this.transitionSet.size)
 			await Promise.all([ ...this.transitionSet ]);
@@ -235,7 +245,10 @@ export class LayoutAdapter extends Adapter {
 	protected handleScrollback() {
 		this.frameQry.contentDocument?.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
 	}
+	//#endregion
 
+
+	//#region template
 	public override render() {
 		const { base } = ContainerLoader.get<SiteConfig>('site-config').env;
 
@@ -289,6 +302,7 @@ export class LayoutAdapter extends Adapter {
 		</div>
 		`;
 	}
+	//#endregion
 
 
 	//#region styles
