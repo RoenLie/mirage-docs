@@ -162,7 +162,7 @@ export class LayoutAdapter extends Adapter {
 	};
 
 	protected startFrameReload = async () => {
-		//console.clear();
+		console.clear();
 
 		while (this.transitionSet.size)
 			await Promise.all([ ...this.transitionSet ]);
@@ -179,7 +179,7 @@ export class LayoutAdapter extends Adapter {
 			'transitionend', this.handleTransitionEnd, { once: true },
 		);
 
-		Object.assign(this.frameQry.style, { opacity: 0 });
+		this.frameQry.style.setProperty('opacity', '0');
 	};
 
 	protected handleColorSchemeToggle(reset?: boolean) {
