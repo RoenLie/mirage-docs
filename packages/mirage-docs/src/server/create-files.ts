@@ -27,6 +27,8 @@ export interface ConfigProperties {
 	input?: string[];
 	autoImport?: AutoImportPluginProps;
 	siteConfig?: UserSiteConfig;
+	/** @default 500ms */
+	hmrReloadDelay?: number | false;
 	debug?: boolean;
 }
 

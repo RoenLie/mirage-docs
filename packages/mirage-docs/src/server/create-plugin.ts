@@ -1,5 +1,6 @@
 import { promises } from 'node:fs';
 
+import { createPromiseResolver, sleep } from '@roenlie/mimic-core/async';
 import type { Plugin, ResolvedConfig } from 'vite';
 
 import { getCache } from './build/cache/cache-registry.js';
@@ -27,6 +28,7 @@ export const createPlugin = (args: {
 		absoluteSourceDir,
 	} = args;
 
+	let reloadPromise: Promise<any> | undefined = undefined;
 
 	return {
 		name: 'mirage-docs',
@@ -118,11 +120,24 @@ export const createPlugin = (args: {
 				if (import.meta.hot) {
 					const reload = () => window.top?.postMessage('hmrReload', location.origin);
 					import.meta.hot.accept();
-					import.meta.hot.on('vite:beforeUpdate', () => reload);
+					import.meta.hot.on('vite:beforeUpdate', reload);
 				}
 				`;
 
 				return code;
+			}
+		},
+		async handleHotUpdate() {
+			if (props.hmrReloadDelay) {
+				if (reloadPromise)
+					return reloadPromise;
+
+				const [ promise, resolve ] = createPromiseResolver();
+				reloadPromise = promise;
+
+				await sleep(props.hmrReloadDelay);
+				resolve();
+				reloadPromise = undefined;
 			}
 		},
 		async watchChange(id) {

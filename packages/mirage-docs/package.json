@@ -9,7 +9,6 @@
 		"url": "https://github.com/RoenLie/mirage-docs/issues",
 		"email": "KristofferRoenLie@gmail.com"
 	},
-	"type": "module",
 	"files": [
 		"./dist",
 		"./src",
@@ -17,22 +16,33 @@
 		"./package.json",
 		"./README.md"
 	],
+	"type": "module",
+	"main": "./dist/app/index.js",
+	"types": "./dist/app/index.d.ts",
 	"exports": {
-		"./server": {
-			"types": "./dist/server/index.d.ts",
-			"default": "./dist/server/index.js"
-		},
+		"./server": "./dist/server/index.js",
+		"./app": "./dist/app/index.js",
 		"./app/*": "./dist/app/*",
 		"./workers/*": "./dist/workers/*",
 		"./assets/*": "./src/assets/*"
 	},
 	"scripts": {
-		"test": "vitest run --config ./tests/vite.config.ts",
-		"build": "pnpm build-server && pnpm build-workers",
-		"build-server": "vite build --config ./vite.config.ts && pnpm emit-types:server && pnpm emit-types:app",
-		"build-workers": "vite build --config ./vite-workers.config.ts",
-		"emit-types:app": "tsc --project ./src/app/tsconfig.json",
-		"emit-types:server": "tsc --project ./src/server/tsconfig.json",
+		"test": "vitest --config ./tests/vite.config.ts",
+		"dev": "pnpm run --parallel \"/^watch:.+/\"",
+		"watch:js": "vite build --watch --config ./vite.config.ts --logLevel silent",
+		"watch:ts-app": "tsc --watch --project ./src/app/tsconfig.json",
+		"watch:ts-server": "tsc --watch --project ./src/server/tsconfig.json",
+		"compile": "pnpm build-pre && pnpm build && pnpm build-post",
+		"build-pre": "pnpm run \"/^build-pre:.+/\"",
+		"build-pre:clean": "rimraf dist",
+		"build-pre:indexes": "package-toolbox build-indexes",
+		"build-pre:test": "vitest run --config ./tests/vite.config.ts",
+		"build": "pnpm run \"/^build:.+/\"",
+		"build:server": "vite build --config ./vite.config.ts",
+		"build:workers": "vite build --config ./vite-workers.config.ts",
+		"build:types": "tsc --project ./src/app/tsconfig.json && tsc --project ./src/server/tsconfig.json",
+		"build-post": "pnpm run \"/^build-post:.+/\"",
+		"build-post:cleanup": "rimraf --glob dist/**/*.tsbuildinfo",
 		"updatedeps": "pnpm update --latest",
 		"increment-version": "package-toolbox increment-version",
 		"package:local": "pnpm pack --pack-destination ../../_packages/"
@@ -44,7 +54,8 @@
 		"@orama/plugin-data-persistence": "2.0.0-beta.12",
 		"@orama/plugin-match-highlight": "2.0.0-beta.12",
 		"@orama/plugin-parsedoc": "2.0.0-beta.12",
-		"@roenlie/lit-aegis": "^1.0.25",
+		"@roenlie/lit-aegis": "^1.0.28",
+		"@roenlie/mimic-core": "^0.0.69",
 		"@sindresorhus/slugify": "^2.2.1",
 		"deepmerge-ts": "^5.1.0",
 		"globby": "^14.0.0",
@@ -66,5 +77,5 @@
 		"bootstrap-icons": "^1.11.2",
 		"vitest": "^1.1.0"
 	},
-	"sideEffects": true
+	"sideEffects": []
 }

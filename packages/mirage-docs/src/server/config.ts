@@ -17,8 +17,8 @@ const pRoot = resolve();
 const outDir = join(resolve(), 'dist');
 
 
-export const defineDocConfig = async (
-	viteConfig: Omit<UserConfig, 'root' | 'base'>,
+export const defineDocConfig = async <T extends UserConfig>(
+	viteConfig: Omit<T, 'root' | 'base'>,
 	props: ConfigProperties,
 ) => {
 	if (!props.root.startsWith('/'))
@@ -66,13 +66,14 @@ export const defineDocConfig = async (
 	}
 
 	const internalProps: InternalConfigProperties =  {
-		debug:      false,
-		base:       '',
-		source:     '',
-		root:       '',
-		input:      [],
-		tagDirs:    [],
-		siteConfig: {
+		debug:          false,
+		hmrReloadDelay: 500,
+		base:           '',
+		source:         '',
+		root:           '',
+		input:          [],
+		tagDirs:        [],
+		siteConfig:     {
 			env: {
 				rootDir:  props.root,
 				entryDir: props.source,

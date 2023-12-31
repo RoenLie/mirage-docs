@@ -1,8 +1,7 @@
+import { getExternalImportPaths } from '@roenlie/package-toolbox/filesystem/get-import-paths.js';
 import { globby } from 'globby';
 import { resolve } from 'path';
 import { defineConfig, type UserConfig } from 'vite';
-
-import { getExternalImportPaths } from './src/server/build/helpers/get-external-paths.js';
 
 
 const root = resolve(resolve(), 'src');
@@ -23,13 +22,13 @@ export default defineConfig(async (): Promise<UserConfig> => {
 					experimentalDecorators: true,
 				},
 			},
+
 		},
 		build: {
 			outDir,
-			emptyOutDir: true,
-			minify:      true,
-			sourcemap:   true,
-			lib:         {
+			minify:    false,
+			sourcemap: true,
+			lib:       {
 				entry:   input,
 				formats: [ 'es' ],
 			},

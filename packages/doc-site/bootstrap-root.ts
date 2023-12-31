@@ -1,4 +1,4 @@
-import { Adapter, ContainerLoader, ContainerModule, injectable } from '@roenlie/mirage-docs/app/aegis.js';
+import { Adapter, ContainerLoader, ContainerModule } from '@roenlie/mirage-docs/app/aegis.js';
 import { html } from 'lit';
 
 

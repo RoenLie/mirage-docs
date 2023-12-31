@@ -6,6 +6,7 @@
 		"baseUrl": ".",
 		"noEmit": false,
 		"emitDeclarationOnly": true,
+		"incremental": true,
 		"types": [
 			"vite/client",
 		],

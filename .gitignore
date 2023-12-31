@@ -1,6 +1,7 @@
 node_modules
 _packages
 *.tsbuildinfo
+index.ts
 .npm
 .eslintcache
 *.tgz
