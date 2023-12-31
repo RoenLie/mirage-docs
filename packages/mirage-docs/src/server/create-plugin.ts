@@ -1,7 +1,8 @@
 import { promises } from 'node:fs';
 
-import { createPromiseResolver, sleep } from '@roenlie/mimic-core/async';
-import type { Plugin, ResolvedConfig } from 'vite';
+import { type ITrackedPromise, TrackedPromise } from '@roenlie/mimic-core/async';
+import { withDebounce } from '@roenlie/mimic-core/timing';
+import type { ModuleNode, Plugin, ResolvedConfig } from 'vite';
 
 import { getCache } from './build/cache/cache-registry.js';
 import { componentAutoImportLoad } from './build/component/auto-import.js';
@@ -28,7 +29,17 @@ export const createPlugin = (args: {
 		absoluteSourceDir,
 	} = args;
 
-	let reloadPromise: Promise<any> | undefined = undefined;
+	let reloadPromise: ITrackedPromise<ModuleNode[]> | undefined = undefined;
+	let hmrModules: ModuleNode[] = [];
+	const debounceHotReload = withDebounce(
+		(modules: ModuleNode[]) => hmrModules.push(...modules),
+		() => {
+			reloadPromise?.resolve(hmrModules);
+			reloadPromise = undefined;
+			hmrModules = [];
+		},
+		props.hmrReloadDelay || 0,
+	);
 
 	return {
 		name: 'mirage-docs',
@@ -127,17 +138,13 @@ export const createPlugin = (args: {
 				return code;
 			}
 		},
-		async handleHotUpdate() {
+		async handleHotUpdate(ctx) {
 			if (props.hmrReloadDelay) {
+				debounceHotReload(ctx.modules);
 				if (reloadPromise)
-					return reloadPromise;
+					return [];
 
-				const [ promise, resolve ] = createPromiseResolver();
-				reloadPromise = promise;
-
-				await sleep(props.hmrReloadDelay);
-				resolve();
-				reloadPromise = undefined;
+				return await (reloadPromise = new TrackedPromise());
 			}
 		},
 		async watchChange(id) {

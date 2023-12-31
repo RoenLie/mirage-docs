@@ -67,7 +67,7 @@ export const defineDocConfig = async <T extends UserConfig>(
 
 	const internalProps: InternalConfigProperties =  {
 		debug:          false,
-		hmrReloadDelay: 500,
+		hmrReloadDelay: 100,
 		base:           '',
 		source:         '',
 		root:           '',
