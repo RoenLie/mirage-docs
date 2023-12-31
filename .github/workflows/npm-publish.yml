@@ -18,7 +18,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2.2.4
         with:
-          version: 7.20.0
+          version: 8.12.0
 
       - name: Install workspace dependencies.
         run: pnpm install
