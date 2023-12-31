@@ -2,7 +2,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "cd packages/mirage-docs && pnpm build && cd ../doc-site && pnpm build",
+		"build": "cd packages/mirage-docs && pnpm compile && cd ../doc-site && pnpm build",
 		"clean": "pnpm clean-packages && pnpm clean-root",
 		"clean-packages": "rimraf --glob ./packages/**/dist ./packages/**/node_modules ./packages/**/.mirage",
 		"clean-root": "rimraf pnpm-lock.yaml node_modules",

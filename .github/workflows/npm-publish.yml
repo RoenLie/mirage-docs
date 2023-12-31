@@ -24,7 +24,7 @@ jobs:
         run: pnpm install
 
       - name: Build complete project.
-        run: pnpm compile
+        run: pnpm build
 
       - name: Change package version
         run: pnpm increment-version
