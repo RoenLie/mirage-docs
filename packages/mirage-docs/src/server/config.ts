@@ -50,20 +50,7 @@ export const defineDocConfig = async <T extends UserConfig>(
 	props.tagDirs ??= [];
 	props.tagDirs.push({ path: props.source });
 
-	// Use package.json to check if we are in a dev mode situation.
-	const currentProjectPath = resolve('../mirage-docs');
-	const pathExists = existsSync(currentProjectPath);
-	if (pathExists) {
-		const pkgJsonPath = join(currentProjectPath, 'package.json');
-
-		const pkgJson = readFileSync(pkgJsonPath, { encoding: 'utf8' });
-		const parsedPkg = JSON.parse(pkgJson) as { exports: { './app/*': string; }};
-		const inDevMode = parsedPkg.exports['./app/*'].includes('./src');
-		setDevMode(inDevMode);
-	}
-	else {
-		setDevMode(false);
-	}
+	setDevMode(false);
 
 	const internalProps: InternalConfigProperties =  {
 		debug:          false,
