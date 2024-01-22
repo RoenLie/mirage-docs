@@ -1,10 +1,10 @@
-import { existsSync, promises, readFileSync } from 'node:fs';
+import { promises } from 'node:fs';
 import { join, normalize, resolve, sep } from 'node:path';
 
 import { persistToFile } from '@orama/plugin-data-persistence/server';
 import { deepmerge, deepmergeInto } from 'deepmerge-ts';
 import copy from 'rollup-plugin-copy';
-import { defineConfig, type UserConfig } from 'vite';
+import { type ConfigEnv, defineConfig, type UserConfig } from 'vite';
 
 import { createCache } from './build/cache/cache-registry.js';
 import { setDevMode } from './build/helpers/is-dev-mode.js';
@@ -17,184 +17,189 @@ const pRoot = resolve();
 const outDir = join(resolve(), 'dist');
 
 
-export const defineDocConfig = async <T extends UserConfig>(
-	viteConfig: Omit<T, 'root' | 'base'>,
-	props: ConfigProperties,
+export const defineDocConfig = async (
+	docsiteConfig: (env: ConfigEnv) => ConfigProperties | Promise<ConfigProperties>,
+	viteConfig: (env: ConfigEnv) => Omit<UserConfig, 'root' | 'base'> | Promise<Omit<UserConfig, 'root' | 'base'>>,
 ) => {
-	if (!props.root.startsWith('/'))
-		throw new SyntaxError('property `root` must start with /');
-	if (!props.source.startsWith('/'))
-		throw new SyntaxError('property `entryDir` must start with /');
+	return defineConfig(async env => {
+		const props = await docsiteConfig(env);
+		const config = await viteConfig(env);
 
-	console.log('Mirage Docs creating and setting up environment...');
-	const bar = new ConsoleBar({
-		formatString:  '#spinner ##blue#bar ##default##dim#count ##default##bright#message',
-		hideCursor:    true,
-		enableSpinner: true,
-		total:         5,
-		doneSymbol:    '■',
-		undoneSymbol:  ' ',
-	});
+		if (!props.root.startsWith('/'))
+			throw new SyntaxError('property `root` must start with /');
+		if (!props.source.startsWith('/'))
+			throw new SyntaxError('property `entryDir` must start with /');
 
-	// We enforce it to start with a leading /, then we add a . to make it relative.
-	props.source = '.' + props.source;
+		console.log('Mirage Docs creating and setting up environment...');
+		const bar = new ConsoleBar({
+			formatString:  '#spinner ##blue#bar ##default##dim#count ##default##bright#message',
+			hideCursor:    true,
+			enableSpinner: true,
+			total:         5,
+			doneSymbol:    '■',
+			undoneSymbol:  ' ',
+		});
 
-	// We enforce it to start with / for consistency, then we remove it.
-	props.root = props.root.replace(/^\/|^\\/, '');
+		// We enforce it to start with a leading /, then we add a . to make it relative.
+		props.source = '.' + props.source;
 
-	// Always include the main index.html file.
-	props.input ??= [];
-	props.input.push(normalize(join(pRoot, props.root, 'index.html')));
+		// We enforce it to start with / for consistency, then we remove it.
+		props.root = props.root.replace(/^\/|^\\/, '');
 
-	// We by default look for tags where the entry dir is.
-	props.tagDirs ??= [];
-	props.tagDirs.push({ path: props.source });
+		// Always include the main index.html file.
+		props.input ??= [];
+		props.input.push(normalize(join(pRoot, props.root, 'index.html')));
 
-	setDevMode(false);
+		// We by default look for tags where the entry dir is.
+		props.tagDirs ??= [];
+		props.tagDirs.push({ path: props.source });
 
-	const internalProps: InternalConfigProperties =  {
-		debug:          false,
-		hmrReloadDelay: 100,
-		base:           '',
-		source:         '',
-		root:           '',
-		input:          [],
-		tagDirs:        [],
-		siteConfig:     {
-			env: {
-				rootDir:  props.root,
-				entryDir: props.source,
-				libDir:   '.mirage',
-				base:     props.base,
-			},
-			root: {
-				styleImports:  [],
-				scriptImports: [],
-				layout:        {
-					headingText: '',
-					logoHeight:  '',
-					logoSrc:     '',
+		setDevMode(false);
+
+		const internalProps: InternalConfigProperties =  {
+			debug:          false,
+			hmrReloadDelay: 100,
+			base:           '',
+			source:         '',
+			root:           '',
+			input:          [],
+			tagDirs:        [],
+			siteConfig:     {
+				env: {
+					rootDir:  props.root,
+					entryDir: props.source,
+					libDir:   '.mirage',
+					base:     props.base,
 				},
-				sidebar: {
-					delimiter:        '_',
-					nameReplacements: [
-						[ '.docs', '' ],
-						[ '.editor', ' Editor' ],
-						[ '-', ' ' ],
-					],
+				root: {
+					styleImports:  [],
+					scriptImports: [],
+					layout:        {
+						headingText: '',
+						logoHeight:  '',
+						logoSrc:     '',
+					},
+					sidebar: {
+						delimiter:        '_',
+						nameReplacements: [
+							[ '.docs', '' ],
+							[ '.editor', ' Editor' ],
+							[ '-', ' ' ],
+						],
+					},
+					styleOverrides: {
+						layout:       '',
+						sidebar:      '',
+						metadata:     '',
+						pathTree:     '',
+						cmpEditor:    '',
+						sourceEditor: '',
+						pageHeader:   '',
+						pageTemplate: '',
+					},
 				},
-				styleOverrides: {
-					layout:       '',
-					sidebar:      '',
-					metadata:     '',
-					pathTree:     '',
-					cmpEditor:    '',
-					sourceEditor: '',
-					pageHeader:   '',
-					pageTemplate: '',
+				pages: {
+					darkTheme:  '',
+					lightTheme: '',
+					styles:     [],
+					scripts:    [],
 				},
 			},
-			pages: {
-				darkTheme:  '',
-				lightTheme: '',
-				styles:     [],
-				scripts:    [],
-			},
-		},
-	};
+		};
 
-	deepmergeInto(internalProps, props);
+		deepmergeInto(internalProps, props);
 
-	// Cache all relevant files.
-	bar.update(bar.current + 1, 'Caching files');
+		// Cache all relevant files.
+		bar.update(bar.current + 1, 'Caching files');
 
-	await createCache(internalProps);
+		await createCache(internalProps);
 
-	bar.update(bar.current + 1, 'Creating file scaffolding');
+		bar.update(bar.current + 1, 'Creating file scaffolding');
 
-	const {
-		filesToCreate,
-		oramaDb,
-		markdownComponentPaths,
-		siteconfigImportPath,
-		absoluteLibDir,
-		absoluteSourceDir,
-	} = await createDocFiles(internalProps);
+		const {
+			filesToCreate,
+			oramaDb,
+			markdownComponentPaths,
+			siteconfigImportPath,
+			absoluteLibDir,
+			absoluteSourceDir,
+		} = await createDocFiles(internalProps);
 
-	bar.update(bar.current + 1, 'Finished creating file scaffolding');
+		bar.update(bar.current + 1, 'Finished creating file scaffolding');
 
-	const docConfig: UserConfig = {
-		appType: 'spa',
-		base:    internalProps.base,
-		root:    join(pRoot, internalProps.root),
-		build:   {
-			rollupOptions: {
-				input: internalProps.input,
-			},
-		},
-		plugins: [
-			createPlugin({
-				props: internalProps,
-				markdownComponentPaths,
-				siteconfigImportPath,
-				absoluteLibDir,
-				absoluteSourceDir,
-			}),
-		],
-	};
-
-	const mergedConfig = deepmerge(defineConfig(viteConfig), docConfig);
-
-	mergedConfig.publicDir ||= 'public';
-	mergedConfig.build ??= {};
-	mergedConfig.build.outDir ??= outDir;
-	mergedConfig.build.emptyOutDir ??= true;
-	mergedConfig.plugins?.push(
-		copy({
-			targets: [
-				{
-					src:  './node_modules/@roenlie/mirage-docs/dist/workers',
-					dest: join(internalProps.root, mergedConfig.publicDir, '.mirage'),
+		const docConfig: UserConfig = {
+			appType: 'spa',
+			base:    internalProps.base,
+			root:    join(pRoot, internalProps.root),
+			build:   {
+				rollupOptions: {
+					input: internalProps.input,
 				},
+			},
+			plugins: [
+				createPlugin({
+					props: internalProps,
+					markdownComponentPaths,
+					siteconfigImportPath,
+					absoluteLibDir,
+					absoluteSourceDir,
+				}),
 			],
-			hook:     'config',
-			copyOnce: true,
-		}) as any,
-	);
+		};
 
-	mergedConfig.build.rollupOptions ??= {};
-	mergedConfig.build.rollupOptions.output ??= {};
-	if (Array.isArray(mergedConfig.build.rollupOptions.output))
-		throw new Error('Mirage Docs does not support: rollupOptions => output as an Array.');
+		const mergedConfig = deepmerge(config, docConfig);
 
-	mergedConfig.build.rollupOptions.output.manualChunks = (id) => {
-		if (id.includes('monaco-editor'))
-			return 'monaco-editor';
-		if (id.endsWith('siteconfig.ts'))
-			return 'site-config';
-	};
+		mergedConfig.publicDir ||= 'public';
+		mergedConfig.build ??= {};
+		mergedConfig.build.outDir ??= outDir;
+		mergedConfig.build.emptyOutDir ??= true;
+		mergedConfig.plugins?.push(
+			copy({
+				targets: [
+					{
+						src:  './node_modules/@roenlie/mirage-docs/dist/workers',
+						dest: join(internalProps.root, mergedConfig.publicDir, '.mirage'),
+					},
+				],
+				hook:     'config',
+				copyOnce: true,
+			}) as any,
+		);
 
-	// Write the mirage files to mirage disc location.
-	bar.update(bar.current + 1, 'Writing files to disk');
+		mergedConfig.build.rollupOptions ??= {};
+		mergedConfig.build.rollupOptions.output ??= {};
+		if (Array.isArray(mergedConfig.build.rollupOptions.output))
+			throw new Error('Mirage Docs does not support: rollupOptions => output as an Array.');
 
-	await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {
-		internalProps.debug && console.log('Attempting to write file:', path);
+		mergedConfig.build.rollupOptions.output.manualChunks = (id) => {
+			if (id.includes('monaco-editor'))
+				return 'monaco-editor';
+			if (id.endsWith('siteconfig.ts'))
+				return 'site-config';
+		};
 
-		await promises.mkdir(path.split(sep).slice(0, -1).join(sep), { recursive: true });
-		await promises.writeFile(path, content);
+		// Write the mirage files to mirage disc location.
+		bar.update(bar.current + 1, 'Writing files to disk');
 
-		internalProps.debug && console.log('Finished writing file:', path);
-	}));
+		await Promise.all([ ...filesToCreate ].map(async ([ path, content ]) => {
+			internalProps.debug && console.log('Attempting to write file:', path);
 
-	// Write the search index file to public disc folder.
-	bar.update(bar.current + 1, 'Writing search indexes to disk');
+			await promises.mkdir(path.split(sep).slice(0, -1).join(sep), { recursive: true });
+			await promises.writeFile(path, content);
 
-	const searchDir = join(pRoot, internalProps.root, mergedConfig.publicDir, '.mirage');
-	await promises.mkdir(searchDir, { recursive: true });
-	await persistToFile(oramaDb, 'json', join(searchDir, 'searchIndexes.json'));
+			internalProps.debug && console.log('Finished writing file:', path);
+		}));
 
-	// creating a newline so that progress is not too close to vite output.
-	console.log('');
+		// Write the search index file to public disc folder.
+		bar.update(bar.current + 1, 'Writing search indexes to disk');
 
-	return mergedConfig;
+		const searchDir = join(pRoot, internalProps.root, mergedConfig.publicDir, '.mirage');
+		await promises.mkdir(searchDir, { recursive: true });
+		await persistToFile(oramaDb, 'json', join(searchDir, 'searchIndexes.json'));
+
+		// creating a newline so that progress is not too close to vite output.
+		console.log('');
+
+		return mergedConfig;
+	});
 };
