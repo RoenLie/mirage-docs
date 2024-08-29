@@ -54,10 +54,8 @@ export const createPlugin = (args: {
 				// files in mirage-docs, so it can only fail if user ends up adding one as an input.
 				if (!ctx.filename.endsWith('index.html'))
 					return;
-
-				return {
-					html,
-					tags: [
+		
+				const tags = [
 						{
 							tag:      'script',
 							attrs:    { type: 'module' },
@@ -83,8 +81,21 @@ export const createPlugin = (args: {
 							document.body.appendChild(document.createElement('midoc-layout'));
 							`,
 						},
-					],
-				};
+				];
+
+				props.styleImports?.sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0));
+				props.styleImports?.forEach(imp => {
+					tags.push({
+						tag:      'link',
+						attrs:    {
+							rel: 'stylesheet',
+							href: imp.src
+						},
+						injectTo: 'head',
+					});
+				});
+
+				return { html, tags };
 			},
 		},
 		buildStart() {
