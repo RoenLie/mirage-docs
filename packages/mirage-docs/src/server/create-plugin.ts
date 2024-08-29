@@ -83,8 +83,8 @@ export const createPlugin = (args: {
 						},
 				];
 
-				props.styleImports?.sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0));
-				props.styleImports?.forEach(imp => {
+				props.siteConfig.root.styleImports.sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0));
+				props.siteConfig.root.styleImports.forEach(imp => {
 					tags.push({
 						tag:      'link',
 						attrs:    {
